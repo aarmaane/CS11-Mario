@@ -15,6 +15,7 @@ WHITE = (255, 255, 255)
 
 # Declaring variables
 
+fpsCounter = time.Clock()
 menu = "game"
 marioPos = [0, 0, 0, 0]
 
@@ -40,5 +41,6 @@ while running:
     mb = mouse.get_pressed()
     mx, my = mouse.get_pos()
     display.flip()
+    
 
 quit()

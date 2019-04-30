@@ -16,6 +16,7 @@ WHITE = (255, 255, 255)
 # Declaring variables
 
 menu = "game"
+marioPos = [0, 0, 0, 0]
 
 # Declaring main functions
 

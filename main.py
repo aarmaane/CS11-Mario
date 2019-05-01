@@ -19,6 +19,7 @@ fpsCounter = time.Clock()
 menu = "game"
 marioPos = [0, 0, 0, 0]
 
+
 # Declaring main functions
 
 def game():
@@ -41,7 +42,30 @@ def loading():
     return "menu"  '''                           
 
 def instructions():
-    pass
+        '''running = True
+    loading = image.load(".png")
+    loading = transform.smoothscale(story, screen.get_size())
+    screen.blit(story,(0,0))
+    while running:
+        for evnt in event.get():          
+            if evnt.type == QUIT:
+                running = False
+        if key.get_pressed()[27]: running = False
+        display.flip()
+    return "menu"  '''   
+        
+def credit():
+        '''running = True
+    loading = image.load(".png")
+    loading = transform.smoothscale(story, screen.get_size())
+    screen.blit(story,(0,0))
+    while running:
+        for evnt in event.get():          
+            if evnt.type == QUIT:
+                running = False
+        if key.get_pressed()[27]: running = False
+        display.flip()
+    return "menu"  '''      
 
 running = True
 while running:
@@ -52,6 +76,17 @@ while running:
     mb = mouse.get_pressed()
     mx, my = mouse.get_pos()
     display.flip()
+    
+page = "menu"
+while page != "exit":
+    if page == "menu":
+        page = menu()
+    if page == "game":
+        page = simpleGame()    
+    if page == "instructions":
+        page = instructions()     
+    if page == "credit":
+        page = credit()  
     
 
 quit()

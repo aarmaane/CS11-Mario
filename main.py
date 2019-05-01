@@ -28,10 +28,21 @@ def menu():
     pass
 
 def loading():
-    pass
+        '''running = True
+    loading = image.load(".png")
+    loading = transform.smoothscale(story, screen.get_size())
+    screen.blit(story,(0,0))
+    while running:
+        for evnt in event.get():          
+            if evnt.type == QUIT:
+                running = False
+        if key.get_pressed()[27]: running = False
+        display.flip()
+    return "menu"  '''                           
 
 def instructions():
     pass
+
 running = True
 while running:
     for evt in event.get():

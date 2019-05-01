@@ -13,15 +13,24 @@ BLUE = (0, 0, 255)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
-# Declaring variables
+# Declaring Variables
 
 fpsCounter = time.Clock()
 menu = "game"
 marioPos = [0, 0, 0, 0]
+backgroundPics = []
+marioSprites = []
 
 # Declaring Rects
 
 smallMario = Rect (
+    
+# Loading Pictures
+    
+for i in range (1):
+    backgroundPics.append(image.load("assets\\backgrounds\\level_"+str(i)+".png"))
+    
+
 
 
 # Declaring main functions

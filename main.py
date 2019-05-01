@@ -19,6 +19,10 @@ fpsCounter = time.Clock()
 menu = "game"
 marioPos = [0, 0, 0, 0]
 
+# Declaring Rects
+
+smallMario = Rect (
+
 
 # Declaring main functions
 

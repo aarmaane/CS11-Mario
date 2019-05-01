@@ -20,6 +20,7 @@ menu = "game"
 marioPos = [0, 0, 0, 0]
 backgroundPics = []
 marioSprites = []
+marioState = 0 # 0 is small, 1 is big mario
 
 # Declaring Rects
 

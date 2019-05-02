@@ -15,23 +15,25 @@ WHITE = (255, 255, 255)
 
 # Declaring Variables
 
+page = "credit"
 fpsCounter = time.Clock()
-menu = "game"
-marioPos = [0, 0, 0, 0]
-backgroundPics = []
+marioPos = [0, 0, 0, True] # X, Y, VY, ONGROUND
+backgroundPics = [image.load("assets\\backgrounds\\level_"+str(i)+".png") for i in range(1,1)]
 marioSprites = []
 marioState = 0 # 0 is small, 1 is big mario
+levelNum = 0 # Using 0 as level 1 since indexes start at 0
 
 # Declaring Rects
 
-smallMario = Rect (
+#smallMario = Rect()
     
 # Loading Pictures
     
-for i in range (1):
+for i in range (1,1):
     backgroundPics.append(image.load("assets\\backgrounds\\level_"+str(i)+".png"))
     
 
+# Declaring game functions
 
 
 # Declaring main functions
@@ -43,55 +45,39 @@ def menu():
     pass
 
 def loading():
-        '''running = True
-    loading = image.load(".png")
-    loading = transform.smoothscale(story, screen.get_size())
-    screen.blit(story,(0,0))
+    running = True
     while running:
         for evnt in event.get():          
             if evnt.type == QUIT:
                 running = False
         if key.get_pressed()[27]: running = False
         display.flip()
-    return "menu"  '''                           
+        fpsCounter.tick(60)
+    return "menu"
 
 def instructions():
-        '''running = True
-    loading = image.load(".png")
-    loading = transform.smoothscale(story, screen.get_size())
-    screen.blit(story,(0,0))
+    running = True
     while running:
         for evnt in event.get():          
             if evnt.type == QUIT:
                 running = False
         if key.get_pressed()[27]: running = False
         display.flip()
-    return "menu"  '''   
+        fpsCounter.tick(60)
+    return "menu"
         
 def credit():
-        '''running = True
-    loading = image.load(".png")
-    loading = transform.smoothscale(story, screen.get_size())
-    screen.blit(story,(0,0))
+    running = True
     while running:
         for evnt in event.get():          
             if evnt.type == QUIT:
                 running = False
         if key.get_pressed()[27]: running = False
         display.flip()
-    return "menu"  '''      
+        fpsCounter.tick(60)
+    return "menu"
 
-running = True
-while running:
-    for evt in event.get():
-        if evt.type == QUIT:
-            running = False
 
-    mb = mouse.get_pressed()
-    mx, my = mouse.get_pos()
-    display.flip()
-    
-page = "menu"
 while page != "exit":
     if page == "menu":
         page = menu()

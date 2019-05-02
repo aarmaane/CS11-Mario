@@ -6,6 +6,8 @@ environ['SDL_VIDEO_CENTERED'] = '1'
 init()
 size = width, height = 800, 600
 screen = display.set_mode(size)
+display.set_caption("Super Mario Bros!")
+
 # Declaring colours
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -17,7 +19,7 @@ WHITE = (255, 255, 255)
 
 page = "game"
 fpsCounter = time.Clock()
-marioPos = [0, 505, 3, 0, True] # X, Y, VX, VY, ONGROUND
+marioPos = [0, 496, 3, 0, True] # X, Y, VX, VY, ONGROUND
 backPos = [0] # Position of the background (as list because mutability)
 marioState = 0 # 0 is small, 1 is big mario
 levelNum = 0 # Using 0 as level 1 since indexes start at 0
@@ -30,14 +32,13 @@ smallMario = Rect(marioPos[0], marioPos[1], 32, 64)
 # Loading Pictures
 
 backgroundPics = [image.load("assets/backgrounds/level_"+str(i)+".png").convert() for i in range(1,2)]
-backgroundPics = [transform.smoothscale(pic,(9086,600)) for pic in backgroundPics]
+backgroundPics = [transform.scale(pic,(9086,600)) for pic in backgroundPics]
 
-marioSprites = [[image.load("assets/sprites/mario/smallmario"+str(i)+".png").convert() for i in range (1,5)],
+marioSprites = [[image.load("assets/sprites/mario/smallmario"+str(i)+".png").convert_alpha() for i in range (1,5)],
              [image.load("assets/sprites/mario/bigmario"+str(i)+".png").convert() for i in range (1,5)],
-			  [image.load("assets/sprites/mario/"+str(i)+".png").convert() for i in marioSpriteNames]]
-
-
-
+                [image.load("assets/sprites/mario/"+str(i)+".png").convert() for i in marioSpriteNames]]
+for i in range(4):
+    marioSprites[0][i] = transform.scale(marioSprites[0][i], (42,42))
 
 # Declaring game functions
 
@@ -45,7 +46,8 @@ def drawScene(background, backX, mario, marioPic):
     """Function to draw the background, mario, enemies, and all objects"""
     screen.blit(background, (backX[0], 0))
     screen.blit(marioPic[0][0], (mario[0], mario[1]))
-		
+
+
 def moveMario(mario, backX, rectLists):
     """Function to move mario and the background (all rects too as a result)"""
     keys=key.get_pressed()

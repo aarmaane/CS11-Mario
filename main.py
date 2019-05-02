@@ -28,8 +28,13 @@ levelNum = 0 # Using 0 as level 1 since indexes start at 0
 smallMario = Rect(marioPos[0], marioPos[1], 32, 64)
     
 # Loading Pictures
+
 backgroundPics = [image.load("assets/backgrounds/level_"+str(i)+".png").convert() for i in range(1,2)]
 backgroundPics = [transform.smoothscale(pic,(9086,600)) for pic in backgroundPics]
+
+for i in range(9):
+    marioSprites.append(image.load("assets/sprites/mario"+str(i)+".png"))
+
 
 # Declaring game functions
 

@@ -17,7 +17,7 @@ WHITE = (255, 255, 255)
 
 page = "game"
 fpsCounter = time.Clock()
-marioPos = [0, 470, 3, 0, True] # X, Y, VX, VY, ONGROUND
+marioPos = [0, 505, 3, 0, True] # X, Y, VX, VY, ONGROUND
 backPos = [0] # Position of the background (as list because mutability)
 marioState = 0 # 0 is small, 1 is big mario
 levelNum = 0 # Using 0 as level 1 since indexes start at 0
@@ -34,7 +34,7 @@ backgroundPics = [transform.smoothscale(pic,(9086,600)) for pic in backgroundPic
 
 marioSprites = [[image.load("assets/sprites/mario/smallmario"+str(i)+".png").convert() for i in range (1,5)],
              [image.load("assets/sprites/mario/bigmario"+str(i)+".png").convert() for i in range (1,5)],
-			  image.load("assets/sprites/mario/str(i)+".png").convert() for i in marioSpriteNames]]
+			  [image.load("assets/sprites/mario/"+str(i)+".png").convert() for i in marioSpriteNames]]
 
 
 
@@ -52,7 +52,7 @@ def moveMario(mario, backX, rectLists):
     if keys[K_a] and mario[0]!=1: # Checking if mario is hitting left side of window
         mario[0] -= mario[2] # Subtracting the VX
     if keys[K_d]:
-        if mario[0] < 401: # Checking if mario is in the middle of the screen
+        if mario[0] < 368: # Checking if mario is in the middle of the screen
             mario[0] += mario[2] # Adding the VX
         else:
             backX[0] -= mario[2] # Subtracting the VX from the background

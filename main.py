@@ -19,9 +19,9 @@ page = "game"
 fpsCounter = time.Clock()
 marioPos = [0, 470, 3, 0, True] # X, Y, VX, VY, ONGROUND
 backPos = [0] # Position of the background (as list because mutability)
-marioSprites = []
 marioState = 0 # 0 is small, 1 is big mario
 levelNum = 0 # Using 0 as level 1 since indexes start at 0
+marioSpriteNames = ["smallmariojump" , "bigmariojump" , "bigmariocrouch" , "smallmariodead" , "bigmariochange"]
 
 # Declaring Rects
 
@@ -32,8 +32,11 @@ smallMario = Rect(marioPos[0], marioPos[1], 32, 64)
 backgroundPics = [image.load("assets/backgrounds/level_"+str(i)+".png").convert() for i in range(1,2)]
 backgroundPics = [transform.smoothscale(pic,(9086,600)) for pic in backgroundPics]
 
-for i in range(9):
-    marioSprites.append(image.load("assets/sprites/mario"+str(i)+".png"))
+marioSprites = [[image.load("assets/sprites/mario/smallmario"+str(i)+".png").convert() for i in range (1,5)],
+             [image.load("assets/sprites/mario/bigmario"+str(i)+".png").convert() for i in range (1,5)],
+			  image.load("assets/sprites/mario/str(i)+".png").convert() for i in marioSpriteNames]]
+
+
 
 
 # Declaring game functions

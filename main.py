@@ -41,11 +41,11 @@ marioSprites = [[image.load("assets/sprites/mario/smallmario"+str(i)+".png").con
 
 # Declaring game functions
 
-def drawScene(background, backX):
+def drawScene(background, backX, mario, marioPic):
     """Function to draw the background, mario, enemies, and all objects"""
     screen.blit(background, (backX[0], 0))
-    draw.rect(screen, RED, (marioPos[0], marioPos[1], 32, 64))
-
+    screen.blit(marioPic[0][0], (mario[0], mario[1]))
+		
 def moveMario(mario, backX, rectLists):
     """Function to move mario and the background (all rects too as a result)"""
     keys=key.get_pressed()
@@ -69,7 +69,7 @@ def game():
                 running = False
         if key.get_pressed()[27]: running = False
         screen.fill(BLACK)
-        drawScene(backgroundPics[levelNum], backPos)
+        drawScene(backgroundPics[levelNum], backPos, marioPos, marioSprites)
         moveMario(marioPos, backPos, 0)
         print(marioPos,backPos)
         display.flip()

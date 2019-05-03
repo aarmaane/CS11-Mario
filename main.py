@@ -21,7 +21,7 @@ SKYBLUE = (247, 214, 181)
 page = "game"
 fpsCounter = time.Clock()
 marioPos = [0, 496, 3, 0, True, "Right"]  # X, Y, VX, VY, ONGROUND, Direction
-marioAccelerate = 0.45
+marioAccelerate = 1
 backPos = [0]  # Position of the background (as list because mutability)
 marioState = 0  # 0 is small, 1 is big mario
 levelNum = 0  # Using 0 as level 1 since indexes start at 0
@@ -60,29 +60,29 @@ def checkMovement(mario, acclerate, backX, rectLists):
     keys=key.get_pressed()
     moving = False
     if keys[K_a]: # Checking if mario is hitting left side of window
-        moveMario(mario, backX, rectLists, "Left")
+        walkMario(mario, backX, rectLists, "Left")
         mario[2] += acclerate
         moving = True
         mario[5] = "Left"
     if keys[K_d]:
-        moveMario(mario, backX, rectLists, "Right")
+        walkMario(mario, backX, rectLists, "Right")
         mario[2] += acclerate
         moving = True
         mario[5] = "Right"
     if moving == False and mario[2] != 0:
         if mario[5] == "Right":
-            moveMario(mario, backX, rectLists, "Right")
+            walkMario(mario, backX, rectLists, "Right")
         if mario[5] == "Left":
-            moveMario(mario, backX, rectLists, "Left")
+            walkMario(mario, backX, rectLists, "Left")
         mario[2] -= acclerate
     # Max and min acceleration
-    if mario[2] > 6:
-        mario[2] = 6
+    if mario[2] > 7:
+        mario[2] = 7
     elif mario[2] < 0:
         mario[2] = 0
 
 
-def moveMario(mario, backX, rectLists, direction):
+def walkMario(mario, backX, rectLists, direction):
     if direction == "Left" and mario[0] != 1:
         mario[0] -= mario[2]  # Subtracting the VX
     elif direction == "Right":
@@ -110,7 +110,7 @@ def game():
         screen.fill(BLACK)
         checkMovement(marioPos, marioAccelerate, backPos, 0)
         drawScene(backgroundPics[levelNum], backPos, marioPos, marioSprites)
-        print(marioPos,backPos)
+        print(marioPos)
         display.flip()
         fpsCounter.tick(60)
     return "menu"

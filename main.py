@@ -61,20 +61,25 @@ def checkMovement(mario, acclerate, backX, rectLists):
     moving = False
     if keys[K_a]: # Checking if mario is hitting left side of window
         walkMario(mario, backX, rectLists, "Left")
-        mario[2] += acclerate
         moving = True
         mario[5] = "Left"
     if keys[K_d]:
         walkMario(mario, backX, rectLists, "Right")
-        mario[2] += acclerate
         moving = True
         mario[5] = "Right"
+	if moving:
+		mario[2] += acclerate
     if moving == False and mario[2] != 0:
         if mario[5] == "Right":
             walkMario(mario, backX, rectLists, "Right")
         if mario[5] == "Left":
             walkMario(mario, backX, rectLists, "Left")
         mario[2] -= acclerate
+	if keys[K_SPACE] and marioPos[4]: # checking if jumping is true
+		marioPos[3]=-10 # jumping power
+        marioPos[4]=False
+	marioPos[1]+=marioPos[3]
+		
     # Max and min acceleration
     if mario[2] > 7:
         mario[2] = 7

@@ -75,11 +75,21 @@ def checkMovement(mario, acclerate, backX, rectLists):
         if mario[5] == "Left":
             walkMario(mario, backX, rectLists, "Left")
         mario[2] -= acclerate
-	if keys[K_SPACE] and marioPos[4]: # checking if jumping is true
-		marioPos[3]=-10 # jumping power
+    floor=496
+    if marioState==1:
+        floor=442
+    if keys[K_SPACE] and marioPos[4]: # checking if jumping is true
+        marioPos[3]-=10 # jumping power
         marioPos[4]=False
-	marioPos[1]+=marioPos[3]
-		
+    marioPos[1]+=marioPos[3]
+    
+    if marioPos[1]>=floor:
+        marioPos[1]=floor # stay on the ground
+        marioPos[3]=0 # stop falling
+        marioPos[4]=True
+        
+    marioPos[3]+=0.3 # apply gravity
+
     # Max and min acceleration
     if mario[2] > 7:
         mario[2] = 7

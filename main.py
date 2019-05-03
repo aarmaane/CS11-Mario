@@ -18,6 +18,7 @@ SKYBLUE = (247, 214, 181)
 
 # Declaring Variables
 
+frame=0
 page = "game"
 fpsCounter = time.Clock()
 marioPos = [0, 496, 3, 0, True, "Right"]  # X, Y, VX, VY, ONGROUND, Direction
@@ -54,6 +55,11 @@ def drawScene(background, backX, mario, marioPic):
     screen.blit(background, (backX[0], 0))
     screen.blit(marioPic[0][0], (mario[0], mario[1]))
 
+    screen.blit(marioSprites[marioState][frame],(mario[0],mario[1]))
+	
+def moveSprites(mario,marioSprite,marioState,frame):
+	if frame +=0.8
+    
 
 def checkMovement(mario, acclerate, backX, rectLists):
     """Function to move mario and the background (all rects too as a result)"""
@@ -63,12 +69,13 @@ def checkMovement(mario, acclerate, backX, rectLists):
         walkMario(mario, backX, rectLists, "Left")
         moving = True
         mario[5] = "Left"
+	
     if keys[K_d]:
         walkMario(mario, backX, rectLists, "Right")
         moving = True
         mario[5] = "Right"
-	if moving:
-		mario[2] += acclerate
+    if moving:
+	mario[2] += acclerate
     if moving == False and mario[2] != 0:
         if mario[5] == "Right":
             walkMario(mario, backX, rectLists, "Right")

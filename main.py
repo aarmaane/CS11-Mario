@@ -22,10 +22,11 @@ frame=0
 page = "game"
 fpsCounter = time.Clock()
 marioPos = [0, 496, 3, 0, True, "Right"]  # X, Y, VX, VY, ONGROUND, Direction
-marioAccelerate = 1
+marioAccelerate = 0.6
 backPos = [0]  # Position of the background (as list because mutability)
 marioState = 0  # 0 is small, 1 is big mario
 levelNum = 0  # Using 0 as level 1 since indexes start at 0
+jumpFrames = [0] # Checking frames that user has been jumping for
 marioSpriteNames = ["smallmariojump" , "bigmariojump" , "bigmariocrouch" , "smallmariodead" , "bigmariochange"]
 isAnimating = False  # Boolean to see if we need to pause the screen and animate mario
 
@@ -54,67 +55,87 @@ def drawScene(background, backX, mario, marioPic):
     """Function to draw the background, mario, enemies, and all objects"""
     screen.blit(background, (backX[0], 0))
     screen.blit(marioPic[0][0], (mario[0], mario[1]))
-
     screen.blit(marioSprites[marioState][frame],(mario[0],mario[1]))
-	
+
 def moveSprites(mario,marioSprite,marioState,frame):
-	if frame +=0.8
+    pass
+    #if frame +=0.8
     
 
-def checkMovement(mario, acclerate, backX, rectLists):
+def checkMovement(mario, acclerate, backX, rectLists, jumpFrames):
     """Function to move mario and the background (all rects too as a result)"""
     keys=key.get_pressed()
+    X, Y, VX, VY, ONGROUND, DIR = 0, 1, 2, 3, 4, 5
     moving = False
+    ####DEBUG INPUT
+    if keys[K_r]:
+        backX[0] = 0
+    # Walking logic
     if keys[K_a]: # Checking if mario is hitting left side of window
+        if mario[DIR] != "Left":
+            mario[VX] = 0 # Stop acceleration if changing direction
         walkMario(mario, backX, rectLists, "Left")
         moving = True
-        mario[5] = "Left"
-	
+        mario[DIR] = "Left"
     if keys[K_d]:
+        if mario[DIR] != "Right":
+            mario[VX] = 0 # Stop acceleration if changing direction
         walkMario(mario, backX, rectLists, "Right")
         moving = True
-        mario[5] = "Right"
-    if moving:
-	mario[2] += acclerate
-    if moving == False and mario[2] != 0:
-        if mario[5] == "Right":
+        mario[DIR] = "Right"
+    if moving: # Accelerate if there is input
+        if mario[ONGROUND]:
+            mario[VX] += acclerate
+        else:
+            mario [VX] += acclerate/4 # Slow down movement when midair
+    elif mario[VX] != 0: # Move and decelerate if there is no input
+        if mario[DIR] == "Right":
             walkMario(mario, backX, rectLists, "Right")
-        if mario[5] == "Left":
+        if mario[DIR] == "Left":
             walkMario(mario, backX, rectLists, "Left")
-        mario[2] -= acclerate
+        if mario[ONGROUND]: # Don't decelerate mid air
+            mario[VX] -= acclerate
+    # Max and min acceleration
+    if mario[VX] > 5:
+        mario[VX] = 5
+    elif mario[VX] < 0:
+        mario[VX] = 0
+    # Jumping logic
+    gravity = 0.6
     floor=496
     if marioState==1:
         floor=442
-    if keys[K_SPACE] and marioPos[4]: # checking if jumping is true
-        marioPos[3]-=10 # jumping power
-        marioPos[4]=False
-    marioPos[1]+=marioPos[3]
-    
-    if marioPos[1]>=floor:
-        marioPos[1]=floor # stay on the ground
-        marioPos[3]=0 # stop falling
-        marioPos[4]=True
-        
-    marioPos[3]+=0.3 # apply gravity
-
-    # Max and min acceleration
-    if mario[2] > 7:
-        mario[2] = 7
-    elif mario[2] < 0:
-        mario[2] = 0
+    if keys[K_SPACE]:
+        if mario[ONGROUND]: # checking if jumping is true
+            mario[VY] -= 9.5 # jumping power
+            mario[ONGROUND] = False
+            jumpFrames[0] = 0
+        elif jumpFrames[0] < 80:
+            gravity = 0.2
+            jumpFrames[0] += 1
+    mario[Y] += marioPos[VY]  # Add the y movement value
+    if mario[Y] < 311:
+        jumpFrames[0] = 80
+    if mario[Y]>=floor:
+        mario[Y]=floor # stay on the ground
+        mario[VY]=0 # stop falling
+        mario[ONGROUND]=True
+    marioPos[VY] += gravity # apply gravity
+    print(jumpFrames)
 
 
 def walkMario(mario, backX, rectLists, direction):
-    if direction == "Left" and mario[0] != 1:
-        mario[0] -= mario[2]  # Subtracting the VX
+    X, Y, VX, VY, ONGROUND, DIR = 0, 1, 2, 3, 4, 5
+    if direction == "Left" and mario[X] != 1:
+        mario[X] -= mario[VX]  # Subtracting the VX
     elif direction == "Right":
-        if mario[0] < 368: # Checking if mario is in the middle of the screen
-            mario[0] += mario[2] # Adding the VX
+        if mario[X] < 368: # Checking if mario is in the middle of the screen
+            mario[X] += mario[VX] # Adding the VX
         else:
-            mario[0] = 368
-            backX[0] -= mario[2] # Subtracting the VX from the background
-    if mario[0] < 0:
-        mario[0] = 0
+            mario[X] = 368
+            backX[0] -= mario[VX] # Subtracting the VX from the background
+    if mario[X] < 0:
+        mario[X] = 0
 
 
 
@@ -130,7 +151,7 @@ def game():
                 running = False
         if key.get_pressed()[27]: running = False
         screen.fill(BLACK)
-        checkMovement(marioPos, marioAccelerate, backPos, 0)
+        checkMovement(marioPos, marioAccelerate, backPos, 0, jumpFrames)
         drawScene(backgroundPics[levelNum], backPos, marioPos, marioSprites)
         print(marioPos)
         display.flip()

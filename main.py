@@ -29,6 +29,8 @@ levelNum = 0  # Using 0 as level 1 since indexes start at 0
 jumpFrames = [0] # Checking frames that user has been jumping for
 marioSpriteNames = ["smallmariojump" , "bigmariojump" , "bigmariocrouch" , "smallmariodead" , "bigmariochange"]
 isAnimating = False  # Boolean to see if we need to pause the screen and animate mario
+if keys[K_SPACE]:
+    space=True
 
 # Declaring Rects
 
@@ -105,7 +107,7 @@ def checkMovement(mario, acclerate, backX, rectLists, jumpFrames):
     floor=496
     if marioState==1:
         floor=442
-    if keys[K_SPACE]:
+    if space:
         if mario[ONGROUND]: # checking if jumping is true
             mario[VY] -= 9.5 # jumping power
             mario[ONGROUND] = False

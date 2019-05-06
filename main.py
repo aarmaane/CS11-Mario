@@ -45,10 +45,12 @@ marioSprites = [[image.load("assets/sprites/mario/smallmario"+str(i)+".png").con
 # Resizing Pictures
 backgroundPics = [transform.scale(pic,(9086,600)) for pic in backgroundPics]
 
-for i in range(4):
-    marioSprites[0][i] = transform.scale(marioSprites[0][i], (42, 42))
-    marioSprites[1][i] = transform.scale(marioSprites[1][i], (42, 96))
-
+for subList in marioSprites:
+    for pic in subList:
+        if pic.get_height() == 16:
+            pic = transform.scale(pic, (42, 42))
+        else:
+            pic = transform.scale(pic, (42, 92))
 # Declaring game functions
 
 def drawScene(background, backX, mario, marioPic):

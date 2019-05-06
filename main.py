@@ -122,6 +122,9 @@ def checkMovement(mario, acclerate, backX, rectLists, jumpFrames):
         mario[Y]=floor # stay on the ground
         mario[VY]=0 # stop falling
         mario[ONGROUND]=True
+    if mario[Y]==floor and mario[Y]-1.get_at()==SKYBLUE:
+        mario[Y]-=1
+        
     marioPos[VY] += gravity # apply gravity
     print(jumpFrames)
 

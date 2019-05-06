@@ -29,8 +29,6 @@ levelNum = 0  # Using 0 as level 1 since indexes start at 0
 jumpFrames = [0] # Checking frames that user has been jumping for
 marioSpriteNames = ["smallmariojump" , "bigmariojump" , "bigmariocrouch" , "smallmariodead" , "bigmariochange"]
 isAnimating = False  # Boolean to see if we need to pause the screen and animate mario
-if keys[K_SPACE]:
-    space=True
 
 # Declaring Rects
 
@@ -47,12 +45,9 @@ marioSprites = [[image.load("assets/sprites/mario/smallmario"+str(i)+".png").con
 # Resizing Pictures
 backgroundPics = [transform.scale(pic,(9086,600)) for pic in backgroundPics]
 
-for subList in marioSprites:
-    for pic in subList:
-        if pic.get_height() == 16:
-            pic = transform.scale(pic, (42, 42))
-        else:
-            pic = transform.scale(pic, (42, 92))
+for i in range(4):
+    marioSprites[0][i] = transform.scale(marioSprites[0][i], (42, 42))
+    marioSprites[1][i] = transform.scale(marioSprites[1][i], (42, 96))
 
 # Declaring game functions
 
@@ -110,7 +105,7 @@ def checkMovement(mario, acclerate, backX, rectLists, jumpFrames):
     floor=496
     if marioState==1:
         floor=442
-    if space:
+    if keys[K_SPACE]:
         if mario[ONGROUND]: # checking if jumping is true
             mario[VY] -= 9.5 # jumping power
             mario[ONGROUND] = False

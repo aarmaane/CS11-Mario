@@ -18,17 +18,18 @@ SKYBLUE = (247, 214, 181)
 
 # Declaring Variables
 
-frame=0
 page = "game"
 fpsCounter = time.Clock()
 marioPos = [0, 496, 3, 0, True, "Right"]  # X, Y, VX, VY, ONGROUND, Direction
-marioAccelerate = 0.6
+marioFrame = [0,0]
+marioAccelerate = 0.5
 backPos = 0  # Position of the background (as list because mutability)
 marioState = 0  # 0 is small, 1 is big mario
 levelNum = 0  # Using 0 as level 1 since indexes start at 0
 jumpFrames = 0 # Checking frames that user has been jumping for
 marioSpriteNames = ["smallmariojump" , "bigmariojump" , "bigmariocrouch" , "smallmariodead" , "bigmariochange"]
 isAnimating = False  # Boolean to see if we need to pause the screen and animate mario
+isFalling = False # Boolean to see if the user has let go of the jump button
 
 # Declaring Rects
 
@@ -45,38 +46,50 @@ marioSprites = [[image.load("assets/sprites/mario/smallmario"+str(i)+".png").con
 # Resizing Pictures
 backgroundPics = [transform.scale(pic,(9086,600)) for pic in backgroundPics]
 
-for subList in marioSprites:
-    for pic in subList:
-        if pic.get_height() == 16:
-            pic = transform.scale(pic, (42, 42))
+for subList in range(len(marioSprites)):
+    for pic in range(len(marioSprites[subList])):
+        if marioSprites[subList][pic].get_height() == 16:
+            marioSprites[subList][pic] = transform.scale(marioSprites[subList][pic], (42, 42))
         else:
-            pic = transform.scale(pic, (42, 92))
+            marioSprites[subList][pic] = transform.scale(marioSprites[subList][pic], (42, 92))
 # Declaring game functions
 
-def drawScene(background, backX, mario, marioPic):
+def drawScene(background, backX, mario, marioPic, marioFrame):
     """Function to draw the background, mario, enemies, and all objects"""
-    screen.blit(background, (backX[0], 0))
-    screen.blit(marioPic[0][0], (mario[0], mario[1]))
-    screen.blit(marioSprites[marioState][frame],(mario[0],mario[1]))
+    screen.blit(background, (backX, 0))
+    print(marioFrame)
+    marioShow = marioPic[marioFrame[0]][int(marioFrame[1])]
+    if mario[5] == "Left":
+        marioShow = transform.flip(marioShow, True, False)
+
+    screen.blit(marioShow, (mario[0], mario[1]))
+
 
 def moveSprites(mario,marioSprite,marioState,frame):
-    pass
-    #if frame +=0.8
-    
+    global marioFrame
+    VX = 2
+    if mario[4]:
+        marioFrame[0] = 0 + marioState
+        if marioFrame[1] < 3.8 and mario[VX] != 0:
+            marioFrame[1] +=  mario[VX]**2/100 + 0.2
+        else:
+            marioFrame[1] = 0
+        if marioFrame[1] > 3.9:
+            marioFrame[1] = 3.9
+    else:
+        marioFrame = [2,0+marioState]
 
-def checkMovement(mario, acclerate, rectLists):
+
+def checkMovement(mario, marioState, acclerate, rectLists, pressSpace):
     """Function to move mario and the background (all rects too as a result)"""
     keys=key.get_pressed()
     X, Y, VX, VY, ONGROUND, DIR = 0, 1, 2, 3, 4, 5
-    global backX, jumpFrames
+    global jumpFrames, isFalling
     moving = False
-    ####DEBUG INPUT
-    if keys[K_r]:
-        backX = 0
     # Walking logic
     if keys[K_a]: # Checking if mario is hitting left side of window
         if mario[DIR] != "Left":
-            mario[VX] = 0 # Stop acceleration if changing direction
+            mario[VX] = 0  # Stop acceleration if changing direction
         walkMario(mario, rectLists, "Left")
         moving = True
         mario[DIR] = "Left"
@@ -99,8 +112,8 @@ def checkMovement(mario, acclerate, rectLists):
         if mario[ONGROUND]: # Don't decelerate mid air
             mario[VX] -= acclerate
     # Max and min acceleration
-    if mario[VX] > 5:
-        mario[VX] = 5
+    if mario[VX] > 4:
+        mario[VX] = 4
     elif mario[VX] < 0:
         mario[VX] = 0
     # Jumping logic
@@ -109,30 +122,29 @@ def checkMovement(mario, acclerate, rectLists):
     if marioState==1:
         floor=442
     if keys[K_SPACE]:
-        if mario[ONGROUND]: # checking if jumping is true
+        if mario[ONGROUND] and pressSpace: # checking if jumping is true
             mario[VY] -= 9.5 # jumping power
             mario[ONGROUND] = False
+            isFalling = False
             jumpFrames = 0
-        elif jumpFrames[0] < 80:
+        elif jumpFrames < 80 and not isFalling:
             gravity = 0.2
             jumpFrames += 1
     mario[Y] += marioPos[VY]  # Add the y movement value
     if mario[Y] < 311:
-        jumpFrames = 80
+        isFalling = True
     if mario[Y]>=floor:
         mario[Y]=floor # stay on the ground
         mario[VY]=0 # stop falling
         mario[ONGROUND]=True
-    if mario[Y]==floor and mario[Y]-1.get_at()==SKYBLUE:
-        mario[Y]-=1
-        
+    #if mario[Y]==floor and (mario[Y]-1).get_at()==SKYBLUE:
+    #    mario[Y]-=1
     marioPos[VY] += gravity # apply gravity
-    print(jumpFrames)
 
 
 def walkMario(mario, rectLists, direction):
     X, Y, VX, VY, ONGROUND, DIR = 0, 1, 2, 3, 4, 5
-    global backX
+    global backPos
     if direction == "Left" and mario[X] != 1:
         mario[X] -= mario[VX]  # Subtracting the VX
     elif direction == "Right":
@@ -140,7 +152,7 @@ def walkMario(mario, rectLists, direction):
             mario[X] += mario[VX] # Adding the VX
         else:
             mario[X] = 368
-            backX -= mario[VX] # Subtracting the VX from the background
+            backPos -= mario[VX] # Subtracting the VX from the background
     if mario[X] < 0:
         mario[X] = 0
 
@@ -153,14 +165,22 @@ def walkMario(mario, rectLists, direction):
 def game():
     running = True
     while running:
+        global isFalling
+        initialSpace = False
         for evnt in event.get():
             if evnt.type == QUIT:
                 running = False
+            if evnt.type == KEYDOWN:
+                if evnt.key == K_SPACE:
+                    initialSpace = True
+            if evnt.type == KEYUP:
+                if evnt.key == K_SPACE:
+                    isFalling = True
         if key.get_pressed()[27]: running = False
         screen.fill(BLACK)
-        checkMovement(marioPos, marioAccelerate, 0, jumpFrames)
-        drawScene(backgroundPics[levelNum], backPos, marioPos, marioSprites)
-        print(marioPos)
+        checkMovement(marioPos, marioState, marioAccelerate, 0, initialSpace)
+        moveSprites(marioPos, marioSprites, marioState, marioFrame)
+        drawScene(backgroundPics[levelNum], backPos, marioPos, marioSprites, marioFrame)
         display.flip()
         fpsCounter.tick(60)
     return "menu"

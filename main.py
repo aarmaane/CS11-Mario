@@ -14,7 +14,7 @@ GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-SKYBLUE = (247, 214, 181)
+SKYBLUE = (107, 140, 255)
 
 # Declaring Variables
 
@@ -137,8 +137,8 @@ def checkMovement(mario, marioState, acclerate, rectLists, pressSpace):
         mario[Y]=floor # stay on the ground
         mario[VY]=0 # stop falling
         mario[ONGROUND]=True
-    #if mario[Y]==floor and (mario[Y]-1).get_at()==SKYBLUE:
-    #    mario[Y]-=1
+    if mario[Y]==floor and screen.get_at((int(mario[X]).int(mario[Y])))==SKYBLUE:
+        mario[Y]-=10
     marioPos[VY] += gravity # apply gravity
 
 

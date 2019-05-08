@@ -160,9 +160,15 @@ def walkMario(mario, rectLists, direction):
     if mario[X] < 0:
         mario[X] = 0
 
+# Declaring loading functions
 
-
-
+def loadFile(targetFile):
+    outputList = []
+    file = open(targetFile,"r")
+    fileLines = file.readlines()
+    for line in fileLines:
+        outputList.append(line)
+    return outputList
 
 # Declaring main functions
 

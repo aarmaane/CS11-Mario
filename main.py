@@ -140,7 +140,7 @@ def checkMovement(mario, marioState, acclerate, rectLists, pressSpace):
         mario[Y]=floor # stay on the ground
         mario[VY]=0 # stop falling
         mario[ONGROUND]=True
-    if mario[Y]==floor and screen.get_at((int(mario[X]),int(mario[Y]+marioOffset)))==SKYBLUE and screen.get_at((int(mario[X]+42),int(mario[Y]+marioOffset)))==SKYBLUE:
+    if mario[Y]==floor and screen.get_at((int(mario[X]+4),int(mario[Y]+marioOffset)))==SKYBLUE and screen.get_at((int(mario[X]+38),int(mario[Y]+marioOffset)))==SKYBLUE:
         inGround=True
         mario[ONGROUND]=True
     marioPos[VY] += gravity # apply gravity

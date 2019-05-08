@@ -89,6 +89,7 @@ def checkMovement(mario, marioState, acclerate, rectLists, pressSpace):
     X, Y, VX, VY, ONGROUND, DIR = 0, 1, 2, 3, 4, 5
     global jumpFrames, isFalling
     moving = False
+    
     # Walking logic
     if keys[K_a]: # Checking if mario is hitting left side of window
         if mario[DIR] != "Left":
@@ -96,6 +97,7 @@ def checkMovement(mario, marioState, acclerate, rectLists, pressSpace):
         walkMario(mario, rectLists, "Left")
         moving = True
         mario[DIR] = "Left"
+        
     if keys[K_d]:
         if mario[DIR] != "Right":
             mario[VX] = 0 # Stop acceleration if changing direction
@@ -114,11 +116,13 @@ def checkMovement(mario, marioState, acclerate, rectLists, pressSpace):
             walkMario(mario, rectLists, "Left")
         if mario[ONGROUND]: # Don't decelerate mid air
             mario[VX] -= acclerate
+            
     # Max and min acceleration
     if mario[VX] > 4:
         mario[VX] = 4
     elif mario[VX] < 0:
         mario[VX] = 0
+        
     # Jumping logic
     gravity = 0.6
     floor=496
@@ -140,6 +144,7 @@ def checkMovement(mario, marioState, acclerate, rectLists, pressSpace):
         mario[Y]=floor # stay on the ground
         mario[VY]=0 # stop falling
         mario[ONGROUND]=True
+        
     if mario[Y]==floor and screen.get_at((int(mario[X]+4),int(mario[Y]+marioOffset)))==SKYBLUE and screen.get_at((int(mario[X]+38),int(mario[Y]+marioOffset)))==SKYBLUE:
         inGround=True
         mario[ONGROUND]=True

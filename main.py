@@ -56,6 +56,7 @@ for subList in range(len(marioSprites)):
 
 def drawScene(background, backX, mario, marioPic, marioFrame):
     """Function to draw the background, mario, enemies, and all objects"""
+    screen.fill(BLACK)
     screen.blit(background, (backX, 0))
     print(marioFrame)
     marioShow = marioPic[marioFrame[0]][int(marioFrame[1])]
@@ -63,6 +64,7 @@ def drawScene(background, backX, mario, marioPic, marioFrame):
         marioShow = transform.flip(marioShow, True, False)
 
     screen.blit(marioShow, (mario[0], mario[1]))
+    display.flip()
 
 
 def moveSprites(mario,marioSprite,marioState,frame):
@@ -177,11 +179,9 @@ def game():
                 if evnt.key == K_SPACE:
                     isFalling = True
         if key.get_pressed()[27]: running = False
-        screen.fill(BLACK)
         checkMovement(marioPos, marioState, marioAccelerate, 0, initialSpace)
         moveSprites(marioPos, marioSprites, marioState, marioFrame)
         drawScene(backgroundPics[levelNum], backPos, marioPos, marioSprites, marioFrame)
-        display.flip()
         fpsCounter.tick(60)
     return "menu"
 

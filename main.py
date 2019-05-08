@@ -22,7 +22,7 @@ page = "game"
 fpsCounter = time.Clock()
 marioPos = [0, 496, 3, 0, True, "Right"]  # X, Y, VX, VY, ONGROUND, Direction
 marioFrame = [0,0]
-marioAccelerate = 0.5
+marioAccelerate = 0.2
 backPos = 0  # Position of the background (as list because mutability)
 marioState = 0  # 0 is small, 1 is big mario
 levelNum = 0  # Using 0 as level 1 since indexes start at 0
@@ -30,6 +30,7 @@ jumpFrames = 0 # Checking frames that user has been jumping for
 marioSpriteNames = ["smallmariojump" , "bigmariojump" , "bigmariocrouch" , "smallmariodead" , "bigmariochange"]
 isAnimating = False  # Boolean to see if we need to pause the screen and animate mario
 isFalling = False # Boolean to see if the user has let go of the jump button
+inGround=False # Boolean to see if mario falls into the abyss
 
 # Declaring Rects
 
@@ -135,12 +136,13 @@ def checkMovement(mario, marioState, acclerate, rectLists, pressSpace):
     mario[Y] += marioPos[VY]  # Add the y movement value
     if mario[Y] < 311:
         isFalling = True
-    if mario[Y]>=floor:
+    if mario[Y]>=floor and not inGround:
         mario[Y]=floor # stay on the ground
         mario[VY]=0 # stop falling
         mario[ONGROUND]=True
-    if mario[Y]==floor and screen.get_at((int(mario[X]).int(mario[Y])))==SKYBLUE:
-        mario[Y]-=10
+    if mario[Y]==floor and screen.get_at((int(mario[X]),int(mario[Y]+marioOffset)))==SKYBLUE and screen.get_at((int(mario[X]+42),int(mario[Y]+marioOffset)))==SKYBLUE:
+        inGround=True
+        mario[ONGROUND]=True
     marioPos[VY] += gravity # apply gravity
 
 

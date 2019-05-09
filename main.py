@@ -20,7 +20,7 @@ SKYBLUE = (107, 140, 255)
 
 page = "loading"
 fpsCounter = time.Clock()
-marioPos = [0, 496, 3, 0, True, "Right", 0, False, 0]  # X, Y, VX, VY, onGround, direction, jumpFrames, inGround, state
+marioPos = [0, 496, 3, 0, True, "Right", 0, False, 0,False]  # X, Y, VX, VY, onGround, direction, jumpFrames, inGround, state, isCrouch
     # onGround: Boolrean to see fi mario is on a solid ground
     # jumpFrames: Variable to keep track of frames user has held space for
     # inGround: Boolean to see if mario has fallen through the floor
@@ -74,7 +74,7 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList):
 
 
 def moveSprites(mario, marioPic, frame):
-    VX, STATE = 2, 8
+    VX, STATE, ISCROUCH = 2, 8, 9
     if mario[4]:
         frame[0] = 0 + mario[STATE]
         if frame[1] < 3.8:
@@ -85,6 +85,9 @@ def moveSprites(mario, marioPic, frame):
             frame[1] = 3.9
         if mario[VX] == 0:
             frame[1] = 0
+          
+    elif mario [ISCROUCH]:
+        frame[0],frame[1] = 2, 2 
     else:
         frame[0],frame[1] = 2, 0+ mario[STATE]
 
@@ -92,7 +95,7 @@ def moveSprites(mario, marioPic, frame):
 def checkMovement(mario, acclerate, rectLists, pressSpace):
     """Function to move mario and the background (all rects too as a result)"""
     keys=key.get_pressed()
-    X, Y, VX, VY, ONGROUND, DIR, JUMPFRAMES, INGROUND, STATE = 0, 1, 2, 3, 4, 5, 6, 7, 8
+    X, Y, VX, VY, ONGROUND, DIR, JUMPFRAMES, INGROUND, STATE, ISCROUCH = 0, 1, 2, 3, 4, 5, 6, 7, 8,9
     global isFalling
     moving = False
     # Walking logic
@@ -108,6 +111,9 @@ def checkMovement(mario, acclerate, rectLists, pressSpace):
         walkMario(mario, rectLists, "Right")
         moving = True
         mario[DIR] = "Right"
+    if keys[K_s] and mario[STATE]==1:
+        mario[ISCROUCH]=True
+        
     if moving: # Accelerate if there is input
         if mario[ONGROUND]:
             mario[VX] += acclerate
@@ -201,6 +207,8 @@ def game():
             if evnt.type == KEYUP:
                 if evnt.key == K_SPACE:
                     isFalling = True
+                if evnt.key== K_s:
+                    marioPos[9]=False
         if key.get_pressed()[27]: running = False
         rectList = [brickList]
         checkMovement(marioPos, marioAccelerate, 0, initialSpace)

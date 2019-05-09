@@ -1,8 +1,8 @@
 from pygame import *
 from random import *
-from os import *
+import os
 # Starting up pygame and necessary components
-environ['SDL_VIDEO_CENTERED'] = '1'
+os.environ['SDL_VIDEO_CENTERED'] = '1'
 init()
 size = width, height = 800, 600
 screen = display.set_mode(size)
@@ -18,7 +18,7 @@ SKYBLUE = (107, 140, 255)
 
 # Declaring Variables
 
-page = "game"
+page = "loading"
 fpsCounter = time.Clock()
 marioPos = [0, 496, 3, 0, True, "Right", 0, False, 0]  # X, Y, VX, VY, onGround, direction, jumpFrames, inGround, state
     # onGround: Boolrean to see fi mario is on a solid ground
@@ -56,21 +56,24 @@ for subList in range(len(marioSprites)):
             marioSprites[subList][pic] = transform.scale(marioSprites[subList][pic], (42, 42))
         else:
             marioSprites[subList][pic] = transform.scale(marioSprites[subList][pic], (42, 84))
-            
+
 # Declaring game functions
 
-def drawScene(background, backX, mario, marioPic, marioFrame):
+def drawScene(background, backX, mario, marioPic, marioFrame, rectList):
     """Function to draw the background, mario, enemies, and all objects"""
     screen.fill(BLACK)
     screen.blit(background, (backX, 0))
     marioShow = marioPic[marioFrame[0]][int(marioFrame[1])]
     if mario[5] == "Left":
         marioShow = transform.flip(marioShow, True, False)
+    for list in rectList:
+        for brick in list:
+            draw.rect(screen,GREEN,brick)
     screen.blit(marioShow, (mario[0], mario[1]))
     display.flip()
 
 
-def moveSprites(mario,marioSprite,frame):
+def moveSprites(mario, marioPic, frame):
     VX, STATE = 2, 8
     if mario[4]:
         frame[0] = 0 + mario[STATE]
@@ -109,7 +112,7 @@ def checkMovement(mario, acclerate, rectLists, pressSpace):
         if mario[ONGROUND]:
             mario[VX] += acclerate
         else:
-            mario [VX] += acclerate/4 # Slow down movement when midair
+            mario[VX] += acclerate/4 # Slow down movement when midair
     elif mario[VX] != 0: # Move and decelerate if there is no input
         if mario[DIR] == "Right":
             walkMario(mario, rectLists, "Right")
@@ -117,7 +120,6 @@ def checkMovement(mario, acclerate, rectLists, pressSpace):
             walkMario(mario, rectLists, "Left")
         if mario[ONGROUND]: # Don't decelerate mid air
             mario[VX] -= acclerate
-            
     # Max and min acceleration
     if mario[VX] > 5:
         mario[VX] = 5
@@ -144,7 +146,8 @@ def checkMovement(mario, acclerate, rectLists, pressSpace):
         mario[Y]=floor # stay on the ground
         mario[VY]=0 # stop falling
         mario[ONGROUND]=True
-    if mario[Y]==floor and screen.get_at((int(mario[X]+4),int(mario[Y]+marioOffset)))==SKYBLUE and screen.get_at((int(mario[X]+38),int(mario[Y]+marioOffset)))==SKYBLUE:
+    if mario[Y]==floor and screen.get_at((int(mario[X]+4),int(mario[Y]+marioOffset)))==SKYBLUE and \
+       screen.get_at((int(mario[X]+38),int(mario[Y]+marioOffset)))==SKYBLUE:
         # Using colour collision to fall through holes
         mario[INGROUND] = True
         mario[ONGROUND] = False
@@ -170,10 +173,11 @@ def walkMario(mario, rectLists, direction):
 
 def loadFile(targetFile):
     outputList = []
-    file = open(targetFile,"r")
+    file = open(targetFile, "r")
     fileLines = file.readlines()
     for line in fileLines:
-        outputList.append(line)
+        line = line.split(",")
+        outputList.append(Rect(int(line[0]),int(line[1]),int(line[2]),int(line[3])))
     return outputList
 
 # Declaring main functions
@@ -198,9 +202,10 @@ def game():
                 if evnt.key == K_SPACE:
                     isFalling = True
         if key.get_pressed()[27]: running = False
+        rectList = [brickList]
         checkMovement(marioPos, marioAccelerate, 0, initialSpace)
         moveSprites(marioPos, marioSprites, marioFrame)
-        drawScene(backgroundPics[levelNum], backPos, marioPos, marioSprites, marioFrame)
+        drawScene(backgroundPics[levelNum], backPos, marioPos, marioSprites, marioFrame, rectList)
         fpsCounter.tick(60)
     return "menu"
 
@@ -211,14 +216,17 @@ def menu():
 
 def loading():
     running = True
+    global brickList
+    brickList = loadFile(str("data/level_" + str(levelNum+1) + "/bricks.txt"))
     while running:
         for evnt in event.get():          
             if evnt.type == QUIT:
                 running = False
-        if key.get_pressed()[27]: running = False
+        if key.get_pressed()[K_RETURN]: running = False
+        screen.blit(backgroundPics[0], (0,0))
         display.flip()
         fpsCounter.tick(60)
-    return "menu"
+    return "game"
 
 
 def instructions():
@@ -248,6 +256,8 @@ def credit():
 while page != "exit":
     if page == "menu":
         page = menu()
+    if page == "loading":
+        page = loading()
     if page == "game":
         page = game()
     if page == "instructions":

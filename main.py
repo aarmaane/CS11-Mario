@@ -85,11 +85,13 @@ def moveSprites(mario, marioPic, frame):
             frame[1] = 3.9
         if mario[VX] == 0:
             frame[1] = 0
-          
-    elif mario [ISCROUCH]:
-        frame[0],frame[1] = 2, 2 
+
     else:
         frame[0],frame[1] = 2, 0+ mario[STATE]
+          
+    if mario [ISCROUCH]:
+        frame[0],frame[1] = 2, 2 
+
 
 
 def checkMovement(mario, acclerate, rectLists, pressSpace):
@@ -99,13 +101,13 @@ def checkMovement(mario, acclerate, rectLists, pressSpace):
     global isFalling
     moving = False
     # Walking logic
-    if keys[K_a]: # Checking if mario is hitting left side of window
+    if keys[K_a] and not mario[ISCROUCH]: # Checking if mario is hitting left side of window
         if mario[DIR] != "Left":
             mario[VX] = 0  # Stop acceleration if changing direction
         walkMario(mario, rectLists, "Left")
         moving = True
         mario[DIR] = "Left"
-    if keys[K_d]:
+    if keys[K_d] and not mario[ISCROUCH]:
         if mario[DIR] != "Right":
             mario[VX] = 0 # Stop acceleration if changing direction
         walkMario(mario, rectLists, "Right")
@@ -113,6 +115,9 @@ def checkMovement(mario, acclerate, rectLists, pressSpace):
         mario[DIR] = "Right"
     if keys[K_s] and mario[STATE]==1:
         mario[ISCROUCH]=True
+    if mario[STATE]==0 and mario[ISCROUCH]:
+        mario[ISCROUCH]=False 
+        
         
     if moving: # Accelerate if there is input
         if mario[ONGROUND]:

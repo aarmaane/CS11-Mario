@@ -208,6 +208,7 @@ def loadFile(targetFile):
     file = open(targetFile, "r")
     fileLines = file.readlines()
     for line in fileLines:
+        line = line.strip()
         line = line.split(",")
         outputList.append([int(line[0]),int(line[1]),int(line[2]),int(line[3])])
     return outputList

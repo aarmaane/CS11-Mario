@@ -66,10 +66,10 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList):
     marioShow = marioPic[marioFrame[0]][int(marioFrame[1])]
     if mario[5] == "Left":
         marioShow = transform.flip(marioShow, True, False)
-    #for list in rectList:
-    #    for brick in list:
-    #        brickRect = Rect (brick[0], brick[1], brick[2], brick[3])
-    #        draw.rect(screen,GREEN,brickRect)
+    for list in rectList:
+        for brick in list:
+            brickRect = Rect (brick[0], brick[1], brick[2], brick[3])
+            draw.rect(screen,GREEN,brickRect)
     screen.blit(marioShow, (mario[0], mario[1]))
     display.flip()
 
@@ -209,7 +209,7 @@ def loadFile(targetFile):
     file = open(targetFile, "r")
     fileLines = file.readlines()
     for line in fileLines:
-        line = line.strip()
+        line = line.strip("\n")
         line = line.split(",")
         outputList.append([int(line[0]),int(line[1]),int(line[2]),int(line[3])])
     return outputList

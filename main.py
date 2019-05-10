@@ -196,9 +196,10 @@ def checkCollide(mario, rectLists):
     for list in rectLists:
         for brick in list:
             brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
-            if marioRect.colliderect(brickRect):
-                mario[X] = brickRect.x - 42
-                mario[VX] = 0
+            if brickRect.colliderect(marioRect):
+                if brickRect.collidepoint((marioRect.x+marioRect.width,marioRect.y)) and brickRect.collidepoint((marioRect.x+marioRect.width,marioRect.y+marioRect.height))
+                    mario[X] = brickRect.x - 42
+                    mario[VX] = 0
 
 
 # Declaring loading functions

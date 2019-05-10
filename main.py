@@ -31,7 +31,7 @@ backPos = 0  # Position of the background
 levelNum = 0  # Using 0 as level 1 since indexes start at 0
 jumpFrames = 0 # Checking frames that user has been jumping for
 isAnimating = False  # Boolean to see if we need to pause the screen and animate mario
-
+RECTFINDER = [0,0] #DELETE THIS LATER
 
 # Declaring Rects
 
@@ -66,9 +66,10 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList):
     marioShow = marioPic[marioFrame[0]][int(marioFrame[1])]
     if mario[5] == "Left":
         marioShow = transform.flip(marioShow, True, False)
-    for list in rectList:
-        for brick in list:
-            draw.rect(screen,GREEN,brick)
+    #for list in rectList:
+    #    for brick in list:
+    #        brickRect = Rect (brick[0], brick[1], brick[2], brick[3])
+    #        draw.rect(screen,GREEN,brickRect)
     screen.blit(marioShow, (mario[0], mario[1]))
     display.flip()
 
@@ -85,10 +86,8 @@ def moveSprites(mario, marioPic, frame):
             frame[1] = 3.9
         if mario[VX] == 0:
             frame[1] = 0
-
     else:
         frame[0],frame[1] = 2, 0+ mario[STATE]
-          
     if mario [ISCROUCH]:
         frame[0],frame[1] = 2, 2 
 
@@ -97,7 +96,7 @@ def moveSprites(mario, marioPic, frame):
 def checkMovement(mario, acclerate, rectLists, pressSpace):
     """Function to move mario and the background (all rects too as a result)"""
     keys=key.get_pressed()
-    X, Y, VX, VY, ONGROUND, DIR, JUMPFRAMES, INGROUND, STATE, ISCROUCH = 0, 1, 2, 3, 4, 5, 6, 7, 8,9
+    X, Y, VX, VY, ONGROUND, DIR, JUMPFRAMES, INGROUND, STATE, ISCROUCH = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
     global isFalling
     moving = False
     # Walking logic
@@ -116,9 +115,7 @@ def checkMovement(mario, acclerate, rectLists, pressSpace):
     if keys[K_s] and mario[STATE]==1:
         mario[ISCROUCH]=True
     if mario[STATE]==0 and mario[ISCROUCH]:
-        mario[ISCROUCH]=False 
-        
-        
+        mario[ISCROUCH]=False
     if moving: # Accelerate if there is input
         if mario[ONGROUND]:
             mario[VX] += acclerate
@@ -141,9 +138,11 @@ def checkMovement(mario, acclerate, rectLists, pressSpace):
     floor=496
     marioOffset = 42
     if mario[STATE]==1: # Change values if mario is big
-        floor=450
+        floor=452
         marioOffset = 88
-    if keys[K_SPACE]:
+    if mario[ISCROUCH]:
+        gravity = 0.9
+    if keys[K_SPACE] and not mario[ISCROUCH]:
         if mario[ONGROUND] and pressSpace: # checking if jumping is true
             mario[VY] -= 9.5 # jumping power
             mario[ONGROUND] = False
@@ -163,8 +162,6 @@ def checkMovement(mario, acclerate, rectLists, pressSpace):
         mario[INGROUND] = True
         mario[ONGROUND] = False
     marioPos[VY] += gravity # apply gravity
-    print(jumpFrames)
-
 
 def walkMario(mario, rectLists, direction):
     X, Y, VX, VY, ONGROUND, DIR = 0, 1, 2, 3, 4, 5
@@ -176,9 +173,33 @@ def walkMario(mario, rectLists, direction):
             mario[X] += mario[VX] # Adding the VX
         else:
             mario[X] = 368
+            #originalBack = backPos
             backPos -= mario[VX] # Subtracting the VX from the background
+            #difference = int(backPos -originalBack)
+            moveRects(rectLists, mario[VX])
     if mario[X] < 0:
         mario[X] = 0
+
+def moveRects(rectLists, VX):
+    global backPos
+    for subList in range(len(rectLists)):
+        for rect in range(len(rectLists[subList])):
+            rectLists[subList][rect][0] -= VX
+
+def checkCollide(mario, rectLists):
+    X, Y, VX, VY, ONGROUND, DIR, JUMPFRAMES, INGROUND, STATE, ISCROUCH = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+    height = 42
+    if mario[STATE] == 1:
+        height = 84
+    marioRect = Rect(mario[X], mario[Y], 38, height)
+    draw.rect(screen,GREEN,marioRect)
+    for list in rectLists:
+        for brick in list:
+            brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
+            if marioRect.colliderect(brickRect):
+                mario[X] = brickRect.x - 42
+                mario[VX] = 0
+
 
 # Declaring loading functions
 
@@ -188,7 +209,7 @@ def loadFile(targetFile):
     fileLines = file.readlines()
     for line in fileLines:
         line = line.split(",")
-        outputList.append(Rect(int(line[0]),int(line[1]),int(line[2]),int(line[3])))
+        outputList.append([int(line[0]),int(line[1]),int(line[2]),int(line[3])])
     return outputList
 
 # Declaring main functions
@@ -196,7 +217,8 @@ def loadFile(targetFile):
 def game():
     running = True
     while running:
-        global isFalling
+        global isFalling, RECTFINDER
+        mx, my = mouse.get_pos()
         initialSpace = False
         for evnt in event.get():
             if evnt.type == QUIT:
@@ -214,11 +236,15 @@ def game():
                     isFalling = True
                 if evnt.key== K_s:
                     marioPos[9]=False
+            if evnt.type == MOUSEBUTTONDOWN:
+                RECTFINDER = [mx,my]
         if key.get_pressed()[27]: running = False
         rectList = [brickList]
-        checkMovement(marioPos, marioAccelerate, 0, initialSpace)
+        checkMovement(marioPos, marioAccelerate, rectList, initialSpace)
         moveSprites(marioPos, marioSprites, marioFrame)
+        checkCollide(marioPos, rectList)
         drawScene(backgroundPics[levelNum], backPos, marioPos, marioSprites, marioFrame, rectList)
+        print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
         fpsCounter.tick(60)
     return "menu"
 

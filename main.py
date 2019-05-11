@@ -192,13 +192,24 @@ def checkCollide(mario, rectLists):
     if mario[STATE] == 1:
         height = 84
     marioRect = Rect(mario[X], mario[Y], 38, height)
-    draw.rect(screen,GREEN,marioRect)
     for list in rectLists:
         for brick in list:
             brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
             if brickRect.colliderect(marioRect):
-                if brickRect.collidepoint((marioRect.x+marioRect.width,marioRect.y)) and brickRect.collidepoint((marioRect.x+marioRect.width,marioRect.y+marioRect.height))
-                    mario[X] = brickRect.x - 42
+                if mario[Y] + height - mario[VY] <= brickRect.y:
+                    mario[ONGROUND] = True
+                    mario[VY] = -1
+                    mario[Y] = brickRect.y - height
+                elif mario[Y] - mario[VY] > brickRect.y + brickRect.height:
+                    print("BUMP")
+                    mario[VY] = 0
+                    mario[Y] = brickRect.y + brickRect.height
+                    mario[JUMPFRAMES] = 41
+                elif mario[X] < brickRect[X] and mario[DIR] == "Right":
+                    mario[X] = brickRect.x - marioRect.width
+                    mario[VX] = 0
+                elif mario[DIR] == "Left":
+                    mario[X] = brickRect.x + brickRect.width
                     mario[VX] = 0
 
 
@@ -246,7 +257,7 @@ def game():
         moveSprites(marioPos, marioSprites, marioFrame)
         checkCollide(marioPos, rectList)
         drawScene(backgroundPics[levelNum], backPos, marioPos, marioSprites, marioFrame, rectList)
-        print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
+        #print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
         fpsCounter.tick(60)
     return "menu"
 

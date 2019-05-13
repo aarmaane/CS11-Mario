@@ -66,10 +66,10 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList):
     marioShow = marioPic[marioFrame[0]][int(marioFrame[1])]
     if mario[5] == "Left":
         marioShow = transform.flip(marioShow, True, False)
-    for list in rectList:
-        for brick in list:
-            brickRect = Rect (brick[0], brick[1], brick[2], brick[3])
-            draw.rect(screen,GREEN,brickRect)
+    #for list in rectList:
+    #    for brick in list:
+    #        brickRect = Rect (brick[0], brick[1], brick[2], brick[3])
+    #        draw.rect(screen,GREEN,brickRect)
     screen.blit(marioShow, (mario[0], mario[1]))
     display.flip()
 
@@ -173,9 +173,7 @@ def walkMario(mario, rectLists, direction):
             mario[X] += mario[VX] # Adding the VX
         else:
             mario[X] = 368
-            #originalBack = backPos
             backPos -= mario[VX] # Subtracting the VX from the background
-            #difference = int(backPos -originalBack)
             moveRects(rectLists, mario[VX])
     if mario[X] < 0:
         mario[X] = 0
@@ -256,7 +254,7 @@ def game():
         moveSprites(marioPos, marioSprites, marioFrame)
         checkCollide(marioPos, rectList)
         drawScene(backgroundPics[levelNum], backPos, marioPos, marioSprites, marioFrame, rectList)
-        #print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
+        print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
         fpsCounter.tick(60)
     return "menu"
 

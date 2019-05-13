@@ -201,7 +201,6 @@ def checkCollide(mario, rectLists):
                     mario[VY] = 0
                     mario[Y] = brickRect.y - height
                 elif mario[Y] - mario[VY] > brickRect.y + brickRect.height:
-                    print("BUMP")
                     mario[VY] = 1
                     mario[Y] = brickRect.y + brickRect.height
                     mario[JUMPFRAMES] = 41

@@ -66,10 +66,10 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList):
     marioShow = marioPic[marioFrame[0]][int(marioFrame[1])]
     if mario[5] == "Left":
         marioShow = transform.flip(marioShow, True, False)
-    #for list in rectList:
-    #    for brick in list:
-    #        brickRect = Rect (brick[0], brick[1], brick[2], brick[3])
-    #        draw.rect(screen,GREEN,brickRect)
+    for list in rectList:
+        for brick in list:
+            brickRect = Rect (brick[0], brick[1], brick[2], brick[3])
+            draw.rect(screen,GREEN,brickRect)
     screen.blit(marioShow, (mario[0], mario[1]))
     display.flip()
 
@@ -198,11 +198,11 @@ def checkCollide(mario, rectLists):
                     mario[ONGROUND] = True
                     mario[VY] = 0
                     mario[Y] = brickRect.y - height
-                elif mario[Y] - mario[VY] > brickRect.y + brickRect.height:
+                elif mario[Y] - mario[VY] >= brickRect.y + brickRect.height:
                     mario[VY] = 1
                     mario[Y] = brickRect.y + brickRect.height
                     mario[JUMPFRAMES] = 41
-                elif mario[X] < brickRect[X] and mario[DIR] == "Right":
+                elif mario[X] <= brickRect[X] and mario[DIR] == "Right":
                     mario[X] = brickRect.x - marioRect.width
                     mario[VX] = 0
                 elif mario[DIR] == "Left":

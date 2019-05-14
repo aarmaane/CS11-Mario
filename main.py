@@ -149,15 +149,18 @@ def checkMovement(mario, acclerate, rectLists, pressSpace):
             mario[ONGROUND] = False
             isFalling = False
             mario[JUMPFRAMES] = 0
-        elif mario[JUMPFRAMES] < 41 and not isFalling: # Simulating higher jump with less gravity
+        elif mario[JUMPFRAMES] < 41 and not isFalling and not mario[ONPLATFORM]: # Simulating higher jump with less gravity
             gravity = 0.2
             mario[JUMPFRAMES] += 1
-    mario[Y] += marioPos[VY]  # Add the y movement value
+    mario[Y] += mario[VY]  # Add the y movement value
     if mario[Y]>=floor and not mario[INGROUND]: # Checking floor collision
         mario[Y]=floor # stay on the ground
         mario[VY]=0 # stop falling
         mario[ONGROUND]=True
         mario[ONPLATFORM] = False
+
+
+
     if mario[Y]==floor and screen.get_at((int(mario[X]+4),int(mario[Y]+marioOffset)))==SKYBLUE and \
        screen.get_at((int(mario[X]+38),int(mario[Y]+marioOffset)))==SKYBLUE:
         # Using colour collision to fall through holes
@@ -195,6 +198,7 @@ def checkCollide(mario, rectLists):
     for list in rectLists:
         for brick in list:
             brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
+            mario[ONPLATFORM]=False
             if brickRect.colliderect(marioRect):
                 if int(mario[Y]) + height - int(mario[VY]) <= brickRect.y:
                     mario[ONGROUND] = True

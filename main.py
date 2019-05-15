@@ -146,10 +146,10 @@ def checkMovement(mario, acclerate, rectLists, pressSpace):
     if mario[ISCROUCH]:
         gravity = 0.9
     print(mario[VY])
-    if mario[ONPLATFORM] and mario[VY] < 0:
+    if mario[ONPLATFORM] and mario[VY] <= gravity*2 and pressSpace:
         isFalling = False
         mario[ONPLATFORM] = False
-    if keys[K_SPACE] and not mario[ISCROUCH]:
+    if keys[K_SPACE] and not mario[ISCROUCH] and not mario[ONPLATFORM]:
         if mario[ONGROUND] and pressSpace: # checking if jumping is true
             mario[VY] -= 9.5 # jumping power
             mario[ONGROUND] = False

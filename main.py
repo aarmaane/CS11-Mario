@@ -101,13 +101,15 @@ def checkMovement(mario, acclerate, rectLists, pressSpace):
     global isFalling
     moving = False
     # Walking logic
-    if keys[K_a] and not mario[ISCROUCH]: # Checking if mario is hitting left side of window
+    if keys[K_a] and keys[K_d]:
+        mario[VX] = 0
+    elif keys[K_a] and not mario[ISCROUCH]: # Checking if mario is hitting left side of window
         if mario[DIR] != "Left":
             mario[VX] = 0  # Stop acceleration if changing direction
         walkMario(mario, rectLists, "Left")
         moving = True
         mario[DIR] = "Left"
-    if keys[K_d] and not mario[ISCROUCH]:
+    elif keys[K_d] and not mario[ISCROUCH]:
         if mario[DIR] != "Right":
             mario[VX] = 0 # Stop acceleration if changing direction
         walkMario(mario, rectLists, "Right")
@@ -143,24 +145,25 @@ def checkMovement(mario, acclerate, rectLists, pressSpace):
         marioOffset = 88
     if mario[ISCROUCH]:
         gravity = 0.9
+    print(mario[VY])
+    if mario[ONPLATFORM] and mario[VY] < 0:
+        isFalling = False
+        mario[ONPLATFORM] = False
     if keys[K_SPACE] and not mario[ISCROUCH]:
         if mario[ONGROUND] and pressSpace: # checking if jumping is true
             mario[VY] -= 9.5 # jumping power
             mario[ONGROUND] = False
-            isFalling = False
             mario[JUMPFRAMES] = 0
         elif mario[JUMPFRAMES] < 41 and not isFalling and not mario[ONPLATFORM]: # Simulating higher jump with less gravity
             gravity = 0.2
             mario[JUMPFRAMES] += 1
     mario[Y] += mario[VY]  # Add the y movement value
-    if mario[Y]>=floor and not mario[INGROUND]: # Checking floor collision
-        mario[Y]=floor # stay on the ground
-        mario[VY]=0 # stop falling
-        mario[ONGROUND]=True
+    if mario[Y] >= floor and not mario[INGROUND]: # Checking floor collision
+        mario[Y] = floor # stay on the ground
+        mario[VY] = 0 # stop falling
+        mario[ONGROUND] = True
         mario[ONPLATFORM] = False
-
-
-
+        isFalling = False
     if mario[Y]==floor and screen.get_at((int(mario[X]+4),int(mario[Y]+marioOffset)))==SKYBLUE and \
        screen.get_at((int(mario[X]+38),int(mario[Y]+marioOffset)))==SKYBLUE:
         # Using colour collision to fall through holes
@@ -190,6 +193,7 @@ def moveRects(rectLists, VX):
             rectLists[subList][rect][0] -= VX
 
 def checkCollide(mario, rectLists):
+    global isFalling
     X, Y, VX, VY, ONGROUND, DIR, JUMPFRAMES, INGROUND, STATE, ISCROUCH, ONPLATFORM = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
     height = 42
     if mario[STATE] == 1:
@@ -198,11 +202,11 @@ def checkCollide(mario, rectLists):
     for list in rectLists:
         for brick in list:
             brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
-            mario[ONPLATFORM]=False
             if brickRect.colliderect(marioRect):
                 if int(mario[Y]) + height - int(mario[VY]) <= brickRect.y:
                     mario[ONGROUND] = True
                     mario[ONPLATFORM] = True
+                    isFalling = True
                     mario[VY] = 0
                     mario[Y] = brickRect.y - height
                 elif mario[Y] - mario[VY] >= brickRect.y + brickRect.height:

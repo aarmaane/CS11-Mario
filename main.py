@@ -158,17 +158,17 @@ def checkMovement(mario, acclerate, rectLists, pressSpace):
             gravity = 0.2
             mario[JUMPFRAMES] += 1
     mario[Y] += mario[VY]  # Add the y movement value
-    if mario[Y] >= floor and not mario[INGROUND]: # Checking floor collision
+    if not mario[INGROUND] and mario[Y] >= floor and screen.get_at((int(mario[X]+4),int(mario[Y]+marioOffset)))==SKYBLUE and \
+       screen.get_at((int(mario[X]+38),int(mario[Y]+marioOffset)))==SKYBLUE:
+        # Using colour collision to fall through holes
+        mario[INGROUND] = True
+        mario[ONGROUND] = False
+    elif mario[Y] >= floor and not mario[INGROUND]: # Checking floor collision
         mario[Y] = floor # stay on the ground
         mario[VY] = 0 # stop falling
         mario[ONGROUND] = True
         mario[ONPLATFORM] = False
         isFalling = False
-    if mario[Y]==floor and screen.get_at((int(mario[X]+4),int(mario[Y]+marioOffset)))==SKYBLUE and \
-       screen.get_at((int(mario[X]+38),int(mario[Y]+marioOffset)))==SKYBLUE:
-        # Using colour collision to fall through holes
-        mario[INGROUND] = True
-        mario[ONGROUND] = False
     marioPos[VY] += gravity # apply gravity
 
 def walkMario(mario, rectLists, direction):

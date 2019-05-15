@@ -26,7 +26,7 @@ marioPos = [0, 496, 0, 0, True, "Right", 0, False, 0, False, False]  # X, Y, VX,
     # inGround: Boolean to see if mario has fallen through the floor
     # state: 0 for small mario, 1 for big mario
     # onPlatform: Boolean to see if mario's last position was on a platform
-marioFrame = [0, 0]
+marioFrame = [0, 0] # List to keep track of mario's sprites
 marioAccelerate = 0.2
 backPos = 0  # Position of the background
 levelNum = 0  # Using 0 as level 1 since indexes start at 0
@@ -101,7 +101,6 @@ def checkMovement(mario, acclerate, rectLists, pressSpace):
     global isFalling
     moving = False
     # Walking logic
-
     if keys[K_a] and keys[K_d]:
         mario[VX] = 0
     elif keys[K_a] and not mario[ISCROUCH]: # Checking if mario is hitting left side of window
@@ -163,18 +162,18 @@ def checkMovement(mario, acclerate, rectLists, pressSpace):
 
     mario[Y] += mario[VY]  # Add the y movement value
 
-    if mario[Y] >= floor and not mario[INGROUND]: # Checking floor collision
+    if not mario[INGROUND] and mario[Y]>=floor and screen.get_at((int(mario[X]+4),int(mario[Y]+marioOffset)))==SKYBLUE and \
+       screen.get_at((int(mario[X]+38),int(mario[Y]+marioOffset)))==SKYBLUE:
+        # Using colour collision to fall through holes
+        mario[INGROUND] = True
+        mario[ONGROUND] = False
+    elif mario[Y] >= floor and not mario[INGROUND]: # Checking floor collision
         mario[Y] = floor # stay on the ground
         mario[VY] = 0 # stop falling
         mario[ONGROUND] = True
         mario[ONPLATFORM] = False
         isFalling = False
 
-    if mario[Y]==floor and screen.get_at((int(mario[X]+4),int(mario[Y]+marioOffset)))==SKYBLUE and \
-       screen.get_at((int(mario[X]+38),int(mario[Y]+marioOffset)))==SKYBLUE:
-        # Using colour collision to fall through holes
-        mario[INGROUND] = True
-        mario[ONGROUND] = False
     marioPos[VY] += gravity # apply gravity
 
 

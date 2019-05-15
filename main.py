@@ -20,7 +20,7 @@ SKYBLUE = (107, 140, 255)
 
 page = "loading"
 fpsCounter = time.Clock()
-marioPos = [0, 496, 3, 0, True, "Right", 0, False, 0, False, False]  # X, Y, VX, VY, onGround, direction, jumpFrames, inGround, state, isCrouch, onPlatform
+marioPos = [0, 496, 0, 0, True, "Right", 0, False, 0, False, False]  # X, Y, VX, VY, onGround, direction, jumpFrames, inGround, state, isCrouch, onPlatform
     # onGround: Boolrean to see fi mario is on a solid ground
     # jumpFrames: Variable to keep track of frames user has held space for
     # inGround: Boolean to see if mario has fallen through the floor
@@ -67,10 +67,10 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList):
     marioShow = marioPic[marioFrame[0]][int(marioFrame[1])]
     if mario[5] == "Left":
         marioShow = transform.flip(marioShow, True, False)
-    for list in rectList:
-        for brick in list:
-            brickRect = Rect (brick[0], brick[1], brick[2], brick[3])
-            draw.rect(screen,GREEN,brickRect)
+    #for list in rectList:
+    #    for brick in list:
+    #        brickRect = Rect (brick[0], brick[1], brick[2], brick[3])
+    #        draw.rect(screen,GREEN,brickRect)
     screen.blit(marioShow, (mario[0], mario[1]))
     display.flip()
 
@@ -80,7 +80,7 @@ def moveSprites(mario, marioPic, frame):
     if mario[4]:
         frame[0] = 0 + mario[STATE]
         if frame[1] < 3.8:
-            frame[1] +=  mario[VX]**2/100 + 0.2
+            frame[1] += mario[VX]**2/100 + 0.2
         else:
             frame[1] = 1
         if frame[1] > 3.9:

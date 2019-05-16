@@ -66,10 +66,11 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList):
     marioShow = marioPic[marioFrame[0]][int(marioFrame[1])]
     if mario[5] == "Left":
         marioShow = transform.flip(marioShow, True, False)
-   # for list in rectList:
-    #    for brick in list:
-     #       brickRect = Rect (brick[0], brick[1], brick[2], brick[3])
-     #       draw.rect(screen,GREEN,brickRect)
+    for list in rectList:
+        for brick in list:
+            brickRect = Rect (brick[0], brick[1], brick[2], brick[3])
+            draw.rect(screen,GREEN,brickRect)
+
     screen.blit(marioShow, (mario[0], mario[1]))
     display.flip()
 
@@ -272,7 +273,7 @@ def game():
             if evnt.type == MOUSEBUTTONDOWN:
                 RECTFINDER = [mx,my]
         if key.get_pressed()[27]: running = False
-        rectList = [brickList]
+        rectList = [brickList, interactBricks,questionBricks]
         checkMovement(marioPos, marioAccelerate, rectList, initialSpace)
         moveSprites(marioPos, marioSprites, marioFrame)
         checkCollide(marioPos, rectList)
@@ -288,9 +289,9 @@ def menu():
 
 def loading():
     running = True
-    global brickList
+    global brickList,interactBricks,questionBricks
     brickList = loadFile(str("data/level_" + str(levelNum+1) + "/bricks.txt"))
-    interactBrickList = loadFile(str("data/level_" + str(levelNum+1) + "/interactBricks.txt"))
+    interactBricks = loadFile(str("data/level_" + str(levelNum+1) + "/interactBricks.txt"))
     questionBricks = loadFile(str("data/level_" + str(levelNum+1) + "/questionBricks.txt"))
     while running:
         for evnt in event.get():          

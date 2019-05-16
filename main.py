@@ -30,7 +30,6 @@ marioFrame = [0, 0] # List to keep track of mario's sprites
 marioAccelerate = 0.2
 backPos = 0  # Position of the background
 levelNum = 0  # Using 0 as level 1 since indexes start at 0
-jumpFrames = 0 # Checking frames that user has been jumping for
 isAnimating = False  # Boolean to see if we need to pause the screen and animate mario
 RECTFINDER = [0,0] #DELETE THIS LATER
 
@@ -226,6 +225,9 @@ def checkCollide(mario, rectLists):
                     mario[X] = brickRect.x + brickRect.width
                     mario[VX] = 0
 
+def cycleList(rectLists):
+    global backPos
+
 
 
 # Declaring loading functions
@@ -237,7 +239,8 @@ def loadFile(targetFile):
     for line in fileLines:
         line = line.strip("\n")
         line = line.split(",")
-        outputList.append([int(line[0]),int(line[1]),int(line[2]),int(line[3])])
+        listLength = len(line)
+        outputList.append([int(line[index]) for index in range(listLength)])
     return outputList
 
 # Declaring main functions
@@ -287,6 +290,8 @@ def loading():
     running = True
     global brickList
     brickList = loadFile(str("data/level_" + str(levelNum+1) + "/bricks.txt"))
+    interactBrickList = loadFile(str("data/level_" + str(levelNum+1) + "/interactBricks.txt"))
+    questionBricks = loadFile(str("data/level_" + str(levelNum+1) + "/questionBricks.txt"))
     while running:
         for evnt in event.get():          
             if evnt.type == QUIT:

@@ -67,10 +67,10 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList):
     marioShow = marioPic[marioFrame[0]][int(marioFrame[1])]
     if mario[5] == "Left":
         marioShow = transform.flip(marioShow, True, False)
-    for list in rectList:
-        for brick in list:
-            brickRect = Rect (brick[0], brick[1], brick[2], brick[3])
-            draw.rect(screen,GREEN,brickRect)
+   # for list in rectList:
+    #    for brick in list:
+     #       brickRect = Rect (brick[0], brick[1], brick[2], brick[3])
+     #       draw.rect(screen,GREEN,brickRect)
     screen.blit(marioShow, (mario[0], mario[1]))
     display.flip()
 

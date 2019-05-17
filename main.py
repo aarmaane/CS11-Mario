@@ -47,6 +47,12 @@ marioSprites = [[image.load("assets/sprites/mario/smallmario"+str(i)+".png").con
              [image.load("assets/sprites/mario/bigmario"+str(i)+".png").convert_alpha() for i in range (1,5)],
                 [image.load("assets/sprites/mario/"+str(i)+".png").convert_alpha() for i in marioSpriteNames]]
 
+brickSprites=[[image.load("assets/sprites/bricks/question"+str(1)+".png").convert_alpha() for i in range (1,4)],
+              [image.load("assets/sprites/bricks/brick.png").convert_alpha(),
+               image.load("assets/sprites/bricks/blockidle.png").convert_alpha()]]
+
+
+
 # Resizing Pictures
 backgroundPics = [transform.scale(pic,(9086,600)) for pic in backgroundPics]
 

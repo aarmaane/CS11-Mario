@@ -49,7 +49,7 @@ marioSprites = [[image.load("assets/sprites/mario/smallmario"+str(i)+".png").con
                 [image.load("assets/sprites/mario/"+str(i)+".png").convert_alpha() for i in marioSpriteNames]]
 
 brickSprites=[[image.load("assets/sprites/bricks/question"+str(1)+".png").convert_alpha() for i in range (1,4)],
-              [image.load("assets/sprites/bricks/brick.png").convert_alpha(),
+              [image.load("assets/sprites/bricks/brick.gif").convert_alpha(),
                image.load("assets/sprites/bricks/blockidle.png").convert_alpha()]]
 
 
@@ -64,9 +64,13 @@ for subList in range(len(marioSprites)):
         else:
             marioSprites[subList][pic] = transform.scale(marioSprites[subList][pic], (42, 84))
 
+for subList in range(len(brickSprites)):
+    for pic in range(len(brickSprites[subList])):
+        brickSprites[subList][pic] = transform.scale(brickSprites[subList][pic], (41,41))
+
 # Declaring game functions
 
-def drawScene(background, backX, mario, marioPic, marioFrame, rectList):
+def drawScene(background, backX, mario, marioPic, marioFrame, rectList, brickPic):
     """Function to draw the background, mario, enemies, and all objects"""
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
@@ -79,7 +83,7 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList):
         for brick in list:
             brickRect = Rect (brick[0], brick[1], brick[2], brick[3])
             if list == interactBricks:
-                draw.rect(screen,RED,brickRect)
+                screen.blit(brickPic[1][0],brickRect)
             elif list == questionBricks:
                 draw.rect(screen, BLUE, brickRect)
             else:
@@ -296,7 +300,7 @@ def game():
         checkMovement(marioPos, marioStats, marioAccelerate, rectList, initialSpace)
         moveSprites(marioPos, marioStats, marioSprites, marioFrame)
         checkCollide(marioPos, marioStats, rectList)
-        drawScene(backgroundPics[levelNum], backPos, marioPos, marioSprites, marioFrame, rectList)
+        drawScene(backgroundPics[levelNum], backPos, marioPos, marioSprites, marioFrame, rectList, brickSprites)
         print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
         fpsCounter.tick(60)
     return "menu"

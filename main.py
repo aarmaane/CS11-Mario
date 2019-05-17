@@ -70,7 +70,6 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList):
         for brick in list:
             brickRect = Rect (brick[0], brick[1], brick[2], brick[3])
             draw.rect(screen,GREEN,brickRect)
-
     screen.blit(marioShow, (mario[0], mario[1]))
     display.flip()
 
@@ -204,10 +203,10 @@ def checkCollide(mario, rectLists):
     height = 42
     if mario[STATE] == 1:
         height = 84
-    marioRect = Rect(mario[X], mario[Y], 38, height)
     for list in rectLists:
         for brick in list:
             brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
+            marioRect = Rect(mario[X] + 2, mario[Y], 38 - 2, height) # Mario's hit box (and making it a little smaller)
             if brickRect.colliderect(marioRect):
                 if int(mario[Y]) + height - int(mario[VY]) <= brickRect.y:
                     mario[ONGROUND] = True
@@ -216,19 +215,20 @@ def checkCollide(mario, rectLists):
                     mario[VY] = 0
                     mario[Y] = brickRect.y - height
                 elif mario[Y] - mario[VY] >= brickRect.y + brickRect.height:
+                    mario[Y] -= mario[VY]
                     mario[VY] = 1
                     mario[Y] = brickRect.y + brickRect.height
                     mario[JUMPFRAMES] = 41
-                elif mario[X] <= brickRect[X] and mario[DIR] == "Right":
-                    mario[X] = brickRect.x - marioRect.width
+                elif mario[X] >= brickRect[X]: # and mario[DIR] == "Left":
+                    mario[X] = brickRect.x + brickRect.width - 2
                     mario[VX] = 0
-                elif mario[X] >= brickRect[X] and mario[DIR] == "Left":
-                    mario[X] = brickRect.x + brickRect.width
+                elif mario[X] <= brickRect[X]: # and mario[DIR] == "Right":
+                    mario[X] = brickRect.x - 38
                     mario[VX] = 0
+
 
 def cycleList(rectLists):
     global backPos
-
 
 
 # Declaring loading functions
@@ -278,7 +278,7 @@ def game():
         moveSprites(marioPos, marioSprites, marioFrame)
         checkCollide(marioPos, rectList)
         drawScene(backgroundPics[levelNum], backPos, marioPos, marioSprites, marioFrame, rectList)
-        print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
+        #print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
         fpsCounter.tick(60)
     return "menu"
 
@@ -289,7 +289,9 @@ def menu():
 
 def loading():
     running = True
-    global brickList,interactBricks,questionBricks
+    global brickList, interactBricks, questionBricks, marioPos, backPos
+    marioPos = [0, 496, 0, 0, True, "Right", 0, False, 0, False, False]
+    backPos = 0
     brickList = loadFile(str("data/level_" + str(levelNum+1) + "/bricks.txt"))
     interactBricks = loadFile(str("data/level_" + str(levelNum+1) + "/interactBricks.txt"))
     questionBricks = loadFile(str("data/level_" + str(levelNum+1) + "/questionBricks.txt"))

@@ -68,15 +68,22 @@ for subList in range(len(marioSprites)):
 
 def drawScene(background, backX, mario, marioPic, marioFrame, rectList):
     """Function to draw the background, mario, enemies, and all objects"""
+    X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
+    ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
     screen.fill(BLACK)
     screen.blit(background, (backX, 0))
     marioShow = marioPic[marioFrame[0]][int(marioFrame[1])]
-    if mario[5] == "Left":
+    if mario[DIR] == "Left":
         marioShow = transform.flip(marioShow, True, False)
     for list in rectList:
         for brick in list:
             brickRect = Rect (brick[0], brick[1], brick[2], brick[3])
-            draw.rect(screen,GREEN,brickRect)
+            if list == interactBricks:
+                draw.rect(screen,RED,brickRect)
+            elif list == questionBricks:
+                draw.rect(screen, BLUE, brickRect)
+            else:
+                draw.rect(screen,GREEN,brickRect)
     screen.blit(marioShow, (mario[0], mario[1]))
     display.flip()
 

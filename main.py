@@ -20,12 +20,13 @@ SKYBLUE = (107, 140, 255)
 
 page = "loading"
 fpsCounter = time.Clock()
-marioPos = [0, 496, 0, 0, True, "Right", 0, False, 0, False, False]  # X, Y, VX, VY, onGround, direction, jumpFrames, inGround, state, isCrouch, onPlatform
+marioPos = [0, 496, 0, 0, "Right", 0]  # X, Y, VX, VY, direction, state
     # onGround: Boolrean to see fi mario is on a solid ground
     # jumpFrames: Variable to keep track of frames user has held space for
     # inGround: Boolean to see if mario has fallen through the floor
     # state: 0 for small mario, 1 for big mario
     # onPlatform: Boolean to see if mario's last position was on a platform
+marioStats = [True, 0, False, False, False, False] # onGround, jumpFrames, inGround, isCrouch, onPlatform, isFalling
 marioFrame = [0, 0] # List to keep track of mario's sprites
 marioAccelerate = 0.2
 backPos = 0  # Position of the background
@@ -80,9 +81,11 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList):
     display.flip()
 
 
-def moveSprites(mario, marioPic, frame):
-    VX, STATE, ISCROUCH = 2, 8, 9
-    if mario[4]:
+def moveSprites(mario, marioInfo, marioPic, frame):
+    X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
+    ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
+    if marioInfo[ONGROUND]:
+        print(mario[STATE])
         frame[0] = 0 + mario[STATE]
         if frame[1] < 3.8:
             frame[1] += mario[VX]**2/100 + 0.2
@@ -93,39 +96,39 @@ def moveSprites(mario, marioPic, frame):
         if mario[VX] == 0:
             frame[1] = 0
     else:
-        frame[0],frame[1] = 2, 0+ mario[STATE]
-    if mario [ISCROUCH]:
+        frame[0],frame[1] = 2, 0 + mario[STATE]
+    if marioInfo[ISCROUCH]:
         frame[0],frame[1] = 2, 2 
 
 
 
-def checkMovement(mario, acclerate, rectLists, pressSpace):
+def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace):
     """Function to move mario and the background (all rects too as a result)"""
     keys=key.get_pressed()
-    X, Y, VX, VY, ONGROUND, DIR, JUMPFRAMES, INGROUND, STATE, ISCROUCH, ONPLATFORM = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
-    global isFalling
+    X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
+    ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
     moving = False
     # Walking logic
     if keys[K_a] and keys[K_d]:
         mario[VX] = 0
-    elif keys[K_a] and not mario[ISCROUCH]: # Checking if mario is hitting left side of window
+    elif keys[K_a] and not marioInfo[ISCROUCH]: # Checking if mario is hitting left side of window
         if mario[DIR] != "Left":
             mario[VX] = 0  # Stop acceleration if changing direction
         walkMario(mario, rectLists, "Left")
         moving = True
         mario[DIR] = "Left"
-    elif keys[K_d] and not mario[ISCROUCH]:
+    elif keys[K_d] and not marioInfo[ISCROUCH]:
         if mario[DIR] != "Right":
             mario[VX] = 0 # Stop acceleration if changing direction
         walkMario(mario, rectLists, "Right")
         moving = True
         mario[DIR] = "Right"
     if keys[K_s] and mario[STATE]==1:
-        mario[ISCROUCH]=True
-    if mario[STATE]==0 and mario[ISCROUCH]:
-        mario[ISCROUCH]=False
+        marioInfo[ISCROUCH]=True
+    if mario[STATE]==0 and marioInfo[ISCROUCH]:
+        marioInfo[ISCROUCH]=False
     if moving: # Accelerate if there is input
-        if mario[ONGROUND]:
+        if marioInfo[ONGROUND]:
             mario[VX] += acclerate
         else:
             mario[VX] += acclerate/4 # Slow down movement when midair
@@ -134,7 +137,7 @@ def checkMovement(mario, acclerate, rectLists, pressSpace):
             walkMario(mario, rectLists, "Right")
         if mario[DIR] == "Left":
             walkMario(mario, rectLists, "Left")
-        if mario[ONGROUND]: # Don't decelerate mid air
+        if marioInfo[ONGROUND]: # Don't decelerate mid air
             mario[VX] -= acclerate
 
     # Max and min acceleration
@@ -149,41 +152,41 @@ def checkMovement(mario, acclerate, rectLists, pressSpace):
     if mario[STATE]==1: # Change values if mario is big
         floor=452
         marioOffset = 88
-    if mario[ISCROUCH]:
+    if marioInfo[ISCROUCH]:
         gravity = 0.9
 
-    if mario[ONPLATFORM] and mario[VY] <= gravity*2 and pressSpace:
-        isFalling = False
-        mario[ONPLATFORM] = False
+    if marioInfo[ONPLATFORM] and mario[VY] <= gravity*2 and pressSpace:
+        marioInfo[ISFALLING] = False
+        marioInfo[ONPLATFORM] = False
 
-    if keys[K_SPACE] and not mario[ISCROUCH] and not mario[ONPLATFORM]:
-        if mario[ONGROUND] and pressSpace: # checking if jumping is true
+    if keys[K_SPACE] and not marioInfo[ISCROUCH] and not marioInfo[ONPLATFORM]:
+        if marioInfo[ONGROUND] and pressSpace: # checking if jumping is true
             mario[VY] -= 9.5 # jumping power
-            mario[ONGROUND] = False
-            mario[JUMPFRAMES] = 0
-        elif mario[JUMPFRAMES] < 41 and not isFalling and not mario[ONPLATFORM]: # Simulating higher jump with less gravity
+            marioInfo[ONGROUND] = False
+            marioInfo[JUMPFRAMES] = 0
+        elif marioInfo[JUMPFRAMES] < 41 and not marioInfo[ISFALLING] and not marioInfo[ONPLATFORM]: # Simulating higher jump with less gravity
             gravity = 0.2
-            mario[JUMPFRAMES] += 1
+            marioInfo[JUMPFRAMES] += 1
 
     mario[Y] += mario[VY]  # Add the y movement value
 
-    if not mario[INGROUND] and mario[Y]>=floor and screen.get_at((int(mario[X]+4),int(mario[Y]+marioOffset)))==SKYBLUE and \
+    if not marioInfo[INGROUND] and mario[Y]>=floor and screen.get_at((int(mario[X]+4),int(mario[Y]+marioOffset)))==SKYBLUE and \
        screen.get_at((int(mario[X]+38),int(mario[Y]+marioOffset)))==SKYBLUE:
         # Using colour collision to fall through holes
-        mario[INGROUND] = True
-        mario[ONGROUND] = False
-    elif mario[Y] >= floor and not mario[INGROUND]: # Checking floor collision
+        marioInfo[INGROUND] = True
+        marioInfo[ONGROUND] = False
+    elif mario[Y] >= floor and not marioInfo[INGROUND]: # Checking floor collision
         mario[Y] = floor # stay on the ground
         mario[VY] = 0 # stop falling
-        mario[ONGROUND] = True
-        mario[ONPLATFORM] = False
-        isFalling = False
+        marioInfo[ONGROUND] = True
+        marioInfo[ONPLATFORM] = False
+        marioInfo[ISFALLING] = False
 
     marioPos[VY] += gravity # apply gravity
 
 
 def walkMario(mario, rectLists, direction):
-    X, Y, VX, VY, ONGROUND, DIR = 0, 1, 2, 3, 4, 5
+    X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     global backPos
     if direction == "Left" and mario[X] != 1:
         mario[X] -= mario[VX]  # Subtracting the VX
@@ -203,9 +206,9 @@ def moveRects(rectLists, VX):
         for rect in range(len(rectLists[subList])):
             rectLists[subList][rect][0] -= VX
 
-def checkCollide(mario, rectLists):
-    global isFalling
-    X, Y, VX, VY, ONGROUND, DIR, JUMPFRAMES, INGROUND, STATE, ISCROUCH, ONPLATFORM = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+def checkCollide(mario, marioInfo, rectLists):
+    X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
+    ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
     height = 42
     if mario[STATE] == 1:
         height = 84
@@ -215,16 +218,16 @@ def checkCollide(mario, rectLists):
             marioRect = Rect(mario[X] + 2, mario[Y], 38 - 2, height) # Mario's hit box (and making it a little smaller)
             if brickRect.colliderect(marioRect):
                 if int(mario[Y]) + height - int(mario[VY]) <= brickRect.y:
-                    mario[ONGROUND] = True
-                    mario[ONPLATFORM] = True
-                    isFalling = True
+                    marioInfo[ONGROUND] = True
+                    marioInfo[ONPLATFORM] = True
+                    marioInfo[ISFALLING] = True
                     mario[VY] = 0
                     mario[Y] = brickRect.y - height
                 elif mario[Y] - mario[VY] >= brickRect.y + brickRect.height:
                     mario[Y] -= mario[VY]
                     mario[VY] = 1
                     mario[Y] = brickRect.y + brickRect.height
-                    mario[JUMPFRAMES] = 41
+                    marioInfo[JUMPFRAMES] = 41
                 elif mario[X] >= brickRect[X]: # and mario[DIR] == "Left":
                     mario[X] = brickRect.x + brickRect.width - 2
                     mario[VX] = 0
@@ -254,8 +257,10 @@ def loadFile(targetFile):
 
 def game():
     running = True
+    X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
+    ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
     while running:
-        global isFalling, RECTFINDER, marioPos
+        global marioStats, RECTFINDER, marioPos
         mx, my = mouse.get_pos()
         initialSpace = False
         for evnt in event.get():
@@ -265,24 +270,25 @@ def game():
                 if evnt.key == K_SPACE:
                     initialSpace = True
                 if evnt.key == K_p:
-                    if marioPos[8] == 0:
-                        marioPos[8] = 1
+                    if marioPos[STATE] == 0:
+                        marioPos[STATE] = 1
                     else:
-                        marioPos[8] = 0
+                        marioPos[STATE] = 0
                 if evnt.key == K_0:
-                    marioPos = [0, 496, 3, 0, True, "Right", 0, False, 0, False, False]
+                    marioPos = [0, 496, 0, 0, "Right", 0]
+                    marioStats = [True, 0, False, False, False, False]
             if evnt.type == KEYUP:
                 if evnt.key == K_SPACE:
-                    isFalling = True
+                    marioStats[ISFALLING] = True
                 if evnt.key== K_s:
-                    marioPos[9]=False
+                    marioStats[ISCROUCH]=False
             if evnt.type == MOUSEBUTTONDOWN:
                 RECTFINDER = [mx,my]
         if key.get_pressed()[27]: running = False
         rectList = [brickList, interactBricks,questionBricks]
-        checkMovement(marioPos, marioAccelerate, rectList, initialSpace)
-        moveSprites(marioPos, marioSprites, marioFrame)
-        checkCollide(marioPos, rectList)
+        checkMovement(marioPos, marioStats, marioAccelerate, rectList, initialSpace)
+        moveSprites(marioPos, marioStats, marioSprites, marioFrame)
+        checkCollide(marioPos, marioStats, rectList)
         drawScene(backgroundPics[levelNum], backPos, marioPos, marioSprites, marioFrame, rectList)
         print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
         fpsCounter.tick(60)
@@ -295,8 +301,9 @@ def menu():
 
 def loading():
     running = True
-    global brickList, interactBricks, questionBricks, marioPos, backPos
-    marioPos = [0, 496, 0, 0, True, "Right", 0, False, 0, False, False]
+    global brickList, interactBricks, questionBricks, marioPos, backPos, marioStats
+    marioPos = [0, 496, 0, 0, "Right", 0]
+    marioStats = [True, 0, False, False, False, False]
     backPos = 0
     brickList = loadFile(str("data/level_" + str(levelNum+1) + "/bricks.txt"))
     interactBricks = loadFile(str("data/level_" + str(levelNum+1) + "/interactBricks.txt"))

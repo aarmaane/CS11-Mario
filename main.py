@@ -16,6 +16,10 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 SKYBLUE = (107, 140, 255)
 
+# Declaring all fonts
+
+marioFont = font.Font("assets/fonts/marioFont.ttf", 20)
+
 # Declaring Variables
 
 page = "loading"
@@ -67,6 +71,7 @@ for subList in range(len(marioSprites)):
 for subList in range(len(brickSprites)):
     for pic in range(len(brickSprites[subList])):
         brickSprites[subList][pic] = transform.scale(brickSprites[subList][pic], (41,41))
+
 
 # Declaring game functions
 
@@ -175,6 +180,10 @@ def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace):
             mario[VY] -= 9.5 # jumping power
             marioInfo[ONGROUND] = False
             marioInfo[JUMPFRAMES] = 0
+            if mario[STATE] == 0:
+                playSound("effects/smallJump.ogg", "effect")
+            else:
+                playSound("effects/bigJump.ogg", "effect")
         elif marioInfo[JUMPFRAMES] < 41 and not marioInfo[ISFALLING] and not marioInfo[ONPLATFORM]: # Simulating higher jump with less gravity
             gravity = 0.2
             marioInfo[JUMPFRAMES] += 1
@@ -239,12 +248,22 @@ def checkCollide(mario, marioInfo, rectLists):
                     mario[VY] = 1
                     mario[Y] = brickRect.y + brickRect.height
                     marioInfo[JUMPFRAMES] = 41
+                    playSound("effects/bump.ogg", "effect")
                 elif mario[X] >= brickRect[X]: # and mario[DIR] == "Left":
                     mario[X] = brickRect.x + brickRect.width - 2
                     mario[VX] = 0
                 elif mario[X] <= brickRect[X]: # and mario[DIR] == "Right":
                     mario[X] = brickRect.x - 38
                     mario[VX] = 0
+
+def playSound(soundFile, soundChannel):
+    channelList = [["music", 0], ["effect", 1]]
+    for subList in channelList:
+        if subList[0] == soundChannel:
+            channelNumber = subList[1]
+    soundObject = mixer.Sound("assets/music/" + soundFile)
+    mixer.Channel(channelNumber).stop()
+    mixer.Channel(channelNumber).play(soundObject)
 
 
 def cycleList(rectLists):
@@ -270,8 +289,10 @@ def game():
     running = True
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
+    global marioStats, RECTFINDER, marioPos
+    playSound("songs/mainSong.ogg", "music")
+    startTime = time.get_ticks()
     while running:
-        global marioStats, RECTFINDER, marioPos
         mx, my = mouse.get_pos()
         initialSpace = False
         for evnt in event.get():

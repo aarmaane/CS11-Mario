@@ -7,6 +7,7 @@ init()
 size = width, height = 800, 600
 screen = display.set_mode(size)
 display.set_caption("Super Mario Bros!")
+display.set_icon(transform.scale(image.load("assets/sprites/mario/smallMarioJump.png"),(32,32)))
 
 # Declaring colours
 RED = (255, 0, 0)

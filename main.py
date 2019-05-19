@@ -18,14 +18,12 @@ WHITE = (255, 255, 255)
 SKYBLUE = (107, 140, 255)
 
 # Declaring all fonts
-
-marioFont = font.Font("assets/fonts/marioFont.ttf", 20)
+marioFont = font.Font("assets/fonts/marioFont.ttf", 18)
 
 # Declaring Variables
-
-page = "loading"
+page = "menu"
 fpsCounter = time.Clock()
-marioPos = [0, 496, 0, 0, "Right", 0]  # X, Y, VX, VY, direction, state
+marioPos = [40, 496, 0, 0, "Right", 0]  # X, Y, VX, VY, direction, state
     # onGround: Boolrean to see fi mario is on a solid ground
     # jumpFrames: Variable to keep track of frames user has held space for
     # inGround: Boolean to see if mario has fallen through the floor
@@ -38,12 +36,10 @@ backPos = 0  # Position of the background
 levelNum = 0  # Using 0 as level 1 since indexes start at 0
 isAnimating = False  # Boolean to see if we need to pause the screen and animate mario
 RECTFINDER = [0,0] #DELETE THIS LATER
-
-# Declaring Rects
-
-smallMario = Rect(marioPos[0], marioPos[1], 32, 64)
     
 # Loading Pictures
+titleLogo = transform.scale(image.load("assets/sprites/title/logo.png"), (480,220))
+titleSelect = transform.scale(image.load("assets/sprites/title/select.png"), (24,24))
 
 backgroundPics = [image.load("assets/backgrounds/level_"+str(i)+".png").convert() for i in range(1,2)]
 
@@ -56,8 +52,6 @@ marioSprites = [[image.load("assets/sprites/mario/smallmario"+str(i)+".png").con
 brickSprites=[[image.load("assets/sprites/bricks/question"+str(1)+".png").convert_alpha() for i in range (1,4)],
               [image.load("assets/sprites/bricks/brick.gif").convert_alpha(),
                image.load("assets/sprites/bricks/blockidle.png").convert_alpha()]]
-
-
 
 # Resizing Pictures
 backgroundPics = [transform.scale(pic,(9086,600)) for pic in backgroundPics]
@@ -73,9 +67,14 @@ for subList in range(len(brickSprites)):
     for pic in range(len(brickSprites[subList])):
         brickSprites[subList][pic] = transform.scale(brickSprites[subList][pic], (41,41))
 
+# Creating text
+playText = marioFont.render("play", False, (255,255,255))
+instructText = marioFont.render("instructions", False, (255,255,255))
+creditText = marioFont.render("credits", False, (255,255,255))
+quitText = marioFont.render("quit", False, (255,255,255))
+
 
 # Declaring game functions
-
 def drawScene(background, backX, mario, marioPic, marioFrame, rectList, brickPic):
     """Function to draw the background, mario, enemies, and all objects"""
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
@@ -99,6 +98,7 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, brickPic
 
 
 def moveSprites(mario, marioInfo, marioPic, frame):
+    """ Function to cycle through Mario's sprites """
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
     if marioInfo[ONGROUND]:
@@ -120,8 +120,8 @@ def moveSprites(mario, marioInfo, marioPic, frame):
 
 
 def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace):
-    """Function to move mario and the background (all rects too as a result)"""
-    keys=key.get_pressed()
+    """Function to accept inputs and apply the appropriate physics """
+    keys = key.get_pressed()
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
     moving = False
@@ -207,6 +207,7 @@ def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace):
 
 
 def walkMario(mario, rectLists, direction):
+    """ Function to move the player """
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     global backPos
     if direction == "Left" and mario[X] != 1:
@@ -222,12 +223,14 @@ def walkMario(mario, rectLists, direction):
         mario[X] = 0
 
 def moveRects(rectLists, VX):
+    """ Function to move rectangles """
     global backPos
     for subList in range(len(rectLists)):
         for rect in range(len(rectLists[subList])):
             rectLists[subList][rect][0] -= VX
 
 def checkCollide(mario, marioInfo, rectLists):
+    """ Function to check mario's collision with Rects"""
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
     height = 42
@@ -258,6 +261,7 @@ def checkCollide(mario, marioInfo, rectLists):
                     mario[VX] = 0
 
 def playSound(soundFile, soundChannel):
+    """ Function to load in sounds and play them on a channel """
     channelList = [["music", 0], ["effect", 1]]
     for subList in channelList:
         if subList[0] == soundChannel:
@@ -266,14 +270,27 @@ def playSound(soundFile, soundChannel):
     mixer.Channel(channelNumber).stop()
     mixer.Channel(channelNumber).play(soundObject)
 
+def globalSound(command, volume = None):
+    """ Function to apply commands to all mixer channels """
+    for id in range(mixer.get_num_channels()):
+        if command == "stop":
+            mixer.Channel(id).stop()
+        elif command == "pause":
+            mixer.Channel(id).pause()
+        elif command == "unpause":
+            mixer.Channel(id).unpause()
+        elif command == "volume":
+            mixer.Channel(id).set_volume(volume)
 
 def cycleList(rectLists):
+    """ Function to keep track of objects on screen and ignore others"""
     global backPos
 
 
 # Declaring loading functions
 
 def loadFile(targetFile):
+    """ Function to load files and make lists out of them"""
     outputList = []
     file = open(targetFile, "r")
     fileLines = file.readlines()
@@ -329,13 +346,42 @@ def game():
 
 
 def menu():
-    return 'exit'
+    running = True
+    globalSound("stop") # Stop any music that's playing
+    selected = 0 # Variable for current selected option
+    textPoints = [[360, 350], [290, 390], [333, 430], [360, 470]]
+    textList = [playText, instructText, creditText, quitText]
+    returnList = ["loading", "instructions", "credits", "exit"]
+    while running:
+        for evnt in event.get():
+            if evnt.type == QUIT:
+                running = False
+            if evnt.type == KEYDOWN:
+                if evnt.key == K_UP or evnt.key == K_w:
+                    selected -= 1
+                elif evnt.key == K_DOWN or evnt.key == K_s:
+                    selected += 1
+                elif evnt.key == K_RETURN:
+                    return returnList[selected]
+        if selected < 0:
+            selected = 3
+        elif selected > 3:
+            selected = 0
+        screen.blit(backgroundPics[0],(0,0))
+        screen.blit(marioSprites[0][0], (40, 496))
+        screen.blit(titleLogo,(160,80))
+        for index in range(len(textList)):
+            screen.blit(textList[index], (textPoints[index][0], textPoints[index][1]))
+        screen.blit(titleSelect, (textPoints[selected][0] - 30, textPoints[selected][1] - 4 ))
+        display.flip()
+        fpsCounter.tick(60)
+    return "exit"
 
 
 def loading():
     running = True
     global brickList, interactBricks, questionBricks, marioPos, backPos, marioStats
-    marioPos = [0, 496, 0, 0, "Right", 0]
+    marioPos = [40, 496, 0, 0, "Right", 0]
     marioStats = [True, 0, False, False, False, False]
     backPos = 0
     brickList = loadFile(str("data/level_" + str(levelNum+1) + "/bricks.txt"))
@@ -346,7 +392,8 @@ def loading():
             if evnt.type == QUIT:
                 running = False
         if key.get_pressed()[K_RETURN]: running = False
-        screen.blit(backgroundPics[0], (0,0))
+        tempText = marioFont.render("LOADING...", False, (255,255,255))
+        screen.blit(tempText,(0,0))
         display.flip()
         fpsCounter.tick(60)
     return "game"

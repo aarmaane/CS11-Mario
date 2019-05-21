@@ -65,7 +65,7 @@ for subList in range(len(marioSprites)):
 
 for subList in range(len(brickSprites)):
     for pic in range(len(brickSprites[subList])):
-        brickSprites[subList][pic] = transform.scale(brickSprites[subList][pic], (41,41))
+        brickSprites[subList][pic] = transform.scale(brickSprites[subList][pic], (42,42))
 
 # Creating text
 playText = marioFont.render("play", False, (255,255,255))

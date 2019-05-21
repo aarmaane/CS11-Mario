@@ -102,7 +102,6 @@ def moveSprites(mario, marioInfo, marioPic, frame):
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
     if marioInfo[ONGROUND]:
-        print(mario[STATE])
         frame[0] = 0 + mario[STATE]
         if frame[1] < 3.8:
             frame[1] += mario[VX]**2/100 + 0.2
@@ -171,11 +170,9 @@ def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace):
         marioOffset = 88
     if marioInfo[ISCROUCH]:
         gravity = 0.9
-
     if marioInfo[ONPLATFORM] and mario[VY] <= gravity*2 and pressSpace:
         marioInfo[ISFALLING] = False
         marioInfo[ONPLATFORM] = False
-
     if keys[K_SPACE] and not marioInfo[ISCROUCH] and not marioInfo[ONPLATFORM]:
         if marioInfo[ONGROUND] and pressSpace: # checking if jumping is true
             mario[VY] -= 9.5 # jumping power
@@ -188,9 +185,7 @@ def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace):
         elif marioInfo[JUMPFRAMES] < 41 and not marioInfo[ISFALLING] and not marioInfo[ONPLATFORM]: # Simulating higher jump with less gravity
             gravity = 0.2
             marioInfo[JUMPFRAMES] += 1
-
     mario[Y] += mario[VY]  # Add the y movement value
-
     if not marioInfo[INGROUND] and mario[Y]>=floor and screen.get_at((int(mario[X]+4),int(mario[Y]+marioOffset)))==SKYBLUE and \
        screen.get_at((int(mario[X]+38),int(mario[Y]+marioOffset)))==SKYBLUE:
         # Using colour collision to fall through holes
@@ -202,7 +197,6 @@ def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace):
         marioInfo[ONGROUND] = True
         marioInfo[ONPLATFORM] = False
         marioInfo[ISFALLING] = False
-
     marioPos[VY] += gravity # apply gravity
 
 
@@ -270,7 +264,7 @@ def playSound(soundFile, soundChannel):
     mixer.Channel(channelNumber).stop()
     mixer.Channel(channelNumber).play(soundObject)
 
-def globalSound(command, volume = None):
+def globalSound(command):
     """ Function to apply commands to all mixer channels """
     for id in range(mixer.get_num_channels()):
         if command == "stop":
@@ -279,13 +273,14 @@ def globalSound(command, volume = None):
             mixer.Channel(id).pause()
         elif command == "unpause":
             mixer.Channel(id).unpause()
-        elif command == "volume":
-            mixer.Channel(id).set_volume(volume)
-
+        elif command == "toggle":
+            if mixer.Channel(id).get_volume() == 0.0:
+                mixer.Channel(id).set_volume(1)
+            else:
+                mixer.Channel(id).set_volume(0)
 def cycleList(rectLists):
     """ Function to keep track of objects on screen and ignore others"""
     global backPos
-
 
 # Declaring loading functions
 
@@ -315,24 +310,26 @@ def game():
         initialSpace = False
         for evnt in event.get():
             if evnt.type == QUIT:
-                running = False
-            if evnt.type == KEYDOWN:
+                return "exit"
+            elif evnt.type == KEYDOWN:
                 if evnt.key == K_SPACE:
                     initialSpace = True
-                if evnt.key == K_p:
+                elif evnt.key == K_p:
                     if marioPos[STATE] == 0:
                         marioPos[STATE] = 1
                     else:
                         marioPos[STATE] = 0
-                if evnt.key == K_0:
+                elif evnt.key == K_m:
+                    globalSound('toggle')
+                elif evnt.key == K_0:
                     marioPos = [0, 496, 0, 0, "Right", 0]
                     marioStats = [True, 0, False, False, False, False]
-            if evnt.type == KEYUP:
+            elif evnt.type == KEYUP:
                 if evnt.key == K_SPACE:
                     marioStats[ISFALLING] = True
-                if evnt.key== K_s:
+                elif evnt.key== K_s:
                     marioStats[ISCROUCH]=False
-            if evnt.type == MOUSEBUTTONDOWN:
+            elif evnt.type == MOUSEBUTTONDOWN:
                 RECTFINDER = [mx,my]
         if key.get_pressed()[27]: running = False
         rectList = [brickList, interactBricks,questionBricks]
@@ -340,7 +337,7 @@ def game():
         moveSprites(marioPos, marioStats, marioSprites, marioFrame)
         checkCollide(marioPos, marioStats, rectList)
         drawScene(backgroundPics[levelNum], backPos, marioPos, marioSprites, marioFrame, rectList, brickSprites)
-        print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
+        #print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
         fpsCounter.tick(60)
     return "menu"
 
@@ -351,11 +348,11 @@ def menu():
     selected = 0 # Variable for current selected option
     textPoints = [[360, 350], [290, 390], [333, 430], [360, 470]]
     textList = [playText, instructText, creditText, quitText]
-    returnList = ["loading", "instructions", "credits", "exit"]
+    returnList = ["loading", "instructions", "credit", "exit"]
     while running:
         for evnt in event.get():
             if evnt.type == QUIT:
-                running = False
+                return "exit"
             if evnt.type == KEYDOWN:
                 if evnt.key == K_UP or evnt.key == K_w:
                     selected -= 1
@@ -390,7 +387,7 @@ def loading():
     while running:
         for evnt in event.get():          
             if evnt.type == QUIT:
-                running = False
+                return "exit"
         if key.get_pressed()[K_RETURN]: running = False
         tempText = marioFont.render("LOADING...", False, (255,255,255))
         screen.blit(tempText,(0,0))
@@ -404,7 +401,7 @@ def instructions():
     while running:
         for evnt in event.get():          
             if evnt.type == QUIT:
-                running = False
+                return "exit"
         if key.get_pressed()[27]: running = False
         display.flip()
         fpsCounter.tick(60)
@@ -416,7 +413,7 @@ def credit():
     while running:
         for evnt in event.get():          
             if evnt.type == QUIT:
-                running = False
+                return "exit"
         if key.get_pressed()[27]: running = False
         display.flip()
         fpsCounter.tick(60)

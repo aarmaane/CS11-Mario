@@ -328,6 +328,7 @@ def game():
     playSound("songs/mainSong.ogg", "music")  # Starting the background music
     pausedBool = False
     startTime = time.get_ticks()  # Variable to keep track of time since level start
+    uniSprite = 0 # Counter to control all non - Mario sprites
     while running:
         mx, my = mouse.get_pos()
         initialSpace = False
@@ -373,7 +374,7 @@ def game():
             drawPause()
         display.flip()
         fpsCounter.tick(60)
-        #print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
+        print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
     return "loading"
 
 

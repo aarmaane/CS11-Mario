@@ -276,7 +276,7 @@ def checkCollide(mario, marioInfo, rectLists):
 
 def playSound(soundFile, soundChannel):
     """ Function to load in sounds and play them on a channel """
-    channelList = [["music", 0], ["effect", 1]]  # List to keep track of mixer channels
+    channelList = [["music", 0], ["effect", 1], ["extra", 2]]  # List to keep track of mixer channels
     for subList in channelList:  # For loop to identify the input
         if subList[0] == soundChannel:
             channelNumber = subList[1]
@@ -343,6 +343,7 @@ def game():
                     pausedBool = not pausedBool # Toggling the paused status
                     if pausedBool:
                         globalSound("pause")
+                        playSound("effects/pause.wav", "extra")
                     else:
                         globalSound("unpause")
                 elif evnt.key == K_ESCAPE and pausedBool:

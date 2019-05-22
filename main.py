@@ -79,6 +79,9 @@ creditText = marioFont.render("credits", False, (255,255,255))
 quitText = marioFont.render("quit", False, (255,255,255))
 pauseText = marioFont.render("paused", False, (255,255,255))
 helpText = marioFont.render("press esc to exit game", False, (255,255,255))
+marioText = marioFont.render("mario", False, (255,255,255))
+timeText = marioFont.render("time", False, (255,255,255))
+worldText = marioFont.render("world", False, (255,255,255))
 
 # Declaring game functions
 def drawScene(background, backX, mario, marioPic, marioFrame, rectList, brickPic):
@@ -99,13 +102,19 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, brickPic
                 draw.rect(screen, BLUE, brickRect)
             else:
                 draw.rect(screen,GREEN,brickRect)
-    screen.blit(marioShow, (mario[0], mario[1])) # Blitting mario's sprite
+    screen.blit(marioShow, (mario[0], mario[1]))  # Blitting mario's sprite
+    drawStats(97600,None,None)
+
+def drawStats(points, coins, startTime):
+    points = marioFont.render("%06i" %int(points), False, (255,255,255))
+    screen.blit(points, (0,100))
+    screen.blit(marioText, (0,0))
 
 def drawPause():
     alphaSurface = Surface((800, 600))  # Making a surface
     alphaSurface.set_alpha(128)  # Giving it alpha functionality
     alphaSurface.fill((0, 0, 0))  # Fill the surface with a black background
-    screen.blit(alphaSurface, (0, 0)) # Blit it into the actual screen
+    screen.blit(alphaSurface, (0, 0))  # Blit it into the actual screen
     # Blitting text
     screen.blit(pauseText, (345,290))
     screen.blit(helpText, (210, 330))
@@ -121,12 +130,12 @@ def moveSprites(mario, marioInfo, marioPic, frame):
             frame[1] += mario[VX]**2/100 + 0.2
         else:
             frame[1] = 1
-        if frame[1] > 3.9: # Sprite counter upper limit
+        if frame[1] > 3.9:  # Sprite counter upper limit
             frame[1] = 3.9
-        if mario[VX] == 0: # If mario isn't moving, stay on his standing sprite
+        if mario[VX] == 0:  # If mario isn't moving, stay on his standing sprite
             frame[1] = 0
     else:
-        frame[0],frame[1] = 2, 0 + mario[STATE] # If mario is midair, stay on his jumping sprite
+        frame[0],frame[1] = 2, 0 + mario[STATE]  # If mario is midair, stay on his jumping sprite
     if marioInfo[ISCROUCH]:
         frame[0],frame[1] = 2, 2  # If mario is crouching, stay on his crouching sprite
 
@@ -184,11 +193,9 @@ def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace):
         marioOffset = 88
     if marioInfo[ISCROUCH]:  # If mario is crouching, give him more gravity
         gravity = 0.9
-
     if marioInfo[ONPLATFORM] and mario[VY] <= gravity*2 and pressSpace:  # If mario is on a platform and pressing space, let him jump
         marioInfo[ISFALLING] = False
         marioInfo[ONPLATFORM] = False
-
     if keys[K_SPACE] and not marioInfo[ISCROUCH] and not marioInfo[ONPLATFORM]:
         if marioInfo[ONGROUND] and pressSpace:  # Checking if jumping is true
             mario[VY] -= 9.5  # Jumping power
@@ -202,9 +209,7 @@ def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace):
         elif marioInfo[JUMPFRAMES] < 41 and not marioInfo[ISFALLING] and not marioInfo[ONPLATFORM]: # Simulating higher jump with less gravity
             gravity = 0.2
             marioInfo[JUMPFRAMES] += 1
-
     mario[Y] += mario[VY]  # Add the y movement value
-
     if not marioInfo[INGROUND] and mario[Y]>=floor and screen.get_at((int(mario[X]+4),int(mario[Y]+marioOffset)))==SKYBLUE and \
        screen.get_at((int(mario[X]+38),int(mario[Y]+marioOffset)))==SKYBLUE:
         # Using colour collision to fall through holes
@@ -216,7 +221,6 @@ def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace):
         marioInfo[ONGROUND] = True
         marioInfo[ONPLATFORM] = False
         marioInfo[ISFALLING] = False
-
     marioPos[VY] += gravity  # apply gravity
 
 
@@ -303,7 +307,6 @@ def cycleList(rectLists):
     """ Function to keep track of objects on screen and ignore others"""
     global backPos
 
-
 # Declaring loading functions
 
 def loadFile(targetFile):
@@ -354,6 +357,8 @@ def game():
                         marioPos[STATE] = 1
                     else:
                         marioPos[STATE] = 0
+                elif evnt.key == K_m:
+                    globalSound('toggle')
                 elif evnt.key == K_0:
                     marioPos = [0, 496, 0, 0, "Right", 0]
                     marioStats = [True, 0, False, False, False, False]

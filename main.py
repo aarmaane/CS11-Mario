@@ -19,6 +19,7 @@ SKYBLUE = (107, 140, 255)
 
 # Declaring all fonts
 marioFont = font.Font("assets/fonts/marioFont.ttf", 18)
+marioFontBig = font.Font("assets/fonts/marioFont.ttf", 22)
 
 # Declaring Variables
 page = "menu"
@@ -58,9 +59,12 @@ brickSprites=[[image.load("assets/sprites/bricks/question"+str(1)+".png").conver
               [image.load("assets/sprites/bricks/brick.gif").convert_alpha(),
                image.load("assets/sprites/bricks/blockidle.png").convert_alpha()]]
 
-# Resizing Pictures
-backgroundPics = [transform.scale(pic,(9086,600)) for pic in backgroundPics]
+statCoin = [image.load("assets/sprites/title/coin"+str(i)+".png").convert_alpha() for i in range (3,0,-1)]
 
+# Resizing and Reordering Pictures
+backgroundPics = [transform.scale(pic,(9086,600)) for pic in backgroundPics]
+statCoin = [transform.scale(pic, (15,24)) for pic in statCoin]
+statCoin = statCoin + statCoin[::-1]
 for subList in range(len(marioSprites)):
     for pic in range(len(marioSprites[subList])):
         if marioSprites[subList][pic].get_height() == 16:
@@ -79,9 +83,9 @@ creditText = marioFont.render("credits", False, (255,255,255))
 quitText = marioFont.render("quit", False, (255,255,255))
 pauseText = marioFont.render("paused", False, (255,255,255))
 helpText = marioFont.render("press esc to exit game", False, (255,255,255))
-marioText = marioFont.render("mario", False, (255,255,255))
-timeText = marioFont.render("time", False, (255,255,255))
-worldText = marioFont.render("world", False, (255,255,255))
+marioText = marioFontBig.render("mario", False, (255,255,255))
+timeText = marioFontBig.render("time", False, (255,255,255))
+worldText = marioFontBig.render("world", False, (255,255,255))
 
 # Declaring game functions
 def drawScene(background, backX, mario, marioPic, marioFrame, rectList, brickPic):
@@ -104,13 +108,29 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, brickPic
                 draw.rect(screen,GREEN,brickRect)
     screen.blit(marioShow, (mario[0], mario[1]))  # Blitting mario's sprite
 
-def drawStats(points, coins, startTime):
-    points = marioFont.render("%06i" %int(points), False, (255,255,255))
-    coins =  marioFont.render("%02i" %int(coins), False, (255,255,255))
-    currentTime = (time.get_ticks() - startTime) / 1000
-    print(currentTime)
-    screen.blit(points, (0,100))
-    screen.blit(marioText, (0,0))
+def drawStats(points, coins, startTime, level, fastMode, coinPic, spriteCount):
+    if not fastMode:
+        nowFast = False
+    else:
+        nowFast = True
+    currentTime = 200 - int((time.get_ticks() - startTime) / 1000)
+    if currentTime < 100 and not fastMode:
+        playSound("effects/timeLow.wav", "music")
+        playSound("songs/mainSongFast.ogg", "music", True)
+        nowFast = True
+    points = marioFontBig.render("%06i" %int(points), False, (255,255,255))
+    coins =  marioFontBig.render("x%02i" %int(coins), False, (255,255,255))
+    world = marioFontBig.render("1-%i" %int(level + 1), False, (255,255,255))
+    timer = marioFontBig.render("%03i" %int(currentTime), False, (255,255,255))
+    screen.blit(points, (75,50))
+    screen.blit(marioText, (75,25))
+    screen.blit(coins, (300,50))
+    screen.blit(worldText, (450,25))
+    screen.blit(world, (470,50))
+    screen.blit(timeText, (625,25))
+    screen.blit(timer, (640, 50))
+    screen.blit(coinPic[int(spriteCount//2)], (275,48))
+    return nowFast
 
 def drawPause():
     alphaSurface = Surface((800, 600))  # Making a surface
@@ -280,15 +300,18 @@ def checkCollide(mario, marioInfo, rectLists):
                     mario[X] = brickRect.x - 38  # Move mario to the left of the rect
                     mario[VX] = 0
 
-def playSound(soundFile, soundChannel):
+def playSound(soundFile, soundChannel, queue = False):
     """ Function to load in sounds and play them on a channel """
     channelList = [["music", 0], ["effect", 1], ["extra", 2]]  # List to keep track of mixer channels
     for subList in channelList:  # For loop to identify the input
         if subList[0] == soundChannel:
             channelNumber = subList[1]
     soundObject = mixer.Sound("assets/music/" + soundFile)  # Loading the sound file
-    mixer.Channel(channelNumber).stop()  # Stopping any previous sound
-    mixer.Channel(channelNumber).play(soundObject)  # Playing new sound
+    if queue:
+        mixer.Channel(channelNumber).queue(soundObject)  # Add the sound to the queue
+    else:
+        mixer.Channel(channelNumber).stop()  # Stopping any previous sound
+        mixer.Channel(channelNumber).play(soundObject)  # Playing new sound
 
 def globalSound(command):
     """ Function to apply commands to all mixer channels """
@@ -308,6 +331,12 @@ def globalSound(command):
 def cycleList(rectLists):
     """ Function to keep track of objects on screen and ignore others"""
     global backPos
+
+def spriteCounter(counter):
+    counter += 0.2
+    if counter > 10:
+        counter = 0
+    return counter
 
 # Declaring loading functions
 
@@ -334,6 +363,7 @@ def game():
     pausedBool = False
     startTime = time.get_ticks()  # Variable to keep track of time since level start
     uniSprite = 0 # Counter to control all non - Mario sprites
+    fast = False
     while running:
         mx, my = mouse.get_pos()
         initialSpace = False
@@ -350,6 +380,7 @@ def game():
                     if pausedBool:
                         globalSound("pause")
                         playSound("effects/pause.wav", "extra")
+                        pauseTime = time.get_ticks() - startTime
                     else:
                         globalSound("unpause")
                 elif evnt.key == K_ESCAPE and pausedBool:
@@ -372,17 +403,19 @@ def game():
             elif evnt.type == MOUSEBUTTONDOWN:
                 RECTFINDER = [mx,my]
         rectList = [brickList, interactBricks, questionBricks]
+        uniSprite = spriteCounter(uniSprite)
         if not pausedBool:
             checkMovement(marioPos, marioStats, marioAccelerate, rectList, initialSpace)
             moveSprites(marioPos, marioStats, marioSprites, marioFrame)
             checkCollide(marioPos, marioStats, rectList)
         drawScene(backgroundPics[levelNum], backPos, marioPos, marioSprites, marioFrame, rectList, brickSprites)
-        drawStats(97600, 4, startTime)
+        fast = drawStats(1337, 48, startTime, levelNum, fast, statCoin, uniSprite)
         if pausedBool:
             drawPause()
+            startTime += (time.get_ticks() - startTime) - pauseTime
         display.flip()
         fpsCounter.tick(60)
-        print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
+        #print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
     return "loading"
 
 

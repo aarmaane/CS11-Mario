@@ -103,10 +103,12 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, brickPic
             else:
                 draw.rect(screen,GREEN,brickRect)
     screen.blit(marioShow, (mario[0], mario[1]))  # Blitting mario's sprite
-    drawStats(97600,None,None)
 
 def drawStats(points, coins, startTime):
     points = marioFont.render("%06i" %int(points), False, (255,255,255))
+    coins =  marioFont.render("%02i" %int(coins), False, (255,255,255))
+    currentTime = (time.get_ticks() - startTime) / 1000
+    print(currentTime)
     screen.blit(points, (0,100))
     screen.blit(marioText, (0,0))
 
@@ -375,6 +377,7 @@ def game():
             moveSprites(marioPos, marioStats, marioSprites, marioFrame)
             checkCollide(marioPos, marioStats, rectList)
         drawScene(backgroundPics[levelNum], backPos, marioPos, marioSprites, marioFrame, rectList, brickSprites)
+        drawStats(97600, 4, startTime)
         if pausedBool:
             drawPause()
         display.flip()

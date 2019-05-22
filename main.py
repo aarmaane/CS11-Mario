@@ -72,7 +72,8 @@ playText = marioFont.render("play", False, (255,255,255))
 instructText = marioFont.render("instructions", False, (255,255,255))
 creditText = marioFont.render("credits", False, (255,255,255))
 quitText = marioFont.render("quit", False, (255,255,255))
-
+pauseText = marioFont.render("paused", False, (255,255,255))
+helpText = marioFont.render("press esc to exit game", False, (255,255,255))
 
 # Declaring game functions
 def drawScene(background, backX, mario, marioPic, marioFrame, rectList, brickPic):
@@ -94,15 +95,20 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, brickPic
             else:
                 draw.rect(screen,GREEN,brickRect)
     screen.blit(marioShow, (mario[0], mario[1]))
-    display.flip()
 
+def drawPause():
+    alphaSurface = Surface((800, 600))  # Making a surface
+    alphaSurface.set_alpha(128)  # Giving it alpha functionality
+    alphaSurface.fill((0, 0, 0))  # Fill the surface with a black background
+    screen.blit(alphaSurface, (0, 0)) # Blit it into the actual screen
+    screen.blit(pauseText, (345,290))
+    screen.blit(helpText, (210, 330))
 
 def moveSprites(mario, marioInfo, marioPic, frame):
     """ Function to cycle through Mario's sprites """
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
     if marioInfo[ONGROUND]:
-        print(mario[STATE])
         frame[0] = 0 + mario[STATE]
         if frame[1] < 3.8:
             frame[1] += mario[VX]**2/100 + 0.2
@@ -270,7 +276,7 @@ def playSound(soundFile, soundChannel):
     mixer.Channel(channelNumber).stop()
     mixer.Channel(channelNumber).play(soundObject)
 
-def globalSound(command, volume = None):
+def globalSound(command):
     """ Function to apply commands to all mixer channels """
     for id in range(mixer.get_num_channels()):
         if command == "stop":
@@ -279,8 +285,11 @@ def globalSound(command, volume = None):
             mixer.Channel(id).pause()
         elif command == "unpause":
             mixer.Channel(id).unpause()
-        elif command == "volume":
-            mixer.Channel(id).set_volume(volume)
+        elif command == "toggleVol":
+            if mixer.Channel(id).get_volume() == 0:
+                mixer.Channel(id).set_volume(1)
+            else:
+                mixer.Channel(id).set_volume(0)
 
 def cycleList(rectLists):
     """ Function to keep track of objects on screen and ignore others"""
@@ -309,40 +318,54 @@ def game():
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
     global marioStats, RECTFINDER, marioPos
     playSound("songs/mainSong.ogg", "music")
+    pausedBool = False
     startTime = time.get_ticks()
     while running:
         mx, my = mouse.get_pos()
         initialSpace = False
         for evnt in event.get():
             if evnt.type == QUIT:
-                running = False
+                return "exit"
             if evnt.type == KEYDOWN:
                 if evnt.key == K_SPACE:
-                    initialSpace = True
-                if evnt.key == K_p:
+                    initialSpace = True # Keep track of when the user first presses space
+                elif evnt.key == K_m:
+                    globalSound("toggleVol") # Toggling the music volume on or off
+                elif evnt.key == K_p:
+                    pausedBool = not pausedBool # Toggling the paused status
+                    if pausedBool:
+                        globalSound("pause")
+                    else:
+                        globalSound("unpause")
+                elif evnt.key == K_ESCAPE and pausedBool:
+                    return "menu"
+                elif evnt.key == K_o:
                     if marioPos[STATE] == 0:
                         marioPos[STATE] = 1
                     else:
                         marioPos[STATE] = 0
-                if evnt.key == K_0:
+                elif evnt.key == K_0:
                     marioPos = [0, 496, 0, 0, "Right", 0]
                     marioStats = [True, 0, False, False, False, False]
-            if evnt.type == KEYUP:
+            elif evnt.type == KEYUP:
                 if evnt.key == K_SPACE:
                     marioStats[ISFALLING] = True
-                if evnt.key== K_s:
+                elif evnt.key== K_s:
                     marioStats[ISCROUCH]=False
-            if evnt.type == MOUSEBUTTONDOWN:
+            elif evnt.type == MOUSEBUTTONDOWN:
                 RECTFINDER = [mx,my]
-        if key.get_pressed()[27]: running = False
-        rectList = [brickList, interactBricks,questionBricks]
-        checkMovement(marioPos, marioStats, marioAccelerate, rectList, initialSpace)
-        moveSprites(marioPos, marioStats, marioSprites, marioFrame)
-        checkCollide(marioPos, marioStats, rectList)
+        rectList = [brickList, interactBricks, questionBricks]
+        if not pausedBool:
+            checkMovement(marioPos, marioStats, marioAccelerate, rectList, initialSpace)
+            moveSprites(marioPos, marioStats, marioSprites, marioFrame)
+            checkCollide(marioPos, marioStats, rectList)
         drawScene(backgroundPics[levelNum], backPos, marioPos, marioSprites, marioFrame, rectList, brickSprites)
-        print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
+        if pausedBool:
+            drawPause()
+        display.flip()
         fpsCounter.tick(60)
-    return "menu"
+        #print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
+    return "loading"
 
 
 def menu():
@@ -351,11 +374,11 @@ def menu():
     selected = 0 # Variable for current selected option
     textPoints = [[360, 350], [290, 390], [333, 430], [360, 470]]
     textList = [playText, instructText, creditText, quitText]
-    returnList = ["loading", "instructions", "credits", "exit"]
+    returnList = ["loading", "instructions", "credit", "exit"]
     while running:
         for evnt in event.get():
             if evnt.type == QUIT:
-                running = False
+                return "exit"
             if evnt.type == KEYDOWN:
                 if evnt.key == K_UP or evnt.key == K_w:
                     selected -= 1
@@ -390,7 +413,7 @@ def loading():
     while running:
         for evnt in event.get():          
             if evnt.type == QUIT:
-                running = False
+                return "exit"
         if key.get_pressed()[K_RETURN]: running = False
         tempText = marioFont.render("LOADING...", False, (255,255,255))
         screen.blit(tempText,(0,0))
@@ -404,7 +427,7 @@ def instructions():
     while running:
         for evnt in event.get():          
             if evnt.type == QUIT:
-                running = False
+                return "exit"
         if key.get_pressed()[27]: running = False
         display.flip()
         fpsCounter.tick(60)
@@ -416,7 +439,7 @@ def credit():
     while running:
         for evnt in event.get():          
             if evnt.type == QUIT:
-                running = False
+                return "exit"
         if key.get_pressed()[27]: running = False
         display.flip()
         fpsCounter.tick(60)

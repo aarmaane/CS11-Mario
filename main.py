@@ -55,7 +55,7 @@ marioSprites = [[image.load("assets/sprites/mario/smallmario"+str(i)+".png").con
              [image.load("assets/sprites/mario/bigmario"+str(i)+".png").convert_alpha() for i in range (1,5)],
                 [image.load("assets/sprites/mario/"+str(i)+".png").convert_alpha() for i in marioSpriteNames]]
 
-brickSprites=[[image.load("assets/sprites/bricks/question"+str(1)+".png").convert_alpha() for i in range (1,4)],
+brickSprites=[[image.load("assets/sprites/bricks/question"+str(i)+".png").convert_alpha() for i in range (3,0,-1)],
               [image.load("assets/sprites/bricks/brick.gif").convert_alpha(),
                image.load("assets/sprites/bricks/blockidle.png").convert_alpha()]]
 
@@ -75,6 +75,7 @@ for subList in range(len(marioSprites)):
 for subList in range(len(brickSprites)):
     for pic in range(len(brickSprites[subList])):
         brickSprites[subList][pic] = transform.scale(brickSprites[subList][pic], (42,42))
+brickSprites[0] = brickSprites[0] + brickSprites[0][::-1]
 
 # Creating text
 playText = marioFont.render("play", False, (255,255,255))
@@ -88,7 +89,7 @@ timeText = marioFontBig.render("time", False, (255,255,255))
 worldText = marioFontBig.render("world", False, (255,255,255))
 
 # Declaring game functions
-def drawScene(background, backX, mario, marioPic, marioFrame, rectList, brickPic):
+def drawScene(background, backX, mario, marioPic, marioFrame, rectList, brickPic, spriteCount):
     """Function to draw the background, mario, enemies, and all objects"""
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
@@ -103,7 +104,7 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, brickPic
             if list == interactBricks:
                 screen.blit(brickPic[1][0],brickRect)
             elif list == questionBricks:
-                draw.rect(screen, BLUE, brickRect)
+                screen.blit(brickPic[0][int(spriteCount//2)],brickRect)
             else:
                 draw.rect(screen,GREEN,brickRect)
     screen.blit(marioShow, (mario[0], mario[1]))  # Blitting mario's sprite
@@ -408,7 +409,7 @@ def game():
             checkMovement(marioPos, marioStats, marioAccelerate, rectList, initialSpace)
             moveSprites(marioPos, marioStats, marioSprites, marioFrame)
             checkCollide(marioPos, marioStats, rectList)
-        drawScene(backgroundPics[levelNum], backPos, marioPos, marioSprites, marioFrame, rectList, brickSprites)
+        drawScene(backgroundPics[levelNum], backPos, marioPos, marioSprites, marioFrame, rectList, brickSprites, uniSprite)
         fast = drawStats(1337, 48, startTime, levelNum, fast, statCoin, uniSprite)
         if pausedBool:
             drawPause()

@@ -17,10 +17,6 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 SKYBLUE = (107, 140, 255)
 
-# Declaring all fonts
-marioFont = font.Font("assets/fonts/marioFont.ttf", 18)
-marioFontBig = font.Font("assets/fonts/marioFont.ttf", 22)
-
 # Declaring Variables
 page = "menu"
 fpsCounter = time.Clock()
@@ -77,6 +73,10 @@ for subList in range(len(brickSprites)):
         brickSprites[subList][pic] = transform.scale(brickSprites[subList][pic], (42,42))
 brickSprites[0] = brickSprites[0] + brickSprites[0][::-1]
 
+# Declaring all fonts
+marioFont = font.Font("assets/fonts/marioFont.ttf", 18)
+marioFontBig = font.Font("assets/fonts/marioFont.ttf", 22)
+
 # Creating text
 playText = marioFont.render("play", False, (255,255,255))
 instructText = marioFont.render("instructions", False, (255,255,255))
@@ -87,6 +87,16 @@ helpText = marioFont.render("press esc to exit game", False, (255,255,255))
 marioText = marioFontBig.render("mario", False, (255,255,255))
 timeText = marioFontBig.render("time", False, (255,255,255))
 worldText = marioFontBig.render("world", False, (255,255,255))
+
+# Loading all sound files
+
+pauseSound = mixer.Sound("assets/music/effects/pause.wav")
+backgroundSound = mixer.Sound("assets/music/songs/mainSong.ogg")
+backgroundFastSound = mixer.Sound("assets/music/songs/mainSongFast.ogg")
+timeLowSound = mixer.Sound("assets/music/effects/timeLow.wav")
+smallJumpSound = mixer.Sound("assets/music/effects/smallJump.ogg")
+bigJumpSound = mixer.Sound("assets/music/effects/bigJump.ogg")
+bumpSound = mixer.Sound("assets/music/effects/bump.ogg")
 
 # Declaring game functions
 def drawScene(background, backX, mario, marioPic, marioFrame, rectList, brickPic, spriteCount):
@@ -114,8 +124,8 @@ def drawStats(points, coins, startTime, level, fastMode, coinPic, spriteCount):
         nowFast = True
     currentTime = 200 - int((time.get_ticks() - startTime) / 1000)
     if currentTime < 100 and not fastMode:
-        playSound("effects/timeLow.wav", "music")
-        playSound("songs/mainSongFast.ogg", "music", True)
+        playSound(timeLowSound, "music")
+        playSound(backgroundFastSound, "music", True)
         nowFast = True
     points = marioFontBig.render("%06i" %int(points), False, (255,255,255))
     coins =  marioFontBig.render("x%02i" %int(coins), False, (255,255,255))
@@ -224,9 +234,9 @@ def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace):
             marioInfo[JUMPFRAMES] = 0
             # Playing jumping sounds
             if mario[STATE] == 0:
-                playSound("effects/smallJump.ogg", "effect")
+                playSound(smallJumpSound, "effect")
             else:
-                playSound("effects/bigJump.ogg", "effect")
+                playSound(bigJumpSound, "effect")
         elif marioInfo[JUMPFRAMES] < 41 and not marioInfo[ISFALLING] and not marioInfo[ONPLATFORM]: # Simulating higher jump with less gravity
             gravity = 0.2
             marioInfo[JUMPFRAMES] += 1
@@ -291,7 +301,7 @@ def checkCollide(mario, marioInfo, rectLists):
                     mario[VY] = 1
                     mario[Y] = brickRect.y + brickRect.height
                     marioInfo[JUMPFRAMES] = 41
-                    playSound("effects/bump.ogg", "effect")  # Play bumping sound
+                    playSound(bumpSound, "effect")  # Play bumping sound
                 elif mario[X] >= brickRect[X]:  # Right side collision
                     mario[X] = brickRect.x + brickRect.width - 2  # Move mario to the right of the rect
                     mario[VX] = 0
@@ -305,12 +315,11 @@ def playSound(soundFile, soundChannel, queue = False):
     for subList in channelList:  # For loop to identify the input
         if subList[0] == soundChannel:
             channelNumber = subList[1]
-    soundObject = mixer.Sound("assets/music/" + soundFile)  # Loading the sound file
     if queue:
-        mixer.Channel(channelNumber).queue(soundObject)  # Add the sound to the queue
+        mixer.Channel(channelNumber).queue(soundFile)  # Add the sound to the queue
     else:
         mixer.Channel(channelNumber).stop()  # Stopping any previous sound
-        mixer.Channel(channelNumber).play(soundObject)  # Playing new sound
+        mixer.Channel(channelNumber).play(soundFile)  # Playing new sound
 
 def globalSound(command):
     """ Function to apply commands to all mixer channels """
@@ -358,7 +367,7 @@ def game():
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
     global marioStats, RECTFINDER, marioPos
-    playSound("songs/mainSong.ogg", "music")  # Starting the background music
+    playSound(backgroundSound, "music")  # Starting the background music
     pausedBool = False
     startTime = time.get_ticks()  # Variable to keep track of time since level start
     uniSprite = 0 # Counter to control all non - Mario sprites
@@ -378,7 +387,7 @@ def game():
                     pausedBool = not pausedBool # Toggling the paused status
                     if pausedBool:
                         globalSound("pause")
-                        playSound("effects/pause.wav", "extra")
+                        playSound(pauseSound, "extra")
                         pauseTime = time.get_ticks() - startTime
                     else:
                         globalSound("unpause")

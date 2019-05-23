@@ -105,8 +105,6 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, brickPic
                 screen.blit(brickPic[1][0],brickRect)
             elif list == questionBricks:
                 screen.blit(brickPic[0][int(spriteCount//2)],brickRect)
-            else:
-                draw.rect(screen,GREEN,brickRect)
     screen.blit(marioShow, (mario[0], mario[1]))  # Blitting mario's sprite
 
 def drawStats(points, coins, startTime, level, fastMode, coinPic, spriteCount):
@@ -454,7 +452,6 @@ def menu():
 
 
 def loading():
-    running = True
     # Loading up and declaring all level elements
     global brickList, interactBricks, questionBricks, marioPos, backPos, marioStats
     marioPos = [40, 496, 0, 0, "Right", 0]
@@ -463,14 +460,15 @@ def loading():
     brickList = loadFile(str("data/level_" + str(levelNum+1) + "/bricks.txt"))
     interactBricks = loadFile(str("data/level_" + str(levelNum+1) + "/interactBricks.txt"))
     questionBricks = loadFile(str("data/level_" + str(levelNum+1) + "/questionBricks.txt"))
-    while running:
+    uniSprite = 0
+    startTime = time.get_ticks()
+    while time.get_ticks() - startTime < 3000 :
         for evnt in event.get():          
             if evnt.type == QUIT:
                 return "exit"
-        if key.get_pressed()[K_RETURN]: running = False
         screen.fill(BLACK)
-        tempText = marioFont.render("LOADING...", False, (255,255,255))
-        screen.blit(tempText,(0,0))
+        uniSprite = spriteCounter(uniSprite)
+        drawStats(0, 0, time.get_ticks(), 0, True, statCoin, uniSprite )
         display.flip()
         fpsCounter.tick(60)
     return "game"

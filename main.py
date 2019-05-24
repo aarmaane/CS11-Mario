@@ -103,6 +103,7 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, brickPic
     """Function to draw the background, mario, enemies, and all objects"""
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
+    BRICKVY, IDLE, TYPE = 4, 5, 6
     screen.fill(BLACK) # Clearing screen
     screen.blit(background, (backX, 0))  # Blitting background
     marioShow = marioPic[marioFrame[0]][int(marioFrame[1])]
@@ -114,7 +115,10 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, brickPic
             if list == interactBricks:
                 screen.blit(brickPic[1][0],brickRect)
             elif list == questionBricks:
-                screen.blit(brickPic[0][int(spriteCount//2)],brickRect)
+                if brick[IDLE] == 1:
+                    screen.blit(brickPic[1][1], brickRect)
+                else:
+                    screen.blit(brickPic[0][int(spriteCount//2)],brickRect)
     screen.blit(marioShow, (mario[0], mario[1]))  # Blitting mario's sprite
 
 def drawStats(points, coins, startTime, level, fastMode, coinPic, spriteCount):
@@ -282,9 +286,12 @@ def checkCollide(mario, marioInfo, rectLists):
     """ Function to check mario's collision with Rects"""
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
+    BRICKVY, IDLE, TYPE = 4, 5, 6
     height = 42
     if mario[STATE] == 1:
         height = 84
+    originalMarioRect = Rect(mario[X] + 2, mario[Y], 38 - 2, height)
+    originalY, originalVY = mario[Y], mario[VY]
     for list in rectLists:
         for brick in list:
             brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
@@ -308,6 +315,15 @@ def checkCollide(mario, marioInfo, rectLists):
                 elif mario[X] <= brickRect[X]:  # Left side collision
                     mario[X] = brickRect.x - 38  # Move mario to the left of the rect
                     mario[VX] = 0
+            if list != brickList and brickRect.colliderect(originalMarioRect) and originalY - originalVY >= brickRect.y + brickRect.height:
+                if list == interactBricks:
+                    indexBrick = interactBricks.index(brick)
+                    del interactBricks[indexBrick]
+                elif list == questionBricks and brick[IDLE] == 0:
+                    indexBrick = questionBricks.index(brick)
+                    questionBricks[indexBrick][IDLE] = 1
+
+
 
 def playSound(soundFile, soundChannel, queue = False):
     """ Function to load in sounds and play them on a channel """
@@ -371,6 +387,7 @@ def game():
     pausedBool = False
     startTime = time.get_ticks()  # Variable to keep track of time since level start
     uniSprite = 0 # Counter to control all non - Mario sprites
+    movingQuestion = []
     fast = False
     while running:
         mx, my = mouse.get_pos()
@@ -467,11 +484,11 @@ def loading():
     marioStats = [True, 0, False, False, False, False]
     backPos = 0
     brickList = loadFile(str("data/level_" + str(levelNum+1) + "/bricks.txt"))
-    interactBricks = loadFile(str("data/level_" + str(levelNum+1) + "/interactBricks.txt"))
-    questionBricks = loadFile(str("data/level_" + str(levelNum+1) + "/questionBricks.txt"))
+    interactBricks = loadFile(str("data/level_" + str(levelNum+1) + "/interactBricks.txt")) # 1-4: Rect, VY
+    questionBricks = loadFile(str("data/level_" + str(levelNum+1) + "/questionBricks.txt")) # 1-4: Rect, VY, State, Type
     uniSprite = 0
     startTime = time.get_ticks()
-    while time.get_ticks() - startTime < 3000 :
+    while time.get_ticks() - startTime < 2500:
         for evnt in event.get():          
             if evnt.type == QUIT:
                 return "exit"

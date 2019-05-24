@@ -291,7 +291,8 @@ def checkCollide(mario, marioInfo, rectLists):
     if mario[STATE] == 1:
         height = 84
     originalMarioRect = Rect(mario[X] + 2, mario[Y], 38 - 2, height)
-    originalY, originalVY = mario[Y], mario[VY]
+    originalX, originalY, originalVY = mario[X], mario[Y], mario[VY]
+    hitBrick = []
     for list in rectLists:
         for brick in list:
             brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
@@ -316,15 +317,21 @@ def checkCollide(mario, marioInfo, rectLists):
                     mario[X] = brickRect.x - 38  # Move mario to the left of the rect
                     mario[VX] = 0
             if list != brickList and brickRect.colliderect(originalMarioRect) and originalY - originalVY >= brickRect.y + brickRect.height:
-                if list == interactBricks:
-                    indexBrick = interactBricks.index(brick)
-                    del interactBricks[indexBrick]
-                elif list == questionBricks and brick[IDLE] == 0:
-                    indexBrick = questionBricks.index(brick)
-                    questionBricks[indexBrick][IDLE] = 1
-
-
-
+                hitBrick.append([brick, list])
+    for list in hitBrick:
+        brick, type = list[0], list[1]
+        brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
+        if len(hitBrick) != 1:
+            if brickRect.x - originalX > 21:
+                continue
+            else:
+                del hitBrick[-1]
+        if type == interactBricks:
+            indexBrick = interactBricks.index(brick)
+            del interactBricks[indexBrick]
+        elif type == questionBricks and brick[IDLE] == 0:
+            indexBrick = questionBricks.index(brick)
+            questionBricks[indexBrick][IDLE] = 1
 def playSound(soundFile, soundChannel, queue = False):
     """ Function to load in sounds and play them on a channel """
     channelList = [["music", 0], ["effect", 1], ["extra", 2]]  # List to keep track of mixer channels

@@ -53,7 +53,7 @@ marioSprites = [[image.load("assets/sprites/mario/smallmario"+str(i)+".png").con
                 [image.load("assets/sprites/mario/"+str(i)+".png").convert_alpha() for i in marioSpriteNames]]
 
 brickSprites=[[image.load("assets/sprites/bricks/question"+str(i)+".png").convert_alpha() for i in range (3,0,-1)],
-              [image.load("assets/sprites/bricks/brick.gif").convert_alpha(),
+              [image.load("assets/sprites/bricks/brick.png").convert_alpha(),
                image.load("assets/sprites/bricks/blockidle.png").convert_alpha()]]
 brickPiece = transform.scale(image.load("assets/sprites/bricks/brickpiece.png").convert_alpha(), (21,21))
 
@@ -153,7 +153,6 @@ def moveBricks(questionBricks, interactBricks):
         else:
             brick[BRICKVY] = 0
             brick[IDLE] = 0
-
 
 
 def drawStats(points, coins, startTime, level, fastMode, coinPic, spriteCount):
@@ -338,15 +337,15 @@ def checkCollide(mario, marioInfo, rectLists, breakingBrick):
                     marioInfo[ISFALLING] = True
                     mario[VY] = 0
                     mario[Y] = brickRect.y - height
-                elif mario[Y] - mario[VY] >= brickRect.y + brickRect.height:  # Hitting bottom collision
+                elif int(mario[Y] - mario[VY]) >= int(brickRect.y + brickRect.height):  # Hitting bottom collision
                     mario[Y] -= mario[VY]
                     mario[VY] = 1
                     mario[Y] = brickRect.y + brickRect.height
                     marioInfo[JUMPFRAMES] = 41
-                elif mario[X] >= brickRect[X]:  # Right side collision
+                elif int(mario[X]) >= int(brickRect[X]):  # Right side collision
                     mario[X] = brickRect.x + brickRect.width - 2  # Move mario to the right of the rect
                     mario[VX] = 0
-                elif mario[X] <= brickRect[X]:  # Left side collision
+                elif int(mario[X]) <= int(brickRect[X]):  # Left side collision
                     mario[X] = brickRect.x - 38  # Move mario to the left of the rect
                     mario[VX] = 0
             if list != brickList and brickRect.colliderect(originalMarioRect) and originalY - originalVY >= brickRect.y + brickRect.height:
@@ -355,7 +354,7 @@ def checkCollide(mario, marioInfo, rectLists, breakingBrick):
         brick, type = list[0], list[1]
         brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
         if len(hitBrick) != 1:
-            if brickRect.x - originalX > 21:
+            if abs(brickRect.x - originalX) > 21:
                 continue
             else:
                 del hitBrick[-1]

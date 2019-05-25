@@ -140,6 +140,21 @@ def drawDebris(brick):
     brick[4] += 0.8
     brick[5] += 3
 
+def moveBricks(questionBricks, interactBricks):
+    BRICKVY, IDLE, TYPE = 4, 5, 6
+    for brick in questionBricks:
+        if brick[BRICKVY] != 4.5 and brick[IDLE] == 1:
+            brick[BRICKVY] += 0.5
+            brick[1] += brick[BRICKVY]
+    for brick in interactBricks:
+        if brick[BRICKVY] != 4.5 and brick[IDLE] == 1:
+            brick[BRICKVY] += 0.5
+            brick[1] += brick[BRICKVY]
+        else:
+            brick[BRICKVY] = 0
+            brick[IDLE] = 0
+
+
 
 def drawStats(points, coins, startTime, level, fastMode, coinPic, spriteCount):
     if not fastMode:
@@ -301,7 +316,7 @@ def walkMario(mario, rectLists, direction, breakingBrick):
         mario[X] = 0
 
 
-def checkCollide(mario, marioInfo, rectLists, breakingBrick, movingQuestion):
+def checkCollide(mario, marioInfo, rectLists, breakingBrick):
     """ Function to check mario's collision with Rects"""
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
@@ -346,13 +361,19 @@ def checkCollide(mario, marioInfo, rectLists, breakingBrick, movingQuestion):
                 del hitBrick[-1]
         if type == interactBricks:
             indexBrick = interactBricks.index(brick)
-            if mario[STATE] == 1:
-                breakingBrick.append(interactBricks[indexBrick] + [-9, 0])
+            if mario[STATE] == 1 and brick[IDLE] == 0:
+                interactBricks[indexBrick][BRICKVY] = -9
+                breakingBrick.append(interactBricks[indexBrick])
                 del interactBricks[indexBrick]
                 playSound(breakSound, "effect")  # Play bumping sound
+            else:
+                interactBricks[indexBrick][BRICKVY] = -5
+                interactBricks[indexBrick][IDLE] = 1
+                playSound(bumpSound, "effect")
         elif type == questionBricks and brick[IDLE] == 0:
             indexBrick = questionBricks.index(brick)
             questionBricks[indexBrick][IDLE] = 1
+            questionBricks[indexBrick][BRICKVY] = -5
             playSound(bumpSound, "effect")  # Play bumping sound
 
 def playSound(soundFile, soundChannel, queue = False):
@@ -426,8 +447,7 @@ def game():
     playSound(backgroundSound, "music")  # Starting the background music
     pausedBool = False
     startTime = time.get_ticks()  # Variable to keep track of time since level start
-    uniSprite = 0 # Counter to control all non - Mario sprites
-    movingQuestion = []
+    uniSprite = 0  # Counter to control all non - Mario sprites
     breakingBrick = []
     fast = False
     while running:
@@ -468,13 +488,14 @@ def game():
                     marioStats[ISCROUCH]=False
             elif evnt.type == MOUSEBUTTONDOWN:
                 RECTFINDER = [mx,my]
-        rectList = [brickList, interactBricks, questionBricks, movingQuestion]
+        rectList = [brickList, interactBricks, questionBricks]
         if not pausedBool:
             uniSprite = spriteCounter(uniSprite)
             disposeRect(breakingBrick)
             checkMovement(marioPos, marioStats, marioAccelerate, rectList, initialSpace, breakingBrick)
             moveSprites(marioPos, marioStats, marioSprites, marioFrame)
-            checkCollide(marioPos, marioStats, rectList, breakingBrick, movingQuestion)
+            moveBricks(questionBricks, interactBricks)
+            checkCollide(marioPos, marioStats, rectList, breakingBrick)
         drawScene(backgroundPics[levelNum - 1], backPos, marioPos, marioSprites, marioFrame, rectList, breakingBrick, brickSprites, uniSprite)
         fast = drawStats(marioScore[PTS], marioScore[COIN], startTime, levelNum, fast, statCoin, uniSprite)
         if pausedBool:

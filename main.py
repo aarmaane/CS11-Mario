@@ -343,11 +343,12 @@ def walkMario(mario, rectLists, direction, clearRectList):
         mario[X] = 0
 
 
-def checkCollide(mario, marioInfo, rectLists, breakingBrick, moveCoins):
+def checkCollide(mario, marioInfo, marioScore, rectLists, breakingBrick, moveCoins):
     """ Function to check mario's collision with Rects"""
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
     BRICKVY, IDLE, TYPE = 4, 5, 6
+    PTS, COIN, LIVES = 0, 1, 2
     height = 42
     if mario[STATE] == 1:
         height = 84
@@ -405,6 +406,8 @@ def checkCollide(mario, marioInfo, rectLists, breakingBrick, moveCoins):
             if questionBricks[indexBrick][TYPE] == 1:
                 moveCoins.append([questionBricks[indexBrick][0] + 6, questionBricks[indexBrick][1], 30, 32, -12])
                 playSound(coinSound, "extra")
+                marioScore[COIN] += 1
+                marioScore[PTS] += 200
 
 def playSound(soundFile, soundChannel, queue = False):
     """ Function to load in sounds and play them on a channel """
@@ -529,7 +532,7 @@ def game():
             moveSprites(marioPos, marioStats, marioSprites, marioFrame)
             moveBricks(questionBricks, interactBricks)
             spinCoins(moveCoins, uniSprite)
-            checkCollide(marioPos, marioStats, rectList, breakingBrick, moveCoins)
+            checkCollide(marioPos, marioStats, marioScore, rectList, breakingBrick, moveCoins)
         drawScene(backgroundPics[levelNum - 1], backPos, marioPos, marioSprites, marioFrame, rectList, breakingBrick, brickSprites, coins, moveCoins, coinsPic, uniSprite)
         fast = drawStats(marioScore[PTS], marioScore[COIN], startTime, levelNum, fast, statCoin, uniSprite)
         if pausedBool:
@@ -537,7 +540,6 @@ def game():
             startTime += (time.get_ticks() - startTime) - pauseTime
         display.flip()
         fpsCounter.tick(60)
-        print(moveCoins)
         #print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
     return "loading"
 

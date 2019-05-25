@@ -59,6 +59,9 @@ brickPiece = transform.scale(image.load("assets/sprites/bricks/brickpiece.png").
 
 statCoin = [image.load("assets/sprites/title/coin"+str(i)+".png").convert_alpha() for i in range (3,0,-1)]
 
+coinsPic = [[image.load("assets/sprites/coins/coinidle"+str(i)+".png").convert_alpha() for i in range (3,0,-1)],
+            [image.load("assets/sprites/coins/coinmove"+str(i)+".png").convert_alpha() for i in range (1,4)]]
+
 # Resizing, Flipping, and Reordering Pictures
 backgroundPics = [transform.scale(pic,(9086,600)) for pic in backgroundPics]
 statCoin = [transform.scale(pic, (15,24)) for pic in statCoin]
@@ -78,6 +81,11 @@ brickPiece = [transform.flip(brickPiece, False, True),
               brickPiece,
               transform.flip(brickPiece, True, True),
               transform.flip(brickPiece, True, False)]
+for subList in range(len(coinsPic)):
+    for pic in range(len(coinsPic[subList])):
+        coinsPic[subList][pic] = transform.scale(coinsPic[subList][pic], (30,36))
+coinsPic[0] = coinsPic[0] + coinsPic[0][::-1]
+
 
 # Declaring all fonts
 marioFont = font.Font("assets/fonts/marioFont.ttf", 18)
@@ -104,9 +112,10 @@ smallJumpSound = mixer.Sound("assets/music/effects/smallJump.ogg")
 bigJumpSound = mixer.Sound("assets/music/effects/bigJump.ogg")
 bumpSound = mixer.Sound("assets/music/effects/bump.ogg")
 breakSound = mixer.Sound("assets/music/effects/brickBreak.ogg")
+coinSound = mixer.Sound("assets/music/effects/coin.ogg")
 
 # Declaring game functions
-def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breakingBrick, brickPic, spriteCount):
+def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breakingBrick, brickPic, coins, moveCoins, coinsPic, spriteCount):
     """Function to draw the background, mario, enemies, and all objects"""
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
@@ -116,6 +125,9 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breaking
     marioShow = marioPic[marioFrame[0]][int(marioFrame[1])]
     if mario[DIR] == "Left":
         marioShow = transform.flip(marioShow, True, False)  # Flipping mario's sprite if he's facing left
+    for coin in moveCoins:
+        coinRect = coin[0], coin[1], coin[2], coin[3]
+        screen.blit(coinsPic[1][int(spriteCount // 0.4 % 3)], coinRect)
     for list in rectList:
         for brick in list:
             brickRect = Rect (brick[0], brick[1], brick[2], brick[3])
@@ -128,6 +140,10 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breaking
                     screen.blit(brickPic[0][int(spriteCount//2)],brickRect)
     for brick in breakingBrick:
         drawDebris(brick)
+    for coin in coins:
+        coinRect = coin[0], coin[1], coin[2], coin[3]
+        screen.blit(coinsPic[0][int(spriteCount // 2)], coinRect)
+
     screen.blit(marioShow, (mario[0], mario[1]))  # Blitting mario's sprite
 
 
@@ -154,6 +170,18 @@ def moveBricks(questionBricks, interactBricks):
             brick[BRICKVY] = 0
             brick[IDLE] = 0
 
+
+def spinCoins(moveCoins, uniSprite):
+    Y, COINVY = 1, 4
+    deleteList = []
+    for coin in range(len(moveCoins)):
+        if moveCoins[coin][COINVY] != 5:
+            moveCoins[coin][COINVY] += 0.5
+            moveCoins[coin][Y] += moveCoins[coin][COINVY]
+        else:
+            deleteList.append(coin)
+    for index in deleteList:
+        del moveCoins[index]
 
 def drawStats(points, coins, startTime, level, fastMode, coinPic, spriteCount):
     if not fastMode:
@@ -209,8 +237,7 @@ def moveSprites(mario, marioInfo, marioPic, frame):
         frame[0],frame[1] = 2, 2  # If mario is crouching, stay on his crouching sprite
 
 
-
-def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace, breakingBrick):
+def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace, clearRectList):
     """Function to accept inputs and apply the appropriate physics """
     keys = key.get_pressed()
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
@@ -222,13 +249,13 @@ def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace, breakingBr
     elif keys[K_a] and not marioInfo[ISCROUCH]:  # Checking if mario is hitting left side of window
         if mario[DIR] != "Left":
             mario[VX] = 0  # Stop acceleration if changing direction
-        walkMario(mario, rectLists, "Left", breakingBrick)
+        walkMario(mario, rectLists, "Left", clearRectList)
         moving = True
         mario[DIR] = "Left"
     elif keys[K_d] and not marioInfo[ISCROUCH]:
         if mario[DIR] != "Right":
             mario[VX] = 0  # Stop acceleration if changing direction
-        walkMario(mario, rectLists, "Right", breakingBrick)
+        walkMario(mario, rectLists, "Right", clearRectList)
         moving = True
         mario[DIR] = "Right"
     if keys[K_s] and mario[STATE]==1:  # Allow crouching if big mario is active
@@ -242,9 +269,9 @@ def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace, breakingBr
             mario[VX] += acclerate/4  # Slow down movement when midair
     elif mario[VX] != 0:  # Move and decelerate if there is no input
         if mario[DIR] == "Right":
-            walkMario(mario, rectLists, "Right", breakingBrick)
+            walkMario(mario, rectLists, "Right", clearRectList)
         if mario[DIR] == "Left":
-            walkMario(mario, rectLists, "Left", breakingBrick)
+            walkMario(mario, rectLists, "Left", clearRectList)
         if marioInfo[ONGROUND]:  # Don't decelerate mid air
             mario[VX] -= acclerate
 
@@ -293,7 +320,7 @@ def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace, breakingBr
     marioPos[VY] += gravity  # apply gravity
 
 
-def walkMario(mario, rectLists, direction, breakingBrick):
+def walkMario(mario, rectLists, direction, clearRectList):
     """ Function to move the player, background, and all rectangles """
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     global backPos
@@ -309,13 +336,14 @@ def walkMario(mario, rectLists, direction, breakingBrick):
             for subList in range(len(rectLists)):
                 for rect in range(len(rectLists[subList])):
                     rectLists[subList][rect][0] -= mario[VX]
-            for rect in range(len(breakingBrick)):
-                breakingBrick[rect][0] -= mario[VX]
+            for subList in range(len(clearRectList)):
+                for rect in range(len(clearRectList[subList])):
+                    clearRectList[subList][rect][0] -= mario[VX]
     if mario[X] < 0:
         mario[X] = 0
 
 
-def checkCollide(mario, marioInfo, rectLists, breakingBrick):
+def checkCollide(mario, marioInfo, rectLists, breakingBrick, moveCoins):
     """ Function to check mario's collision with Rects"""
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
@@ -374,6 +402,9 @@ def checkCollide(mario, marioInfo, rectLists, breakingBrick):
             questionBricks[indexBrick][IDLE] = 1
             questionBricks[indexBrick][BRICKVY] = -5
             playSound(bumpSound, "effect")  # Play bumping sound
+            if questionBricks[indexBrick][TYPE] == 1:
+                moveCoins.append([questionBricks[indexBrick][0] + 6, questionBricks[indexBrick][1], 30, 32, -12])
+                playSound(coinSound, "extra")
 
 def playSound(soundFile, soundChannel, queue = False):
     """ Function to load in sounds and play them on a channel """
@@ -448,6 +479,8 @@ def game():
     startTime = time.get_ticks()  # Variable to keep track of time since level start
     uniSprite = 0  # Counter to control all non - Mario sprites
     breakingBrick = []
+    moveCoins = []
+    mushrooms = []
     fast = False
     while running:
         mx, my = mouse.get_pos()
@@ -488,20 +521,23 @@ def game():
             elif evnt.type == MOUSEBUTTONDOWN:
                 RECTFINDER = [mx,my]
         rectList = [brickList, interactBricks, questionBricks]
+        clearRectList = [coins, moveCoins, breakingBrick, mushrooms]
         if not pausedBool:
             uniSprite = spriteCounter(uniSprite)
             disposeRect(breakingBrick)
-            checkMovement(marioPos, marioStats, marioAccelerate, rectList, initialSpace, breakingBrick)
+            checkMovement(marioPos, marioStats, marioAccelerate, rectList, initialSpace, clearRectList)
             moveSprites(marioPos, marioStats, marioSprites, marioFrame)
             moveBricks(questionBricks, interactBricks)
-            checkCollide(marioPos, marioStats, rectList, breakingBrick)
-        drawScene(backgroundPics[levelNum - 1], backPos, marioPos, marioSprites, marioFrame, rectList, breakingBrick, brickSprites, uniSprite)
+            spinCoins(moveCoins, uniSprite)
+            checkCollide(marioPos, marioStats, rectList, breakingBrick, moveCoins)
+        drawScene(backgroundPics[levelNum - 1], backPos, marioPos, marioSprites, marioFrame, rectList, breakingBrick, brickSprites, coins, moveCoins, coinsPic, uniSprite)
         fast = drawStats(marioScore[PTS], marioScore[COIN], startTime, levelNum, fast, statCoin, uniSprite)
         if pausedBool:
             drawPause()
             startTime += (time.get_ticks() - startTime) - pauseTime
         display.flip()
         fpsCounter.tick(60)
+        print(moveCoins)
         #print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
     return "loading"
 
@@ -544,7 +580,7 @@ def menu():
 def loading():
     PTS, COIN, LIVES = 0, 1, 2
     # Loading up and declaring all level elements
-    global brickList, interactBricks, questionBricks, marioPos, backPos, marioStats, levelNum
+    global brickList, interactBricks, questionBricks, coins, marioPos, backPos, marioStats, levelNum
     levelNum += 1
     marioPos = [40, 496, 0, 0, "Right", 0]
     marioStats = [True, 0, False, False, False, False]
@@ -552,6 +588,7 @@ def loading():
     brickList = loadFile(str("data/level_" + str(levelNum) + "/bricks.txt"))
     interactBricks = loadFile(str("data/level_" + str(levelNum) + "/interactBricks.txt")) # 1-4: Rect, VY
     questionBricks = loadFile(str("data/level_" + str(levelNum) + "/questionBricks.txt")) # 1-4: Rect, VY, State, Type
+    coins = loadFile(str("data/level_" + str(levelNum) + "/coins.txt"))
     uniSprite = 0
     startTime = time.get_ticks()
     currentWorld = marioFontBig.render("World 1-%s" %levelNum, False, (255,255,255))

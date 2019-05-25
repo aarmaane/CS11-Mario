@@ -60,7 +60,7 @@ brickPiece = transform.scale(image.load("assets/sprites/bricks/brickpiece.png").
 statCoin = [image.load("assets/sprites/title/coin"+str(i)+".png").convert_alpha() for i in range (3,0,-1)]
 
 coinsPic = [[image.load("assets/sprites/coins/coinidle"+str(i)+".png").convert_alpha() for i in range (3,0,-1)],
-            [image.load("assets/sprites/coins/coinmove"+str(i)+".png").convert_alpha() for i in range (1,4)]]
+            [image.load("assets/sprites/coins/coinmove"+str(i)+".png").convert_alpha() for i in range (1,5)]]
 
 # Resizing, Flipping, and Reordering Pictures
 backgroundPics = [transform.scale(pic,(9086,600)) for pic in backgroundPics]
@@ -127,7 +127,7 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breaking
         marioShow = transform.flip(marioShow, True, False)  # Flipping mario's sprite if he's facing left
     for coin in moveCoins:
         coinRect = coin[0], coin[1], coin[2], coin[3]
-        screen.blit(coinsPic[1][int(spriteCount // 0.4 % 3)], coinRect)
+        screen.blit(coinsPic[1][int(spriteCount // 0.4 % 4)], coinRect)
     for list in rectList:
         for brick in list:
             brickRect = Rect (brick[0], brick[1], brick[2], brick[3])

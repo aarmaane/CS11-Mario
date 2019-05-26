@@ -382,36 +382,67 @@ def checkCollide(mario, marioInfo, marioScore, rectLists, breakingBrick, moveCoi
     for list in hitBrick:
         brick, type = list[0], list[1]
         brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
+        # Handling collision wigh multiple bricks
         if len(hitBrick) != 1:
             if abs(brickRect.x - originalX) > 21:
                 continue
             else:
                 del hitBrick[-1]
-        if type == interactBricks:
+        # Manipulating bricks appropriately
+        if type == interactBricks and brick[IDLE] == 0:
             indexBrick = interactBricks.index(brick)
-            if mario[STATE] == 1 and brick[IDLE] == 0:
-                interactBricks[indexBrick][BRICKVY] = -9
-                breakingBrick.append(interactBricks[indexBrick])
-                del interactBricks[indexBrick]
-                playSound(breakSound, "effect")  # Play bumping sound
-            else:
+            if brick[TYPE] > 0 or mario[STATE] == 0:
                 interactBricks[indexBrick][BRICKVY] = -5
                 interactBricks[indexBrick][IDLE] = 1
                 playSound(bumpSound, "effect")
-        elif type == questionBricks and brick[IDLE] == 0:
-            indexBrick = questionBricks.index(brick)
-            questionBricks[indexBrick][IDLE] = 1
-            questionBricks[indexBrick][BRICKVY] = -5
+                if brick[TYPE] > 0:
+                    brick[TYPE] -= 1
+                    moveCoins.append([interactBricks[indexBrick][0] + 6, interactBricks[indexBrick][1], 30, 32, -12])
+                    playSound(coinSound, "block")
+                    marioScore[COIN] += 1
+                    marioScore[PTS] += 200
+                    if brick[TYPE] == 0:
+                        questionBricks.append([brick[0], brick[1], brick[2], brick[3], brick[4], brick[5], 0])
+                        del interactBricks[indexBrick]
+            else:
+                interactBricks[indexBrick][BRICKVY] = -9
+                breakingBrick.append(interactBricks[indexBrick])
+                del interactBricks[indexBrick]
+                playSound(breakSound, "block")  # Play bumping sound
+        elif type == questionBricks:
             playSound(bumpSound, "effect")  # Play bumping sound
-            if questionBricks[indexBrick][TYPE] == 1:
-                moveCoins.append([questionBricks[indexBrick][0] + 6, questionBricks[indexBrick][1], 30, 32, -12])
-                playSound(coinSound, "extra")
-                marioScore[COIN] += 1
-                marioScore[PTS] += 200
+            if brick[IDLE] == 0:
+                indexBrick = questionBricks.index(brick)
+                questionBricks[indexBrick][IDLE] = 1
+                questionBricks[indexBrick][BRICKVY] = -5
+                if questionBricks[indexBrick][TYPE] == 1:
+                    moveCoins.append([questionBricks[indexBrick][0] + 6, questionBricks[indexBrick][1], 30, 32, -12])
+                    playSound(coinSound, "block")
+                    marioScore[COIN] += 1
+                    marioScore[PTS] += 200
+
+
+def checkClearCollide(mario, marioScore, coins):
+    PTS, COIN, LIVES = 0, 1, 2
+    X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
+    deleteList = []
+    height = 42
+    if mario[STATE] == 1:
+        height = 84
+    marioRect = Rect(mario[X], mario[Y], 38 - 2, height)
+    for coin in range(len(coins)):
+        coinRect = Rect(coins[coin][0], coins[coin][1], coins[coin][2], coins[coin][3])
+        if marioRect.colliderect(coinRect):
+            deleteList.append(coin)
+            playSound(coinSound, "block")
+            marioScore[PTS] += 200
+            marioScore[COIN] += 1
+    for index in deleteList:
+        del coins[index]
 
 def playSound(soundFile, soundChannel, queue = False):
     """ Function to load in sounds and play them on a channel """
-    channelList = [["music", 0], ["effect", 1], ["extra", 2]]  # List to keep track of mixer channels
+    channelList = [["music", 0], ["effect", 1], ["block", 2], ["extra", 3]]  # List to keep track of mixer channels
     for subList in channelList:  # For loop to identify the input
         if subList[0] == soundChannel:
             channelNumber = subList[1]
@@ -533,6 +564,7 @@ def game():
             moveBricks(questionBricks, interactBricks)
             spinCoins(moveCoins, uniSprite)
             checkCollide(marioPos, marioStats, marioScore, rectList, breakingBrick, moveCoins)
+            checkClearCollide(marioPos, marioScore, coins)
         drawScene(backgroundPics[levelNum - 1], backPos, marioPos, marioSprites, marioFrame, rectList, breakingBrick, brickSprites, coins, moveCoins, coinsPic, uniSprite)
         fast = drawStats(marioScore[PTS], marioScore[COIN], startTime, levelNum, fast, statCoin, uniSprite)
         if pausedBool:
@@ -545,8 +577,9 @@ def game():
 
 
 def menu():
-    global levelNum
+    global levelNum, marioScore
     levelNum = 0
+    marioScore= [0, 0, 0]
     running = True
     globalSound("stop") # Stop any music that's playing
     selected = 0 # Variable for current selected option
@@ -588,8 +621,8 @@ def loading():
     marioStats = [True, 0, False, False, False, False]
     backPos = 0
     brickList = loadFile(str("data/level_" + str(levelNum) + "/bricks.txt"))
-    interactBricks = loadFile(str("data/level_" + str(levelNum) + "/interactBricks.txt")) # 1-4: Rect, VY
-    questionBricks = loadFile(str("data/level_" + str(levelNum) + "/questionBricks.txt")) # 1-4: Rect, VY, State, Type
+    interactBricks = loadFile(str("data/level_" + str(levelNum) + "/interactBricks.txt"))  # 1-4: Rect, VY, State, Coins
+    questionBricks = loadFile(str("data/level_" + str(levelNum) + "/questionBricks.txt"))  # 1-4: Rect, VY, State, Type
     coins = loadFile(str("data/level_" + str(levelNum) + "/coins.txt"))
     uniSprite = 0
     startTime = time.get_ticks()

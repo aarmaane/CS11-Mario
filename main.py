@@ -62,6 +62,8 @@ statCoin = [image.load("assets/sprites/title/coin"+str(i)+".png").convert_alpha(
 coinsPic = [[image.load("assets/sprites/coins/coinidle"+str(i)+".png").convert_alpha() for i in range (3,0,-1)],
             [image.load("assets/sprites/coins/coinmove"+str(i)+".png").convert_alpha() for i in range (1,5)]]
 
+itemsPic = [image.load("assets/sprites/items/mushroom.png").convert_alpha()]
+
 # Resizing, Flipping, and Reordering Pictures
 backgroundPics = [transform.scale(pic,(9086,600)) for pic in backgroundPics]
 statCoin = [transform.scale(pic, (15,24)) for pic in statCoin]
@@ -84,6 +86,8 @@ brickPiece = [transform.flip(brickPiece, False, True),
 for subList in range(len(coinsPic)):
     for pic in range(len(coinsPic[subList])):
         coinsPic[subList][pic] = transform.scale(coinsPic[subList][pic], (30,36))
+for pic in range(len(itemsPic)):
+    itemsPic[pic] = transform.scale(itemsPic[pic], (42,42))
 coinsPic[0] = coinsPic[0] + coinsPic[0][::-1]
 
 
@@ -113,9 +117,10 @@ bigJumpSound = mixer.Sound("assets/music/effects/bigJump.ogg")
 bumpSound = mixer.Sound("assets/music/effects/bump.ogg")
 breakSound = mixer.Sound("assets/music/effects/brickBreak.ogg")
 coinSound = mixer.Sound("assets/music/effects/coin.ogg")
+appearSound = mixer.Sound("assets/music/effects/itemAppear.ogg")
 
 # Declaring game functions
-def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breakingBrick, brickPic, coins, moveCoins, coinsPic, spriteCount):
+def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breakingBrick, brickPic, coins, moveCoins, coinsPic, mushrooms, itemsPic, spriteCount):
     """Function to draw the background, mario, enemies, and all objects"""
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
@@ -128,6 +133,10 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breaking
     for coin in moveCoins:
         coinRect = coin[0], coin[1], coin[2], coin[3]
         screen.blit(coinsPic[1][int(spriteCount // 0.4 % 4)], coinRect)
+    for mushroom in mushrooms:
+        mushRect = Rect(mushroom[0], mushroom[1], mushroom[2], mushroom[3])
+        if mushroom[4] == 0:
+            screen.blit(itemsPic[0], mushRect)
     for list in rectList:
         for brick in list:
             brickRect = Rect (brick[0], brick[1], brick[2], brick[3])
@@ -162,6 +171,7 @@ def moveBricks(questionBricks, interactBricks):
         if brick[BRICKVY] != 4.5 and brick[IDLE] == 1:
             brick[BRICKVY] += 0.5
             brick[1] += brick[BRICKVY]
+
     for brick in interactBricks:
         if brick[BRICKVY] != 4.5 and brick[IDLE] == 1:
             brick[BRICKVY] += 0.5
@@ -182,6 +192,26 @@ def spinCoins(moveCoins, uniSprite):
             deleteList.append(coin)
     for index in deleteList:
         del moveCoins[index]
+
+def moveItems(rectList,mushrooms):
+    X, Y, DELAY, MOVEUP, MUSHVX, MUSHVY = 0, 1, 4, 5, 6, 7
+    # Making sure all mushrooms are activated
+    for mushroom in mushrooms:
+        if mushroom[DELAY] > 0:
+            mushroom[DELAY] -= 1
+        elif mushroom[MOVEUP] > 0:
+            mushroom[MOVEUP] -= 1
+            mushroom[1] -= 1
+        else:
+            mushroom[X] += mushroom[MUSHVX]
+            mushRect = Rect(mushroom[0], mushroom[1], mushroom[2], mushroom[3])
+            for list in rectList:
+                for brick in list:
+                    brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
+                    if mushRect.colliderect(brickRect):
+                        mushroom[MUSHVX] *= -1
+
+
 
 def drawStats(points, coins, startTime, level, fastMode, coinPic, spriteCount):
     if not fastMode:
@@ -343,7 +373,7 @@ def walkMario(mario, rectLists, direction, clearRectList):
         mario[X] = 0
 
 
-def checkCollide(mario, marioInfo, marioScore, rectLists, breakingBrick, moveCoins):
+def checkCollide(mario, marioInfo, marioScore, rectLists, breakingBrick, moveCoins, mushrooms):
     """ Function to check mario's collision with Rects"""
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
@@ -420,12 +450,16 @@ def checkCollide(mario, marioInfo, marioScore, rectLists, breakingBrick, moveCoi
                     playSound(coinSound, "block")
                     marioScore[COIN] += 1
                     marioScore[PTS] += 200
+                elif questionBricks[indexBrick][TYPE] == 2:
+                    mushrooms.append([questionBricks[indexBrick][0], questionBricks[indexBrick][1], 42, 42, 20, 42, 3, 0])
+                    playSound(appearSound, "block")
 
 
-def checkClearCollide(mario, marioScore, coins):
+def checkClearCollide(mario, marioScore, coins, mushrooms):
     PTS, COIN, LIVES = 0, 1, 2
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     deleteList = []
+    mushDeleteList = []
     height = 42
     if mario[STATE] == 1:
         height = 84
@@ -439,6 +473,16 @@ def checkClearCollide(mario, marioScore, coins):
             marioScore[COIN] += 1
     for index in deleteList:
         del coins[index]
+    for index in range(len(mushrooms)):
+        mushRect = Rect(mushrooms[index][0], mushrooms[index][1], mushrooms[index][2], mushrooms[index][3])
+        if marioRect.colliderect(mushRect):
+            if mario[STATE] == 0:
+                mario[Y] -= 42
+                mario[STATE] = 1
+            marioScore[PTS] += 2000
+            mushDeleteList.append(index)
+    for index in mushDeleteList:
+        del mushrooms[index]
 
 def playSound(soundFile, soundChannel, queue = False):
     """ Function to load in sounds and play them on a channel """
@@ -478,13 +522,21 @@ def spriteCounter(counter):
         counter = 0
     return counter
 
-def disposeRect(breakingBrick):
+def disposeRect(breakingBrick, itemsList):
     deleteList = []
+    itemDeleteList = []
     for index in range(len(breakingBrick)):
         if breakingBrick[index][1] > 600:
             deleteList.append(index)
     for index in deleteList:
         del breakingBrick[index]
+    for list in range(len(itemsList)):
+        for item in range(len(itemsList[list])):
+            if itemsList[list][item][0] < -300 :
+                itemDeleteList.append([list, item])
+    for list in itemDeleteList:
+        listIndex, item = list[0], list[1]
+        del itemsList[listIndex][item]
 
 # Declaring loading functions
 
@@ -556,16 +608,18 @@ def game():
                 RECTFINDER = [mx,my]
         rectList = [brickList, interactBricks, questionBricks]
         clearRectList = [coins, moveCoins, breakingBrick, mushrooms]
+        itemsList = [mushrooms]
         if not pausedBool:
             uniSprite = spriteCounter(uniSprite)
-            disposeRect(breakingBrick)
+            disposeRect(breakingBrick, itemsList)
             checkMovement(marioPos, marioStats, marioAccelerate, rectList, initialSpace, clearRectList)
             moveSprites(marioPos, marioStats, marioSprites, marioFrame)
             moveBricks(questionBricks, interactBricks)
             spinCoins(moveCoins, uniSprite)
-            checkCollide(marioPos, marioStats, marioScore, rectList, breakingBrick, moveCoins)
-            checkClearCollide(marioPos, marioScore, coins)
-        drawScene(backgroundPics[levelNum - 1], backPos, marioPos, marioSprites, marioFrame, rectList, breakingBrick, brickSprites, coins, moveCoins, coinsPic, uniSprite)
+            moveItems(rectList, mushrooms)
+            checkCollide(marioPos, marioStats, marioScore, rectList, breakingBrick, moveCoins, mushrooms)
+            checkClearCollide(marioPos, marioScore, coins, mushrooms)
+        drawScene(backgroundPics[levelNum - 1], backPos, marioPos, marioSprites, marioFrame, rectList, breakingBrick, brickSprites, coins, moveCoins, coinsPic, mushrooms, itemsPic, uniSprite)
         fast = drawStats(marioScore[PTS], marioScore[COIN], startTime, levelNum, fast, statCoin, uniSprite)
         if pausedBool:
             drawPause()

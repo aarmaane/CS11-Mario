@@ -168,12 +168,12 @@ def drawDebris(brick):
 def moveBricks(questionBricks, interactBricks):
     BRICKVY, IDLE, TYPE = 4, 5, 6
     for brick in questionBricks:
-        if brick[BRICKVY] != 4.5 and brick[IDLE] == 1:
+        if brick[BRICKVY] != 3.5 and brick[IDLE] == 1:
             brick[BRICKVY] += 0.5
             brick[1] += brick[BRICKVY]
 
     for brick in interactBricks:
-        if brick[BRICKVY] != 4.5 and brick[IDLE] == 1:
+        if brick[BRICKVY] != 3.5 and brick[IDLE] == 1:
             brick[BRICKVY] += 0.5
             brick[1] += brick[BRICKVY]
         else:
@@ -422,7 +422,7 @@ def checkCollide(mario, marioInfo, marioScore, rectLists, breakingBrick, moveCoi
         if type == interactBricks and brick[IDLE] == 0:
             indexBrick = interactBricks.index(brick)
             if brick[TYPE] > 0 or mario[STATE] == 0:
-                interactBricks[indexBrick][BRICKVY] = -5
+                interactBricks[indexBrick][BRICKVY] = -4
                 interactBricks[indexBrick][IDLE] = 1
                 playSound(bumpSound, "effect")
                 if brick[TYPE] > 0:
@@ -444,20 +444,21 @@ def checkCollide(mario, marioInfo, marioScore, rectLists, breakingBrick, moveCoi
             if brick[IDLE] == 0:
                 indexBrick = questionBricks.index(brick)
                 questionBricks[indexBrick][IDLE] = 1
-                questionBricks[indexBrick][BRICKVY] = -5
+                questionBricks[indexBrick][BRICKVY] = -4
                 if questionBricks[indexBrick][TYPE] == 1:
                     moveCoins.append([questionBricks[indexBrick][0] + 6, questionBricks[indexBrick][1], 30, 32, -12])
                     playSound(coinSound, "block")
                     marioScore[COIN] += 1
                     marioScore[PTS] += 200
                 elif questionBricks[indexBrick][TYPE] == 2:
-                    mushrooms.append([questionBricks[indexBrick][0], questionBricks[indexBrick][1], 42, 42, 20, 42, 3, 0])
+                    mushrooms.append([questionBricks[indexBrick][0], questionBricks[indexBrick][1], 42, 42, 15, 42, 3, 0])
                     playSound(appearSound, "block")
 
 
 def checkClearCollide(mario, marioScore, coins, mushrooms):
     PTS, COIN, LIVES = 0, 1, 2
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
+    X, Y, DELAY, MOVEUP, MUSHVX, MUSHVY = 0, 1, 4, 5, 6, 7
     deleteList = []
     mushDeleteList = []
     height = 42
@@ -475,7 +476,7 @@ def checkClearCollide(mario, marioScore, coins, mushrooms):
         del coins[index]
     for index in range(len(mushrooms)):
         mushRect = Rect(mushrooms[index][0], mushrooms[index][1], mushrooms[index][2], mushrooms[index][3])
-        if marioRect.colliderect(mushRect):
+        if marioRect.colliderect(mushRect) and mushrooms[index][DELAY] == 0 and mushrooms[index][MOVEUP] == 0:
             if mario[STATE] == 0:
                 mario[Y] -= 42
                 mario[STATE] = 1

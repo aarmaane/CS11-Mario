@@ -32,7 +32,7 @@ marioStats = [True, 0, False, False, False, False] # onGround, jumpFrames, inGro
 # isCrouch: Boolean to see if mario is crouching
 # onPlatform: Boolean to see if mario's last position was on a platform
 # isFalling: Boolean to see if mario has stopped jumping and should fall
-marioScore = [0, 0, 0] # Points, Coins, Lives
+marioScore = [0, 0, 3] # Points, Coins, Lives
 marioFrame = [0, 0] # List to keep track of mario's sprites
 marioAccelerate = 0.2 # The value at which mario can speed up and slow down
 backPos = 0  # Position of the background
@@ -579,7 +579,7 @@ def game():
 def menu():
     global levelNum, marioScore
     levelNum = 0
-    marioScore= [0, 0, 0]
+    marioScore= [0, 0, 3]
     running = True
     globalSound("stop") # Stop any music that's playing
     selected = 0 # Variable for current selected option

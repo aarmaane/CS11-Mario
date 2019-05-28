@@ -206,7 +206,7 @@ def spinCoins(moveCoins, uniSprite):
         del moveCoins[index]
 
 def moveItems(rectList,mushrooms):
-    X, Y, DELAY, MOVEUP, MUSHVX, MUSHVY = 0, 1, 4, 5, 6, 7
+    X, Y, DELAY, MOVEUP, MUSHVX, MUSHVY, INFLOOR = 0, 1, 4, 5, 6, 7, 8
     # Making sure all mushrooms are activated
     for mushroom in mushrooms:
         if mushroom[DELAY] > 0:
@@ -216,13 +216,27 @@ def moveItems(rectList,mushrooms):
             mushroom[1] -= 1
         else:
             mushroom[X] += mushroom[MUSHVX]
+            mushroom[MUSHVY] += 0.5
+            mushroom[Y] += mushroom[MUSHVY]
+            if mushroom[Y] > 496 and not mushroom[INFLOOR]:
+                mushroom[Y] = 496
+                mushroom[MUSHVY] = 0
+                mushRect = Rect(mushroom[0], mushroom[1], mushroom[2], mushroom[3])
+                if mushRect.x > 0 and screen.get_at((mushRect.x, mushRect.bottom)) == SKYBLUE and screen.get_at((mushRect.right, mushRect.bottom)) == SKYBLUE:
+                    mushroom[INFLOOR] = True
             mushRect = Rect(mushroom[0], mushroom[1], mushroom[2], mushroom[3])
             for list in rectList:
                 for brick in list:
                     brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
                     if mushRect.colliderect(brickRect):
-                        mushroom[MUSHVX] *= -1
+                        if int(mushroom[Y]) <= brickRect.y:
+                            mushroom[Y] = brickRect.y - 42
+                            mushroom[MUSHVY] = 0
+                        else:
+                            mushroom[MUSHVX] *= -1
 
+def itemCollide(item):
+    pass
 
 
 def drawStats(points, coins, startTime, level, fastMode, coinPic, spriteCount):
@@ -463,7 +477,7 @@ def checkCollide(mario, marioInfo, marioScore, rectLists, breakingBrick, moveCoi
                     marioScore[COIN] += 1
                     marioScore[PTS] += 200
                 elif questionBricks[indexBrick][TYPE] == 2:
-                    mushrooms.append([questionBricks[indexBrick][0], questionBricks[indexBrick][1], 42, 42, 15, 42, 3, 0])
+                    mushrooms.append([questionBricks[indexBrick][0], questionBricks[indexBrick][1], 42, 42, 15, 42, 3, 0, False])
                     playSound(appearSound, "block")
 
 

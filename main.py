@@ -92,19 +92,31 @@ coinsPic[0] = coinsPic[0] + coinsPic[0][::-1]
 
 
 # Declaring all fonts
+
 marioFont = font.Font("assets/fonts/marioFont.ttf", 18)
 marioFontBig = font.Font("assets/fonts/marioFont.ttf", 22)
+marioFontSuperBig = font.Font("assets/fonts/marioFont.ttf", 30)
 
 # Creating text
-playText = marioFont.render("play", False, (255,255,255))
-instructText = marioFont.render("instructions", False, (255,255,255))
-creditText = marioFont.render("credits", False, (255,255,255))
-quitText = marioFont.render("quit", False, (255,255,255))
-pauseText = marioFont.render("paused", False, (255,255,255))
-helpText = marioFont.render("press esc to exit game", False, (255,255,255))
-marioText = marioFontBig.render("mario", False, (255,255,255))
-timeText = marioFontBig.render("time", False, (255,255,255))
-worldText = marioFontBig.render("world", False, (255,255,255))
+
+playText = marioFont.render("play", False, WHITE)
+instructText = marioFont.render("instructions", False, WHITE)
+creditText = marioFont.render("credits", False, WHITE)
+quitText = marioFont.render("quit", False, WHITE)
+pauseText = marioFont.render("paused", False, WHITE)
+helpText = marioFont.render("press esc to exit game", False, WHITE)
+marioText = marioFontBig.render("mario", False, WHITE)
+timeText = marioFontBig.render("time", False, WHITE)
+worldText = marioFontBig.render("world", False, WHITE)
+
+instructTextNew = marioFontSuperBig.render("Instructions", False, WHITE)
+moveRightText= marioFont.render("Move Right  -  D", False, WHITE)
+moveLeftText= marioFont.render("Move Left  -  A", False, WHITE)
+jumpText= marioFont.render("Jump  -  Space", False, WHITE)
+crouchText= marioFont.render("Crouch  -  S", False, WHITE)
+pauseText= marioFont.render("Pause  -  P", False, WHITE)
+musicPauseText= marioFont.render("Pause/Unpause Music  -  M", False, WHITE)
+
 
 # Loading all sound files
 
@@ -704,6 +716,10 @@ def instructions():
         for evnt in event.get():          
             if evnt.type == QUIT:
                 return "exit"
+        screen.blit(backgroundPics[0],(0,0))
+        screen.blit(instructTextNew,(235,40))
+        screen.blit(moveRightText,(80,130))
+        screen.blit(moveLeftText,(80,170))
         if key.get_pressed()[27]: running = False
         display.flip()
         fpsCounter.tick(60)
@@ -722,6 +738,7 @@ def credit():
     return "menu"
 
 # Main loop to check for which page to fall on
+
 while page != "exit":
     if page == "menu":
         page = menu()

@@ -1,5 +1,6 @@
 from pygame import *
 from random import *
+import copy
 import os
 # Starting up pygame and necessary components
 os.environ['SDL_VIDEO_CENTERED'] = '1'
@@ -109,13 +110,13 @@ marioText = marioFontBig.render("mario", False, WHITE)
 timeText = marioFontBig.render("time", False, WHITE)
 worldText = marioFontBig.render("world", False, WHITE)
 
-instructTextNew = marioFontSuperBig.render("Instructions", False, WHITE)
-moveRightText= marioFont.render("Move Right  -  D", False, WHITE)
-moveLeftText= marioFont.render("Move Left  -  A", False, WHITE)
-jumpText= marioFont.render("Jump  -  Space", False, WHITE)
-crouchText= marioFont.render("Crouch  -  S", False, WHITE)
-pauseText= marioFont.render("Pause  -  P", False, WHITE)
-musicPauseText= marioFont.render("Pause/Unpause Music  -  M", False, WHITE)
+instructHelp = marioFontSuperBig.render("Instructions", False, WHITE)
+moveRightHelp = marioFont.render("Move Right  -  D", False, WHITE)
+moveLeftHelp = marioFont.render("Move Left  -  A", False, WHITE)
+jumpHelp = marioFont.render("Jump  -  Space", False, WHITE)
+crouchHelp = marioFont.render("Crouch  -  S", False, WHITE)
+pauseHelp = marioFont.render("Pause  -  P", False, WHITE)
+musicPauseHelp = marioFont.render("Pause/Unpause Music  -  M", False, WHITE)
 
 
 # Loading all sound files
@@ -132,7 +133,7 @@ coinSound = mixer.Sound("assets/music/effects/coin.ogg")
 appearSound = mixer.Sound("assets/music/effects/itemAppear.ogg")
 
 # Declaring game functions
-def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breakingBrick, brickPic, coins, moveCoins, coinsPic, mushrooms, itemsPic, spriteCount):
+def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breakingBrick, brickPic, coins, moveCoins, coinsPic, mushrooms, itemsPic, enemiesList, spriteCount):
     """Function to draw the background, mario, enemies, and all objects"""
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
@@ -149,9 +150,14 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breaking
         mushRect = Rect(mushroom[0], mushroom[1], mushroom[2], mushroom[3])
         if mushroom[4] == 0:
             screen.blit(itemsPic[0], mushRect)
+    for list in enemiesList:
+        for enemy in list:
+            enmyRect = Rect(enemy[0], enemy[1], enemy[2], enemy[3])
+            if list == goombas:
+                draw.rect(screen,GREEN,enmyRect)
     for list in rectList:
         for brick in list:
-            brickRect = Rect (brick[0], brick[1], brick[2], brick[3])
+            brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
             if list == interactBricks:
                 screen.blit(brickPic[1][0],brickRect)
             elif list == questionBricks:
@@ -205,8 +211,9 @@ def spinCoins(moveCoins, uniSprite):
     for index in deleteList:
         del moveCoins[index]
 
-def moveItems(rectList,mushrooms):
+def moveItems(rectList, enemiesList, mushrooms, goombas):
     X, Y, DELAY, MOVEUP, MUSHVX, MUSHVY, INFLOOR = 0, 1, 4, 5, 6, 7, 8
+    ENMYVX, ENMYVY, ENMYIDLE, ENMYINFLOOR = 4, 5, 6, 7
     # Making sure all mushrooms are activated
     for mushroom in mushrooms:
         if mushroom[DELAY] > 0:
@@ -215,28 +222,42 @@ def moveItems(rectList,mushrooms):
             mushroom[MOVEUP] -= 1
             mushroom[1] -= 1
         else:
-            mushroom[X] += mushroom[MUSHVX]
-            mushroom[MUSHVY] += 0.5
-            mushroom[Y] += mushroom[MUSHVY]
-            if mushroom[Y] > 496 and not mushroom[INFLOOR]:
-                mushroom[Y] = 496
-                mushroom[MUSHVY] = 0
-                mushRect = Rect(mushroom[0], mushroom[1], mushroom[2], mushroom[3])
-                if mushRect.x > 0 and screen.get_at((mushRect.x, mushRect.bottom)) == SKYBLUE and screen.get_at((mushRect.right, mushRect.bottom)) == SKYBLUE:
-                    mushroom[INFLOOR] = True
-            mushRect = Rect(mushroom[0], mushroom[1], mushroom[2], mushroom[3])
-            for list in rectList:
-                for brick in list:
-                    brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
-                    if mushRect.colliderect(brickRect):
-                        if int(mushroom[Y]) <= brickRect.y:
-                            mushroom[Y] = brickRect.y - 42
-                            mushroom[MUSHVY] = 0
-                        else:
-                            mushroom[MUSHVX] *= -1
+            itemCollide(mushroom, rectList, [X, Y, MUSHVX, MUSHVY, INFLOOR])
+    for goomba in goombas:
+        if goomba[ENMYIDLE] == 1:
+            itemCollide(goomba, rectList, [X, Y, ENMYVX, ENMYVY, ENMYINFLOOR], enemiesList)
 
-def itemCollide(item):
-    pass
+
+def itemCollide(item, rectList, indexList, extraCollideIn = []):
+    X, Y, VX, VY, INFLOOR = indexList[0], indexList[1], indexList[2], indexList[3], indexList[4]
+    extraCollide = copy.deepcopy(extraCollideIn)
+    if extraCollide != []:
+        for list in range(len(extraCollide)):
+            if item in extraCollide[list]:
+                del extraCollide[list][extraCollide[list].index(item)]
+    rectList = rectList + extraCollide
+    item[X] += item[VX]
+    item[VY] += 0.6
+    item[Y] += item[VY]
+    if item[Y] > 496 and not item[INFLOOR]:
+        item[Y] = 496
+        item[VY] = 0
+        itemRect = Rect(item[0] + 3, item[1], item[2] - 3, item[3])
+        try:
+            if itemRect.x > 0 and screen.get_at((itemRect.x, itemRect.bottom)) == SKYBLUE and screen.get_at((itemRect.right, itemRect.bottom)) == SKYBLUE:
+                item[INFLOOR] = True
+        except IndexError:
+            pass
+    itemRect = Rect(item[0], item[1], item[2], item[3])
+    for list in rectList:
+        for brick in list:
+            brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
+            if itemRect.colliderect(brickRect) and itemRect != brickRect:
+                if int(item[Y]) < brickRect.y:
+                    item[Y] = brickRect.y - 42
+                    item[VY] = 0
+                else:
+                    item[VX] *= -1
 
 
 def drawStats(points, coins, startTime, level, fastMode, coinPic, spriteCount):
@@ -538,9 +559,6 @@ def globalSound(command):
             else:
                 mixer.Channel(id).set_volume(0)
 
-def cycleList(rectLists):
-    """ Function to keep track of objects on screen and ignore others"""
-    global backPos
 
 def spriteCounter(counter):
     """ Function to progress the universal sprite counter"""
@@ -549,21 +567,30 @@ def spriteCounter(counter):
         counter = 0
     return counter
 
-def disposeRect(breakingBrick, itemsList):
-    deleteList = []
-    itemDeleteList = []
-    for index in range(len(breakingBrick)):
+def rotateRect(rectList, breakingBrick, itemsList, enemiesList):
+    X, Y, ENMYVX, ENMYVY, ENMYIDLE, ENMYINFLOOR = 0, 1, 4, 5, 6, 7
+    # Deleting any offscreen Rects
+    for index in range(len(breakingBrick) - 1, -1, -1):
         if breakingBrick[index][1] > 600:
-            deleteList.append(index)
-    for index in deleteList:
-        del breakingBrick[index]
+            del breakingBrick[index]
     for list in range(len(itemsList)):
-        for item in range(len(itemsList[list])):
-            if itemsList[list][item][0] < -300 :
-                itemDeleteList.append([list, item])
-    for list in itemDeleteList:
-        listIndex, item = list[0], list[1]
-        del itemsList[listIndex][item]
+        for item in range(len(itemsList[list]) - 1, -1, -1):
+            if itemsList[list][item][0] < -300 or itemsList[list][item][1] > 650:
+                del itemsList[list][item]
+    for list in range(len(rectList)):
+        for rect in range(len(rectList[list]) - 1, -1, -1):
+            if rectList[list][rect][0] < -300:
+                del rectList[list][rect]
+    for list in range(len(enemiesList)):
+        for rect in range(len(enemiesList[list]) - 1, -1, -1):
+            if enemiesList[list][rect][0] < -300 or enemiesList[list][rect][1] > 650:
+                del enemiesList[list][rect]
+    # Activating all enemies
+    for list in enemiesList:
+        for enemy in list:
+            if enemy[ENMYIDLE] == 0 and enemy[X] < 800:
+                enemy[ENMYIDLE] = 1
+
 
 # Declaring loading functions
 
@@ -634,19 +661,20 @@ def game():
             elif evnt.type == MOUSEBUTTONDOWN:
                 RECTFINDER = [mx,my]
         rectList = [brickList, interactBricks, questionBricks]
-        clearRectList = [coins, moveCoins, breakingBrick, mushrooms]
+        clearRectList = [coins, moveCoins, breakingBrick, mushrooms, goombas]
         itemsList = [mushrooms]
+        enemiesList = [goombas]
         if not pausedBool:
             uniSprite = spriteCounter(uniSprite)
-            disposeRect(breakingBrick, itemsList)
+            rotateRect(rectList, breakingBrick, itemsList, enemiesList)
             checkMovement(marioPos, marioStats, marioAccelerate, rectList, initialSpace, clearRectList)
             moveSprites(marioPos, marioStats, marioSprites, marioFrame)
             moveBricks(questionBricks, interactBricks)
             spinCoins(moveCoins, uniSprite)
-            moveItems(rectList, mushrooms)
+            moveItems(rectList, enemiesList, mushrooms, goombas)
             checkCollide(marioPos, marioStats, marioScore, rectList, breakingBrick, moveCoins, mushrooms)
             checkClearCollide(marioPos, marioScore, coins, mushrooms)
-        drawScene(backgroundPics[levelNum - 1], backPos, marioPos, marioSprites, marioFrame, rectList, breakingBrick, brickSprites, coins, moveCoins, coinsPic, mushrooms, itemsPic, uniSprite)
+        drawScene(backgroundPics[levelNum - 1], backPos, marioPos, marioSprites, marioFrame, rectList, breakingBrick, brickSprites, coins, moveCoins, coinsPic, mushrooms, itemsPic, enemiesList, uniSprite)
         fast = drawStats(marioScore[PTS], marioScore[COIN], startTime, levelNum, fast, statCoin, uniSprite)
         if pausedBool:
             drawPause()
@@ -696,7 +724,7 @@ def menu():
 def loading():
     PTS, COIN, LIVES = 0, 1, 2
     # Loading up and declaring all level elements
-    global brickList, interactBricks, questionBricks, coins, marioPos, backPos, marioStats, levelNum
+    global brickList, interactBricks, questionBricks, coins, goombas, marioPos, backPos, marioStats, levelNum
     levelNum += 1
     marioPos = [40, 496, 0, 0, "Right", 0]
     marioStats = [True, 0, False, False, False, False]
@@ -705,6 +733,7 @@ def loading():
     interactBricks = loadFile(str("data/level_" + str(levelNum) + "/interactBricks.txt"))  # 1-4: Rect, VY, State, Coins
     questionBricks = loadFile(str("data/level_" + str(levelNum) + "/questionBricks.txt"))  # 1-4: Rect, VY, State, Type
     coins = loadFile(str("data/level_" + str(levelNum) + "/coins.txt"))
+    goombas = loadFile(str("data/level_" + str(levelNum) + "/goombas.txt"))
     uniSprite = 0
     startTime = time.get_ticks()
     currentWorld = marioFontBig.render("World 1-%s" %levelNum, False, (255,255,255))
@@ -731,9 +760,9 @@ def instructions():
             if evnt.type == QUIT:
                 return "exit"
         screen.blit(backgroundPics[0],(0,0))
-        screen.blit(instructTextNew,(235,40))
-        screen.blit(moveRightText,(80,130))
-        screen.blit(moveLeftText,(80,170))
+        screen.blit(instructHelp,(235,40))
+        screen.blit(moveRightHelp,(80,130))
+        screen.blit(moveLeftHelp,(80,170))
         if key.get_pressed()[27]: running = False
         display.flip()
         fpsCounter.tick(60)

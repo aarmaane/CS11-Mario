@@ -49,21 +49,23 @@ backgroundPics = [image.load("assets/backgrounds/level_"+str(i)+".png").convert(
 
 marioSpriteNames = ["smallmariojump" , "bigmariojump" , "bigmariocrouch" , "smallmariodead" , "bigmariochange"]
 
-marioSprites = [[image.load("assets/sprites/mario/smallmario"+str(i)+".png").convert_alpha() for i in range (1,5)],
-             [image.load("assets/sprites/mario/bigmario"+str(i)+".png").convert_alpha() for i in range (1,5)],
+marioSprites = [[image.load("assets/sprites/mario/smallmario"+str(i)+".png").convert_alpha() for i in range(1,5)],
+             [image.load("assets/sprites/mario/bigmario"+str(i)+".png").convert_alpha() for i in range(1,5)],
                 [image.load("assets/sprites/mario/"+str(i)+".png").convert_alpha() for i in marioSpriteNames]]
 
-brickSprites=[[image.load("assets/sprites/bricks/question"+str(i)+".png").convert_alpha() for i in range (3,0,-1)],
+brickSprites=[[image.load("assets/sprites/bricks/question"+str(i)+".png").convert_alpha() for i in range(3,0,-1)],
               [image.load("assets/sprites/bricks/brick.png").convert_alpha(),
                image.load("assets/sprites/bricks/blockidle.png").convert_alpha()]]
 brickPiece = transform.scale(image.load("assets/sprites/bricks/brickpiece.png").convert_alpha(), (21,21))
 
-statCoin = [image.load("assets/sprites/title/coin"+str(i)+".png").convert_alpha() for i in range (3,0,-1)]
+statCoin = [image.load("assets/sprites/title/coin"+str(i)+".png").convert_alpha() for i in range(3,0,-1)]
 
-coinsPic = [[image.load("assets/sprites/coins/coinidle"+str(i)+".png").convert_alpha() for i in range (3,0,-1)],
-            [image.load("assets/sprites/coins/coinmove"+str(i)+".png").convert_alpha() for i in range (1,5)]]
+coinsPic = [[image.load("assets/sprites/coins/coinidle"+str(i)+".png").convert_alpha() for i in range(3,0,-1)],
+            [image.load("assets/sprites/coins/coinmove"+str(i)+".png").convert_alpha() for i in range(1,5)]]
 
 itemsPic = [image.load("assets/sprites/items/mushroom.png").convert_alpha()]
+
+enemiesPic = [[image.load("assets/sprites/enemies/goomba"+str(i)+'.png').convert_alpha() for i in range(1,3)]]
 
 # Resizing, Flipping, and Reordering Pictures
 backgroundPics = [transform.scale(pic,(9086,600)) for pic in backgroundPics]
@@ -90,6 +92,9 @@ for subList in range(len(coinsPic)):
 for pic in range(len(itemsPic)):
     itemsPic[pic] = transform.scale(itemsPic[pic], (42,42))
 coinsPic[0] = coinsPic[0] + coinsPic[0][::-1]
+for subList in range(len(enemiesPic)):
+    for pic in range(len(enemiesPic[subList])):
+        enemiesPic[subList][pic] = transform.scale(enemiesPic[subList][pic], (42,42))
 
 
 # Declaring all fonts
@@ -136,7 +141,7 @@ coinSound = mixer.Sound("assets/music/effects/coin.ogg")
 appearSound = mixer.Sound("assets/music/effects/itemAppear.ogg")
 
 # Declaring game functions
-def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breakingBrick, brickPic, coins, moveCoins, coinsPic, mushrooms, itemsPic, enemiesList, spriteCount):
+def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breakingBrick, brickPic, coins, moveCoins, coinsPic, mushrooms, itemsPic, enemiesList, enemiesPic, spriteCount):
     """Function to draw the background, mario, enemies, and all objects"""
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
@@ -157,7 +162,8 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breaking
         for enemy in list:
             enmyRect = Rect(enemy[0], enemy[1], enemy[2], enemy[3])
             if list == goombas:
-                draw.rect(screen,GREEN,enmyRect)
+                screen.blit(enemiesPic[0][int(spriteCount//6 % 2)], enmyRect)
+                print(int(spriteCount//3.2))
     for list in rectList:
         for brick in list:
             brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
@@ -677,7 +683,7 @@ def game():
             moveItems(rectList, enemiesList, mushrooms, goombas)
             checkCollide(marioPos, marioStats, marioScore, rectList, breakingBrick, moveCoins, mushrooms)
             checkClearCollide(marioPos, marioScore, coins, mushrooms)
-        drawScene(backgroundPics[levelNum - 1], backPos, marioPos, marioSprites, marioFrame, rectList, breakingBrick, brickSprites, coins, moveCoins, coinsPic, mushrooms, itemsPic, enemiesList, uniSprite)
+        drawScene(backgroundPics[levelNum - 1], backPos, marioPos, marioSprites, marioFrame, rectList, breakingBrick, brickSprites, coins, moveCoins, coinsPic, mushrooms, itemsPic, enemiesList, enemiesPic, uniSprite)
         fast = drawStats(marioScore[PTS], marioScore[COIN], startTime, levelNum, fast, statCoin, uniSprite)
         if pausedBool:
             drawPause()

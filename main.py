@@ -117,6 +117,9 @@ jumpHelp = marioFont.render("Jump  -  Space", False, WHITE)
 crouchHelp = marioFont.render("Crouch  -  S", False, WHITE)
 pauseHelp = marioFont.render("Pause  -  P", False, WHITE)
 musicPauseHelp = marioFont.render("Pause/Unpause Music  -  M", False, WHITE)
+backTextHelp = marioFont.render("Back",False,WHITE)
+
+creditTextHelp = marioFontBig.render("Created By: Kevin Cui, Armaan Randhawa, and Henry Zhang",False,WHITE)
 
 
 # Loading all sound files
@@ -756,13 +759,25 @@ def loading():
 def instructions():
     running = True
     while running:
-        for evnt in event.get():          
+        for evnt in event.get():
+
+            if evnt.type == KEYDOWN:
+                if evnt.key == K_RETURN:
+                    return "menu"
             if evnt.type == QUIT:
                 return "exit"
         screen.blit(backgroundPics[0],(0,0))
         screen.blit(instructHelp,(235,40))
         screen.blit(moveRightHelp,(80,130))
         screen.blit(moveLeftHelp,(80,170))
+        screen.blit(jumpHelp,(80,210))
+        screen.blit(crouchHelp,(80,250))
+        screen.blit(pauseHelp,(80,290))
+        screen.blit(musicPauseHelp,(80,330))
+        screen.blit(backTextHelp,(650,450))
+        screen.blit(titleSelect,(610,445))
+
+
         if key.get_pressed()[27]: running = False
         display.flip()
         fpsCounter.tick(60)
@@ -775,6 +790,9 @@ def credit():
         for evnt in event.get():          
             if evnt.type == QUIT:
                 return "exit"
+        screen.blit(backgroundPics[0], (0, 0))
+        screen.blit(marioSprites[0][0],(375,494))
+        screen.blit(marioSprites[1][0],(150,450))
         if key.get_pressed()[27]: running = False
         display.flip()
         fpsCounter.tick(60)

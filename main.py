@@ -26,19 +26,20 @@ marioPos = [40, 496, 0, 0, "Right", 0]  # X, Y, VX, VY, direction, state
 # VX, VY:  Variables to keep track of mario's X and Y velocity
 # direction: Variable to keep track of the direction mario is facing
 # state: 0 for small mario, 1 for big mario
-marioStats = [True, 0, False, False, False, False] # onGround, jumpFrames, inGround, isCrouch, onPlatform, isFalling
+marioStats = [True, 0, False, False, False, False, False] # onGround, jumpFrames, inGround, isCrouch, onPlatform, isFalling, isAnimating
 # onGround: Boolean to see if mario is on a solid ground
 # jumpFrames: Variable to keep track of frames user has held space for
 # inGround: Boolean to see if mario has fallen through the floor
 # isCrouch: Boolean to see if mario is crouching
 # onPlatform: Boolean to see if mario's last position was on a platform
 # isFalling: Boolean to see if mario has stopped jumping and should fall
+# isAnimating: Boolean to see if we need to pause the game and change mario's state
 marioScore = [0, 0, 3] # Points, Coins, Lives
 marioFrame = [0, 0] # List to keep track of mario's sprites
 marioAccelerate = 0.2 # The value at which mario can speed up and slow down
 backPos = 0  # Position of the background
 levelNum = 0  # Using 0 as level 1 since indexes start at 0
-isAnimating = False  # Boolean to see if we need to pause the screen and animate mario
+
 RECTFINDER = [0,0] #DELETE THIS LATER
     
 # Loading Pictures
@@ -143,6 +144,7 @@ bumpSound = mixer.Sound("assets/music/effects/bump.ogg")
 breakSound = mixer.Sound("assets/music/effects/brickBreak.ogg")
 coinSound = mixer.Sound("assets/music/effects/coin.ogg")
 appearSound = mixer.Sound("assets/music/effects/itemAppear.ogg")
+stompSound = mixer.Sound("assets/music/effects/stomp.ogg")
 
 # Declaring game functions
 def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breakingBrick, brickPic, coins, moveCoins, coinsPic, mushrooms, itemsPic, enemiesList, enemiesPic, spriteCount, isMuted):
@@ -170,7 +172,7 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breaking
                 if enemy[ENMYIDLE] == 2:
                     screen.blit(enemiesPic[0][2], enmyRect)
                 else:
-                    screen.blit(enemiesPic[0][int(spriteCount//6) ], enmyRect)
+                    screen.blit(enemiesPic[0][int(spriteCount//6)], enmyRect)
     for list in rectList:
         for brick in list:
             brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
@@ -316,6 +318,8 @@ def moveSprites(mario, marioInfo, marioPic, frame):
     """ Function to cycle through Mario's sprites """
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
+    if mario[STATE] == -1:  # If mario is dying, skip the moveSprites function
+        return
     if marioInfo[ONGROUND]:
         frame[0] = 0 + mario[STATE] # Adjusting for sprite for = big mario
         # Mario's running sprite counter
@@ -524,7 +528,7 @@ def checkCollide(mario, marioInfo, marioScore, rectLists, breakingBrick, moveCoi
 def checkClearCollide(mario, marioStats, marioScore, coins, mushrooms, enemiesList):
     PTS, COIN, LIVES = 0, 1, 2
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
-    ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
+    ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING, ISANIMATING = 0, 1, 2, 3, 4, 5, 6
     X, Y, DELAY, MOVEUP, MUSHVX, MUSHVY = 0, 1, 4, 5, 6, 7
     ENMYVX, ENMYVY, ENMYIDLE, ENMYINFLOOR = 4, 5, 6, 7
     height = 42
@@ -544,6 +548,7 @@ def checkClearCollide(mario, marioStats, marioScore, coins, mushrooms, enemiesLi
             if mario[STATE] == 0:
                 mario[Y] -= 42
                 mario[STATE] = 1
+                marioStats[ISANIMATING] = True
             marioScore[PTS] += 2000
             del mushrooms[index]
     for list in range(len(enemiesList)):
@@ -553,12 +558,13 @@ def checkClearCollide(mario, marioStats, marioScore, coins, mushrooms, enemiesLi
                 if int(mario[Y]) + height - int(mario[VY]) <= enmyRect.y:
                     mario[VY] = -7.5
                     marioStats[ISFALLING] = True
-                    marioStats[ONPLATFORM] = True
+                    marioStats[ONGROUND] = False
+                    marioScore[PTS] += 100
+                    playSound(stompSound, "effect")
                     enemiesList[list][enemy][ENMYIDLE] = 2
                     enemiesList[list][enemy][ENMYINFLOOR] = 32  # Turning the infloor value into a counter for removing dead goombas
                 else:
-                    mario[STATE] = 0
-                    mario[Y] -= 42
+                    print('ur ded')
 
 def playSound(soundFile, soundChannel, queue = False):
     """ Function to load in sounds and play them on a channel """
@@ -641,7 +647,7 @@ def loadFile(targetFile):
 def game():
     running = True
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
-    ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
+    ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING, ISANIMATING = 0, 1, 2, 3, 4, 5, 6
     PTS, COIN, LIVES = 0, 1, 2
     global marioStats, RECTFINDER, marioPos # REMOVE THESE AT END
     playSound(backgroundSound, "music")  # Starting the background music
@@ -696,7 +702,7 @@ def game():
                     marioStats[ISCROUCH]=False
             elif evnt.type == MOUSEBUTTONDOWN:
                 RECTFINDER = [mx,my]
-        if not pausedBool:
+        if not pausedBool and not marioStats[ISANIMATING]:
             uniSprite = spriteCounter(uniSprite)
             rotateRect(rectList, breakingBrick, itemsList, enemiesList)
             checkMovement(marioPos, marioStats, marioAccelerate, rectList, initialSpace, clearRectList)
@@ -706,6 +712,8 @@ def game():
             moveItems(rectList, enemiesList, mushrooms, goombas)
             checkCollide(marioPos, marioStats, marioScore, rectList, breakingBrick, moveCoins, mushrooms)
             checkClearCollide(marioPos, marioStats, marioScore, coins, mushrooms, enemiesList)
+        if marioStats[ISANIMATING]:
+
         drawScene(backgroundPics[levelNum - 1], backPos, marioPos, marioSprites, marioFrame, rectList, breakingBrick, brickSprites, coins, moveCoins, coinsPic, mushrooms, itemsPic, enemiesList, enemiesPic, uniSprite, isMuted)
         fast = drawStats(marioScore[PTS], marioScore[COIN], startTime, levelNum, fast, statCoin, uniSprite)
         if pausedBool:
@@ -761,7 +769,7 @@ def loading():
     global brickList, interactBricks, questionBricks, coins, goombas, marioPos, backPos, marioStats, levelNum
     levelNum += 1
     marioPos = [40, 496, 0, 0, "Right", 0]
-    marioStats = [True, 0, False, False, False, False]
+    marioStats = [True, 0, False, False, False, False, False]
     backPos = 0
     brickList = loadFile(str("data/level_" + str(levelNum) + "/bricks.txt"))
     interactBricks = loadFile(str("data/level_" + str(levelNum) + "/interactBricks.txt"))  # 1-4: Rect, VY, State, Coins

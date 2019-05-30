@@ -634,7 +634,7 @@ def loadFile(targetFile):
         line = line.split(",")  # Dividing elements seperated by commas
         listLength = len(line)
         outputList.append([int(line[index]) for index in range(listLength)])  # Appending line info to list
-    return outputList  # Returning final list
+    return outputList  # Returning final list-
 
 # Declaring main functions
 
@@ -818,17 +818,25 @@ def instructions():
 def credit():
     running = True
     while running:
-        for evnt in event.get():          
+        for evnt in event.get():
+
+            if evnt.type == KEYDOWN:
+                if evnt.key == K_RETURN:
+                    return "menu"
+
             if evnt.type == QUIT:
                 return "exit"
         screen.blit(backgroundPics[0], (0, 0))
-        screen.blit(creditTitleHelp,(150,45))
-        screen.blit(marioSprites[0][0],(375,494))
+        screen.blit(creditTitleHelp,(170,45))
+        screen.blit(marioSprites[0][0],(400,494))
         screen.blit(marioSprites[1][0],(130,450))
-        screen.blit(enemiesPic[0][0],(620,495))
+        screen.blit(enemiesPic[0][0],(630,495))
         screen.blit(creditTextHelp1,(30,350))
-        screen.blit(creditTextHelp2, (315, 400))
+        screen.blit(creditTextHelp2, (335, 400))
         screen.blit(creditTextHelp3, (550, 370))
+        screen.blit(backTextHelp, (50, 50))
+        screen.blit(titleSelect, (10, 45))
+
         if key.get_pressed()[27]: running = False
         display.flip()
         fpsCounter.tick(60)

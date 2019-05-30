@@ -125,7 +125,10 @@ pauseHelp = marioFont.render("Pause  -  P", False, WHITE)
 musicPauseHelp = marioFont.render("Pause/Unpause Music  -  M", False, WHITE)
 backTextHelp = marioFont.render("Back",False,WHITE)
 
-creditTextHelp = marioFontBig.render("Created By: Armaan Randhawa, Henry Zhang, and Kevin Cui",False,WHITE)
+creditTitleHelp = marioFontSuperBig.render("Game Created By: ",False,WHITE)
+creditTextHelp1 = marioFont.render("Armaan Randhawa",False,WHITE)
+creditTextHelp2 = marioFont.render("Kevin Cui",False,WHITE)
+creditTextHelp3 = marioFont.render("Henry Zhang",False,WHITE)
 
 
 # Loading all sound files
@@ -819,8 +822,13 @@ def credit():
             if evnt.type == QUIT:
                 return "exit"
         screen.blit(backgroundPics[0], (0, 0))
+        screen.blit(creditTitleHelp,(150,45))
         screen.blit(marioSprites[0][0],(375,494))
-        screen.blit(marioSprites[1][0],(150,450))
+        screen.blit(marioSprites[1][0],(130,450))
+        screen.blit(enemiesPic[0][0],(620,495))
+        screen.blit(creditTextHelp1,(30,350))
+        screen.blit(creditTextHelp2, (315, 400))
+        screen.blit(creditTextHelp3, (550, 370))
         if key.get_pressed()[27]: running = False
         display.flip()
         fpsCounter.tick(60)

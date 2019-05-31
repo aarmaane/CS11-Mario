@@ -138,6 +138,7 @@ creditTextHelp3 = marioFont.render("Henry Zhang",False,WHITE)
 pauseSound = mixer.Sound("assets/music/effects/pause.wav")
 backgroundSound = mixer.Sound("assets/music/songs/mainSong.ogg")
 backgroundFastSound = mixer.Sound("assets/music/songs/mainSongFast.ogg")
+deathSound = mixer.Sound("assets/music/songs/death.wav")
 timeLowSound = mixer.Sound("assets/music/effects/timeLow.wav")
 smallJumpSound = mixer.Sound("assets/music/effects/smallJump.ogg")
 bigJumpSound = mixer.Sound("assets/music/effects/bigJump.ogg")
@@ -148,7 +149,6 @@ appearSound = mixer.Sound("assets/music/effects/itemAppear.ogg")
 stompSound = mixer.Sound("assets/music/effects/stomp.ogg")
 growSound = mixer.Sound("assets/music/effects/grow.ogg")
 shrinkSound = mixer.Sound("assets/music/effects/shrink.ogg")
-
 
 # Declaring game functions
 def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breakingBrick, brickPic, coins, moveCoins, coinsPic, mushrooms, itemsPic, enemiesList, enemiesPic, spriteCount, isMuted):
@@ -341,8 +341,14 @@ def moveSprites(mario, marioInfo, marioPic, frame):
             frame[2] = 0
             if mario[STATE] == 0:
                 mario[Y] += 42
-        if mario[STATE] == -1:  # If mario is dying, skip the moveSprites function
+        if mario[STATE] == -1 and frame[2] == 0:  # If mario is dying, play his dying animation
             frame[0], frame[1] = 2, 3
+            frame[2] = -10
+            playSound(deathSound, "music")
+        elif mario[STATE] == -1:
+            frame[0], frame[1] = 2, 3
+            frame[2] += 0.4
+            mario[Y] += frame[2]
         elif mario[STATE] == 0:
             for index in range(len(changingSprites)):
                 if changingSprites[index] == [2,5]:
@@ -378,7 +384,7 @@ def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace, clearRectL
     """Function to accept inputs and apply the appropriate physics """
     keys = key.get_pressed()
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
-    ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
+    ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING, ISANIMATING = 0, 1, 2, 3, 4, 5, 6
     moving = False
     # Walking logic
     if keys[K_a] and keys[K_d]:  # If both keys are pressed, don't move
@@ -454,6 +460,9 @@ def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace, clearRectL
         marioInfo[ONGROUND] = True
         marioInfo[ONPLATFORM] = False
         marioInfo[ISFALLING] = False
+    if mario[INGROUND] and mario[Y] > 700:
+        marioInfo[ISANIMATING] = True
+        mario[STATE] = -1
     marioPos[VY] += gravity  # apply gravity
 
 
@@ -818,6 +827,7 @@ def loading():
     marioPos = [40, 496, 0, 0, "Right", 0]
     marioStats = [True, 0, False, False, False, False, False, 0]
     backPos = 0
+    marioFrame = [0 ,0, 0]
     brickList = loadFile(str("data/level_" + str(levelNum) + "/bricks.txt"))
     interactBricks = loadFile(str("data/level_" + str(levelNum) + "/interactBricks.txt"))  # 1-4: Rect, VY, State, Coins
     questionBricks = loadFile(str("data/level_" + str(levelNum) + "/questionBricks.txt"))  # 1-4: Rect, VY, State, Type
@@ -839,7 +849,7 @@ def loading():
         screen.blit(marioSprites[0][0], (315, 300))
         display.flip()
         fpsCounter.tick(60)
-    return ["game", brickList, interactBricks, questionBricks, coins, goombas, marioPos, backPos, marioStats]
+    return ["game", brickList, interactBricks, questionBricks, coins, goombas, marioPos, backPos, marioStats, marioFrame]
 
 
 def instructions():
@@ -896,7 +906,7 @@ while page != "exit":
     if page == "menu":
         page = menu()
     if page == "loading":
-        page, brickList, interactBricks, questionBricks, coins, goombas, marioPos, backPos, marioStats = loading()
+        page, brickList, interactBricks, questionBricks, coins, goombas, marioPos, backPos, marioStats, marioFrame = loading()
     if page == "game":
         page = game()
     if page == "instructions":

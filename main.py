@@ -763,6 +763,7 @@ def game():
             startTime += (time.get_ticks() - startTime) - pauseTime
         display.flip()
         fpsCounter.tick(60)
+        display.set_caption("Super Mario Bros! FPS: %.2f" %fpsCounter.get_fps())
         #print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
     return "loading"
 
@@ -825,7 +826,7 @@ def loading():
     while time.get_ticks() - startTime < 2500:
         for evnt in event.get():          
             if evnt.type == QUIT:
-                return "exit"
+                return ["exit", None, None, None, None, None, None, None, None]
         screen.fill(BLACK)
         uniSprite = spriteCounter(uniSprite)
         drawStats(None, None, 0, 0, time.get_ticks(), levelNum, True, True, statCoin, uniSprite)

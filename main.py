@@ -334,17 +334,21 @@ def moveSprites(mario, marioInfo, marioPic, frame):
     """ Function to cycle through Mario's sprites """
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING, ISANIMATING, INVULFRAMES = 0, 1, 2, 3, 4, 5, 6, 7
-    changingSprites = [[2,5], [2,4], [2,5], [2,4], [2,5], [1,0]]
+    changingSprites = [[2,5], [2,4], [2,5], [2,4], [2,5], [2,4], [1,0]]
     if marioInfo[ISANIMATING]:
-        if frame[2] == 47:
+        if frame[2] == 55:
             marioInfo[ISANIMATING] = False
             frame[2] = 0
             if mario[STATE] == 0:
-                mario[Y] +=42
+                mario[Y] += 42
         if mario[STATE] == -1:  # If mario is dying, skip the moveSprites function
             frame[0], frame[1] = 2, 3
         elif mario[STATE] == 0:
-            changingSprites = changingSprites[::-1]
+            for index in range(len(changingSprites)):
+                if changingSprites[index] == [2,5]:
+                    changingSprites[index] = [1,0]
+                elif changingSprites[index] == [1,0]:
+                    changingSprites[index] = [2,5]
             frame[2] += 1
             frame[0], frame[1] = changingSprites[(frame[2]//8)][0], changingSprites[(frame[2]//8)][1]
         elif mario[STATE] == 1:

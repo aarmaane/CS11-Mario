@@ -335,20 +335,25 @@ def moveSprites(mario, marioInfo, marioPic, frame):
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING, ISANIMATING, INVULFRAMES = 0, 1, 2, 3, 4, 5, 6, 7
     changingSprites = [[2,5], [2,4], [2,5], [2,4], [2,5], [2,4], [1,0]]
+    isDead = False
     if marioInfo[ISANIMATING]:
+        if mario[STATE] == -1 and frame[2] > 70:
+            isDead = True
         if frame[2] == 55:
             marioInfo[ISANIMATING] = False
             frame[2] = 0
             if mario[STATE] == 0:
                 mario[Y] += 42
+            return
         if mario[STATE] == -1 and frame[2] == 0:  # If mario is dying, play his dying animation
             frame[0], frame[1] = 2, 3
-            frame[2] = -10
+            frame[2] = -9
             playSound(deathSound, "music")
         elif mario[STATE] == -1:
             frame[0], frame[1] = 2, 3
             frame[2] += 0.4
             mario[Y] += frame[2]
+            print(frame[2])
         elif mario[STATE] == 0:
             for index in range(len(changingSprites)):
                 if changingSprites[index] == [2,5]:
@@ -360,7 +365,7 @@ def moveSprites(mario, marioInfo, marioPic, frame):
         elif mario[STATE] == 1:
             frame[2] += 1
             frame[0], frame[1] = changingSprites[(frame[2]//8)][0], changingSprites[(frame[2]//8)][1]
-        return
+        return isDead
     if marioInfo[ONGROUND]:
         frame[0] = 0 + mario[STATE] # Adjusting for sprite for = big mario
         # Mario's running sprite counter
@@ -701,11 +706,12 @@ def game():
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING, ISANIMATING = 0, 1, 2, 3, 4, 5, 6
     PTS, COIN, LIVES = 0, 1, 2
-    global marioStats, RECTFINDER, marioPos # REMOVE THESE AT END
+    global levelNum, marioStats, RECTFINDER, marioPos, marioScore # REMOVE THESE AT END
     playSound(backgroundSound, "music")  # Starting the background music
     pausedBool = False
     isMuted = False
     timesUp = False
+    isDead = False
     startTime = time.get_ticks()  # Variable to keep track of time since level start
     uniSprite = 0  # Counter to control all non - Mario sprites
     # Declaring session specific lists
@@ -718,6 +724,7 @@ def game():
     itemsList = [mushrooms]
     enemiesList = [goombas]
     fast = False
+    print(marioFrame)
     while running:
         mx, my = mouse.get_pos()
         initialSpace = False
@@ -768,7 +775,7 @@ def game():
             checkCollide(marioPos, marioStats, marioScore, rectList, breakingBrick, moveCoins, mushrooms)
             checkClearCollide(marioPos, marioStats, marioScore, coins, mushrooms, enemiesList, marioFrame)
         if marioStats[ISANIMATING]:
-            moveSprites(marioPos, marioStats, marioSprites, marioFrame)
+            isDead = moveSprites(marioPos, marioStats, marioSprites, marioFrame)
         drawScene(backgroundPics[levelNum - 1], backPos, marioPos, marioSprites, marioFrame, rectList, breakingBrick, brickSprites, coins, moveCoins, coinsPic, mushrooms, itemsPic, enemiesList, enemiesPic, uniSprite, isMuted)
         fast, timesUp = drawStats(marioPos, marioStats, marioScore[PTS], marioScore[COIN], startTime, levelNum, fast, timesUp, statCoin, uniSprite)
         if pausedBool:
@@ -778,6 +785,12 @@ def game():
         fpsCounter.tick(60)
         display.set_caption("Super Mario Bros! FPS: %.2f" %fpsCounter.get_fps())
         #print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
+        if isDead:
+            levelNum -=1
+            marioScore[LIVES] -= 1
+            if marioScore[LIVES] == 0:
+                return "gameOver"
+            return "loading"
     return "loading"
 
 
@@ -827,7 +840,7 @@ def loading():
     marioPos = [40, 496, 0, 0, "Right", 0]
     marioStats = [True, 0, False, False, False, False, False, 0]
     backPos = 0
-    marioFrame = [0 ,0, 0]
+    marioFrame = [0,0, 0]
     brickList = loadFile(str("data/level_" + str(levelNum) + "/bricks.txt"))
     interactBricks = loadFile(str("data/level_" + str(levelNum) + "/interactBricks.txt"))  # 1-4: Rect, VY, State, Coins
     questionBricks = loadFile(str("data/level_" + str(levelNum) + "/questionBricks.txt"))  # 1-4: Rect, VY, State, Type
@@ -840,7 +853,7 @@ def loading():
     while time.get_ticks() - startTime < 2500:
         for evnt in event.get():          
             if evnt.type == QUIT:
-                return ["exit", None, None, None, None, None, None, None, None]
+                return ["exit", None, None, None, None, None, None, None, None, None]
         screen.fill(BLACK)
         uniSprite = spriteCounter(uniSprite)
         drawStats(None, None, 0, 0, time.get_ticks(), levelNum, True, True, statCoin, uniSprite)
@@ -851,6 +864,8 @@ def loading():
         fpsCounter.tick(60)
     return ["game", brickList, interactBricks, questionBricks, coins, goombas, marioPos, backPos, marioStats, marioFrame]
 
+def gameOver():
+    return "menu"
 
 def instructions():
     running = True
@@ -901,12 +916,13 @@ def credit():
     return "menu"
 
 # Main loop to check for which page to fall on
-
 while page != "exit":
     if page == "menu":
         page = menu()
     if page == "loading":
         page, brickList, interactBricks, questionBricks, coins, goombas, marioPos, backPos, marioStats, marioFrame = loading()
+    if page == "gameOver":
+        page = gameOver()
     if page == "game":
         page = game()
     if page == "instructions":

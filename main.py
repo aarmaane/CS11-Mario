@@ -48,7 +48,9 @@ titleLogo = transform.scale(image.load("assets/sprites/title/logo.png"), (480,22
 titleSelect = transform.scale(image.load("assets/sprites/title/select.png"), (24,24))
 mutePic = transform.scale(image.load("assets/sprites/title/muted.png"), (45,45))
 
-backgroundPics = [image.load("assets/backgrounds/level_"+str(i)+".png").convert() for i in range(1,2)]
+backgroundPics = [transform.scale(image.load("assets/backgrounds/level_1.png").convert(), (9086, 600)),
+                  transform.scale(image.load("assets/backgrounds/level_2.png").convert(), (10065, 600)),
+                  transform.scale(image.load("assets/backgrounds/level_3.png").convert(), (9200, 600))]
 
 marioSpriteNames = ["smallmariojump" , "bigmariojump" , "bigmariocrouch" , "smallmariodead" , "bigmariochange", "smallmariochange"]
 
@@ -71,7 +73,6 @@ itemsPic = [image.load("assets/sprites/items/mushroom.png").convert_alpha()]
 enemiesPic = [[image.load("assets/sprites/enemies/goomba"+str(i)+'.png').convert_alpha() for i in range(1,4)]]
 
 # Resizing, Flipping, and Reordering Pictures
-backgroundPics = [transform.scale(pic,(9086,600)) for pic in backgroundPics]
 statCoin = [transform.scale(pic, (15,24)) for pic in statCoin]
 statCoin = statCoin + statCoin[::-1]
 for subList in range(len(marioSprites)):
@@ -102,6 +103,7 @@ for subList in range(len(enemiesPic)):
 
 # Declaring all fonts
 
+marioFontThin = font.Font("assets/fonts/marioFont.ttf", 12)
 marioFont = font.Font("assets/fonts/marioFont.ttf", 18)
 marioFontBig = font.Font("assets/fonts/marioFont.ttf", 22)
 marioFontSuperBig = font.Font("assets/fonts/marioFont.ttf", 30)
@@ -132,7 +134,6 @@ creditTextHelp1 = marioFont.render("Armaan Randhawa",False,WHITE)
 creditTextHelp2 = marioFont.render("Kevin Cui",False,WHITE)
 creditTextHelp3 = marioFont.render("Henry Zhang",False,WHITE)
 
-
 # Loading all sound files
 
 pauseSound = mixer.Sound("assets/music/effects/pause.wav")
@@ -151,7 +152,7 @@ growSound = mixer.Sound("assets/music/effects/grow.ogg")
 shrinkSound = mixer.Sound("assets/music/effects/shrink.ogg")
 
 # Declaring game functions
-def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breakingBrick, brickPic, coins, moveCoins, coinsPic, mushrooms, itemsPic, enemiesList, enemiesPic, spriteCount, isMuted):
+def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breakingBrick, brickPic, coins, moveCoins, coinsPic, mushrooms, itemsPic, enemiesList, enemiesPic, spriteCount, points, isMuted):
     """Function to draw the background, mario, enemies, and all objects"""
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING, ISANIMATING, INVULFRAMES = 0, 1, 2, 3, 4, 5, 6, 7
@@ -192,11 +193,13 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breaking
     for coin in coins:
         coinRect = coin[0], coin[1], coin[2], coin[3]
         screen.blit(coinsPic[0][int(spriteCount // 2)], coinRect)
-    if marioStats[INVULFRAMES]%2 == 0:
+    if marioStats[INVULFRAMES]%2 == 0 or marioStats[ISANIMATING]:
         screen.blit(marioShow, (mario[0], mario[1]))  # Blitting mario's sprite
+    for point in points:
+        pointText = marioFontThin.render("%s" %point[3], False, WHITE)
+        screen.blit(pointText, (point[0], point[1]))
     if isMuted:
         screen.blit(mutePic, (735,25))
-
 
 def drawDebris(brick):
     screen.blit(brickPiece[0], (brick[0] - brick[5],brick[1]))
@@ -223,17 +226,20 @@ def moveBricks(questionBricks, interactBricks):
             brick[IDLE] = 0
 
 
-def spinCoins(moveCoins, uniSprite):
-    Y, COINVY = 1, 4
-    deleteList = []
-    for coin in range(len(moveCoins)):
+def floatObjects(moveCoins, points):
+    X, Y, COINVY = 0, 1, 4
+    PTSCOUNT, PTSNUM = 2, 3
+    for coin in range(len(moveCoins) - 1, -1, -1):
         if moveCoins[coin][COINVY] != 5:
             moveCoins[coin][COINVY] += 0.5
             moveCoins[coin][Y] += moveCoins[coin][COINVY]
         else:
-            deleteList.append(coin)
-    for index in deleteList:
-        del moveCoins[index]
+            points.append([moveCoins[coin][X], moveCoins[coin][Y], 30, 100])
+            del moveCoins[coin]
+    for point in range(len(points) - 1, -1, -1):
+        points[point][PTSCOUNT] -= 1
+        points[point][Y] -= 1
+
 
 def moveItems(rectList, enemiesList, mushrooms, goombas):
     X, Y, DELAY, MOVEUP, MUSHVX, MUSHVY, INFLOOR = 0, 1, 4, 5, 6, 7, 8
@@ -344,6 +350,7 @@ def moveSprites(mario, marioInfo, marioPic, frame):
             frame[2] = 0
             if mario[STATE] == 0:
                 mario[Y] += 42
+                frame[0], frame[1] = 0, 0
             return
         if mario[STATE] == -1 and frame[2] == 0:  # If mario is dying, play his dying animation
             frame[0], frame[1] = 2, 3
@@ -353,7 +360,6 @@ def moveSprites(mario, marioInfo, marioPic, frame):
             frame[0], frame[1] = 2, 3
             frame[2] += 0.4
             mario[Y] += frame[2]
-            print(frame[2])
         elif mario[STATE] == 0:
             for index in range(len(changingSprites)):
                 if changingSprites[index] == [2,5]:
@@ -369,7 +375,7 @@ def moveSprites(mario, marioInfo, marioPic, frame):
     if marioInfo[ONGROUND]:
         frame[0] = 0 + mario[STATE] # Adjusting for sprite for = big mario
         # Mario's running sprite counter
-        if frame[1] < 3.8:
+        if frame[1] < 3.8 and mario[VY] < 2:
             frame[1] += mario[VX]**2/100 + 0.2
         else:
             frame[1] = 1
@@ -576,7 +582,7 @@ def checkCollide(mario, marioInfo, marioScore, rectLists, breakingBrick, moveCoi
                     playSound(appearSound, "block")
 
 
-def checkClearCollide(mario, marioStats, marioScore, coins, mushrooms, enemiesList, frame):
+def checkClearCollide(mario, marioStats, marioScore, coins, mushrooms, enemiesList, points):
     PTS, COIN, LIVES = 0, 1, 2
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING, ISANIMATING, INVULFRAMES = 0, 1, 2, 3, 4, 5, 6, 7
@@ -592,6 +598,7 @@ def checkClearCollide(mario, marioStats, marioScore, coins, mushrooms, enemiesLi
             del coins[coin]
             playSound(coinSound, "block")
             marioScore[PTS] += 200
+            points.append([coinRect.x, coinRect.y, 30, 100])
             marioScore[COIN] += 1
     for index in range(len(mushrooms) - 1, -1, -1):
         mushRect = Rect(mushrooms[index][0], mushrooms[index][1], mushrooms[index][2], mushrooms[index][3])
@@ -602,11 +609,12 @@ def checkClearCollide(mario, marioStats, marioScore, coins, mushrooms, enemiesLi
                 marioStats[ISANIMATING] = True
                 playSound(growSound, "effect")
             marioScore[PTS] += 2000
+            points.append([mushRect.x, mushRect.y, 30, 2000])
             del mushrooms[index]
     for list in range(len(enemiesList)):
         for enemy in range(len(enemiesList[list]) - 1, -1, -1):
             enmyRect = Rect(enemiesList[list][enemy][0], enemiesList[list][enemy][1], enemiesList[list][enemy][2], enemiesList[list][enemy][3])
-            if enemiesList[list][enemy][ENMYIDLE] != 2 and marioStats[INVULFRAMES] == 0 and marioRect.colliderect(enmyRect):
+            if enemiesList[list][enemy][ENMYIDLE] != 2 and marioRect.colliderect(enmyRect):
                 if int(mario[Y]) + height - int(mario[VY]) <= enmyRect.y:
                     mario[VY] = -7.5
                     marioStats[ISFALLING] = True
@@ -615,11 +623,11 @@ def checkClearCollide(mario, marioStats, marioScore, coins, mushrooms, enemiesLi
                     playSound(stompSound, "effect")
                     enemiesList[list][enemy][ENMYIDLE] = 2
                     enemiesList[list][enemy][ENMYINFLOOR] = 32  # Turning the infloor value into a counter for removing dead goombas
-                else:
-                    mario[STATE] -=1
+                elif marioStats[INVULFRAMES] == 0:
+                    mario[STATE] -= 1
                     marioStats[ISANIMATING] = True
                     if mario[STATE] == 0:
-                        marioStats[INVULFRAMES] = 60
+                        marioStats[INVULFRAMES] = 80
                         playSound(shrinkSound, "effect")
 
 
@@ -658,7 +666,7 @@ def spriteCounter(counter):
         counter = 0
     return counter
 
-def rotateRect(rectList, breakingBrick, itemsList, enemiesList):
+def rotateRect(rectList, breakingBrick, itemsList, enemiesList, points):
     X, Y, ENMYVX, ENMYVY, ENMYIDLE, ENMYINFLOOR = 0, 1, 4, 5, 6, 7
     # Deleting any offscreen Rects
     for index in range(len(breakingBrick) - 1, -1, -1):
@@ -676,12 +684,16 @@ def rotateRect(rectList, breakingBrick, itemsList, enemiesList):
         for rect in range(len(enemiesList[list]) - 1, -1, -1):
             if enemiesList[list][rect][0] < -300 or enemiesList[list][rect][1] > 650:
                 del enemiesList[list][rect]
+    for point in range(len(points) - 1, -1, -1):
+        if points[point][2] == 0:
+            del points[point]
     # Activating and deactivating all enemies
     for list in range(len(enemiesList)):
         for enemy in range(len(enemiesList[list]) - 1, -1, -1):
             if enemiesList[list][enemy][ENMYIDLE] == 0 and enemiesList[list][enemy][X] < 800:
                 enemiesList[list][enemy][ENMYIDLE] = 1
             elif enemiesList[list][enemy][ENMYIDLE] == 2 and enemiesList[list][enemy][ENMYINFLOOR] == 0:
+                points.append([enemiesList[list][enemy][0], enemiesList[list][enemy][1], 40, 100])
                 del enemiesList[list][enemy]
 
 
@@ -710,21 +722,23 @@ def game():
     playSound(backgroundSound, "music")  # Starting the background music
     pausedBool = False
     isMuted = False
+    if mixer.Channel(0).get_volume() == 0:
+        isMuted = True
     timesUp = False
     isDead = False
-    startTime = time.get_ticks()  # Variable to keep track of time since level start
+    fast = False
     uniSprite = 0  # Counter to control all non - Mario sprites
     # Declaring session specific lists
     breakingBrick = []
     moveCoins = []
     mushrooms = []
+    points = []
     # Declaring packaged lists
     rectList = [brickList, interactBricks, questionBricks]
-    clearRectList = [coins, moveCoins, breakingBrick, mushrooms, goombas]
+    clearRectList = [coins, moveCoins, breakingBrick, mushrooms, goombas, points]
     itemsList = [mushrooms]
     enemiesList = [goombas]
-    fast = False
-    print(marioFrame)
+    startTime = time.get_ticks()  # Variable to keep track of time since level start
     while running:
         mx, my = mouse.get_pos()
         initialSpace = False
@@ -747,16 +761,18 @@ def game():
                         globalSound("unpause")
                 elif evnt.key == K_ESCAPE and pausedBool:
                     return "menu"
+                elif evnt.key == K_m:
+                    globalSound('toggle')
                 elif evnt.key == K_o:
                     if marioPos[STATE] == 0:
                         marioPos[STATE] = 1
                     else:
                         marioPos[STATE] = 0
-                elif evnt.key == K_m:
-                    globalSound('toggle')
                 elif evnt.key == K_0:
                     marioPos = [0, 496, 0, 0, "Right", 0]
                     marioStats = [True, 0, False, False, False, False, False, 0]
+                elif evnt.key == K_BACKSLASH:
+                    running = False
             elif evnt.type == KEYUP:
                 if evnt.key == K_SPACE:
                     marioStats[ISFALLING] = True
@@ -766,17 +782,17 @@ def game():
                 RECTFINDER = [mx,my]
         if not pausedBool and not marioStats[ISANIMATING]:
             uniSprite = spriteCounter(uniSprite)
-            rotateRect(rectList, breakingBrick, itemsList, enemiesList)
+            rotateRect(rectList, breakingBrick, itemsList, enemiesList, points)
             checkMovement(marioPos, marioStats, marioAccelerate, rectList, initialSpace, clearRectList)
             moveSprites(marioPos, marioStats, marioSprites, marioFrame)
             moveBricks(questionBricks, interactBricks)
-            spinCoins(moveCoins, uniSprite)
+            floatObjects(moveCoins, points)
             moveItems(rectList, enemiesList, mushrooms, goombas)
             checkCollide(marioPos, marioStats, marioScore, rectList, breakingBrick, moveCoins, mushrooms)
-            checkClearCollide(marioPos, marioStats, marioScore, coins, mushrooms, enemiesList, marioFrame)
+            checkClearCollide(marioPos, marioStats, marioScore, coins, mushrooms, enemiesList, points)
         if marioStats[ISANIMATING]:
             isDead = moveSprites(marioPos, marioStats, marioSprites, marioFrame)
-        drawScene(backgroundPics[levelNum - 1], backPos, marioPos, marioSprites, marioFrame, rectList, breakingBrick, brickSprites, coins, moveCoins, coinsPic, mushrooms, itemsPic, enemiesList, enemiesPic, uniSprite, isMuted)
+        drawScene(backgroundPics[levelNum - 1], backPos, marioPos, marioSprites, marioFrame, rectList, breakingBrick, brickSprites, coins, moveCoins, coinsPic, mushrooms, itemsPic, enemiesList, enemiesPic, uniSprite, points, isMuted)
         fast, timesUp = drawStats(marioPos, marioStats, marioScore[PTS], marioScore[COIN], startTime, levelNum, fast, timesUp, statCoin, uniSprite)
         if pausedBool:
             drawPause()
@@ -836,6 +852,7 @@ def loading():
     PTS, COIN, LIVES = 0, 1, 2
     # Loading up and declaring all level elements
     global levelNum
+    globalSound("stop")
     levelNum += 1
     marioPos = [40, 496, 0, 0, "Right", 0]
     marioStats = [True, 0, False, False, False, False, False, 0]
@@ -856,7 +873,7 @@ def loading():
                 return ["exit", None, None, None, None, None, None, None, None, None]
         screen.fill(BLACK)
         uniSprite = spriteCounter(uniSprite)
-        drawStats(None, None, 0, 0, time.get_ticks(), levelNum, True, True, statCoin, uniSprite)
+        drawStats(None, None, marioScore[PTS], marioScore[COIN], time.get_ticks(), levelNum, True, True, statCoin, uniSprite)
         screen.blit(currentWorld, (300, 250))
         screen.blit(lives, (390, 315))
         screen.blit(marioSprites[0][0], (315, 300))

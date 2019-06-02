@@ -354,12 +354,13 @@ def moveSprites(mario, marioInfo, marioPic, frame):
             return
         if mario[STATE] == -1 and frame[2] == 0:  # If mario is dying, play his dying animation
             frame[0], frame[1] = 2, 3
-            frame[2] = -9
+            frame[2] = -15
             playSound(deathSound, "music")
         elif mario[STATE] == -1:
             frame[0], frame[1] = 2, 3
             frame[2] += 0.4
-            mario[Y] += frame[2]
+            if frame[2] > -9:
+                mario[Y] += frame[2]
         elif mario[STATE] == 0:
             for index in range(len(changingSprites)):
                 if changingSprites[index] == [2,5]:
@@ -517,7 +518,7 @@ def checkCollide(mario, marioInfo, marioScore, rectLists, breakingBrick, moveCoi
             brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
             marioRect = Rect(mario[X] + 2, mario[Y], 38 - 2, height) # Mario's hit box (and making it a little smaller)
             if brickRect.colliderect(marioRect):
-                if int(mario[Y]) + height - int(mario[VY]) <= brickRect.y:  # Hitting top collision
+                if int(mario[Y]) + height - int(mario[VY]) - 1 <= brickRect.y:  # Hitting top collision
                     marioInfo[ONGROUND] = True
                     marioInfo[ONPLATFORM] = True
                     marioInfo[ISFALLING] = True

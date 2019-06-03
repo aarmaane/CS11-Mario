@@ -870,7 +870,7 @@ def game():
         display.flip()
         fpsCounter.tick(60)
         display.set_caption("Super Mario Bros! FPS: %.2f" %fpsCounter.get_fps())
-        #print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
+        print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
         # End of game handling
         if isDead:
             levelNum -=1

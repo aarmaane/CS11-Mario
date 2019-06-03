@@ -150,6 +150,7 @@ backgroundFastSound = mixer.Sound("assets/music/songs/mainSongFast.ogg")
 deathSound = mixer.Sound("assets/music/songs/death.wav")
 flagSound = mixer.Sound("assets/music/songs/flag.wav")
 doneSound = mixer.Sound("assets/music/songs/leveldone.wav")
+timepointsSound = mixer.Sound("assets/music/songs/timepoints.ogg")
 timeLowSound = mixer.Sound("assets/music/effects/timeLow.wav")
 smallJumpSound = mixer.Sound("assets/music/effects/smallJump.ogg")
 bigJumpSound = mixer.Sound("assets/music/effects/bigJump.ogg")
@@ -688,8 +689,11 @@ def movePole(mario, marioStats, frame, flagInfo, unisprite):
         mario[X] += 3.5
         marioStats[ONGROUND] = True
         moveSprites(mario,marioStats,frame)
-        if mario[X] > 650:
+        if mario[X] > 650 and mario[X] < 800:
             mario[X] = 800
+            playSound(timepointsSound, "effect")
+    if mario[X] > 800:
+        print('ye')
 
 def rotateRect(rectList, breakingBrick, itemsList, enemiesList, points):
     X, Y, ENMYVX, ENMYVY, ENMYIDLE, ENMYINFLOOR = 0, 1, 4, 5, 6, 7

@@ -248,7 +248,7 @@ def floatObjects(moveCoins, points):
             moveCoins[coin][COINVY] += 0.5
             moveCoins[coin][Y] += moveCoins[coin][COINVY]
         else:
-            points.append([moveCoins[coin][X], moveCoins[coin][Y], 30, 100])
+            points.append([moveCoins[coin][X], moveCoins[coin][Y], 30, 200])
             del moveCoins[coin]
     for point in range(len(points) - 1, -1, -1):
         points[point][PTSCOUNT] -= 1
@@ -561,7 +561,7 @@ def checkCollide(mario, marioInfo, marioScore, rectLists, breakingBrick, moveCoi
     for list in hitBrick:
         brick, type = list[0], list[1]
         brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
-        # Handling collision wigh multiple bricks
+        # Handling collision with multiple bricks
         if len(hitBrick) != 1:
             if abs(brickRect.x - originalX) > 21:
                 continue
@@ -620,7 +620,7 @@ def checkClearCollide(mario, marioStats, marioScore, coins, mushrooms, enemiesLi
             del coins[coin]
             playSound(coinSound, "block")
             marioScore[PTS] += 200
-            points.append([coinRect.x, coinRect.y, 30, 100])
+            points.append([coinRect.x, coinRect.y, 30, 200])
             marioScore[COIN] += 1
     for index in range(len(mushrooms) - 1, -1, -1):
         mushRect = Rect(mushrooms[index][0], mushrooms[index][1], mushrooms[index][2], mushrooms[index][3])
@@ -672,7 +672,7 @@ def movePole(mario, marioStats, frame, flagInfo, unisprite):
         flagInfo[1][1] += 4
     if mario[Y] < 451 - offset:
         mario[Y] += 4
-        frame[0], frame[1] = 3, (unisprite * 2 // 10 + mario[STATE] * 2)
+        frame[0], frame[1] = 3, (unisprite * 0.8 % 2 + mario[STATE] * 2)
     if mario[Y] >= 451 - offset and flagRect.y >= 451 and frame[2] < 20:
         mario[X] = poleRect.x + 16
         frame[0], frame[1] = 3, 4 + mario[STATE]

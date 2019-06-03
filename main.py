@@ -834,7 +834,7 @@ def game():
                     marioPos = [0, 496, 0, 0, "Right", 0]
                     marioStats = [True, 0, False, False, False, False, False, 0]
                 elif evnt.key == K_BACKSLASH:
-                    running = False
+                    return "loading"
             elif evnt.type == KEYUP:
                 if evnt.key == K_SPACE:
                     marioStats[ISFALLING] = True

@@ -314,23 +314,19 @@ def itemCollide(item, rectList, indexList, extraCollideIn = []):
                         item[VX] *= -1
 
 
-def drawStats(mario, marioInfo, points, coins, startTime, level, fastMode, timesUp, coinPic, spriteCount):
+def drawStats(mario, marioInfo, points, coins, startTime, level, fastMode, timesUp, coinPic, spriteCount, forceTime = None):
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING, ISANIMATING, INVULFRAMES = 0, 1, 2, 3, 4, 5, 6, 7
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
-    if not fastMode:
-        nowFast = False
-    else:
-        nowFast = True
-    if not timesUp:
-        timesUpCheck = False
-    else:
-        timesUpCheck = True
+    nowFast = fastMode
+    timesUpCheck = timesUp
     currentTime = 200 - int((time.get_ticks() - startTime) / 1000)
-    if currentTime < 100 and not fastMode:
+    if forceTime != None:
+        currentTime = forceTime
+    if currentTime < 100 and not fastMode and forceTime is None:
         playSound(timeLowSound, "music")
         playSound(backgroundFastSound, "music", True)
         nowFast = True
-    if currentTime == 0 and not timesUp:
+    if currentTime == 0 and not timesUp and forceTime is None:
         currentTime = 0
         marioInfo[ISANIMATING] = True
         mario[STATE] = -1
@@ -453,8 +449,8 @@ def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace, clearRectL
             mario[VX] -= acclerate
 
     # Max and min acceleration
-    if mario[VX] > 6:
-        mario[VX] = 6
+    if mario[VX] > 5:
+        mario[VX] = 5
     elif mario[VX] < 0:
         mario[VX] = 0
     # Jumping logic
@@ -605,7 +601,7 @@ def checkCollide(mario, marioInfo, marioScore, rectLists, breakingBrick, moveCoi
                     playSound(appearSound, "block")
 
 
-def checkClearCollide(mario, marioStats, marioScore, coins, mushrooms, enemiesList, points):
+def checkClearCollide(mario, marioStats, marioScore, coins, mushrooms, enemiesList, points, startTime):
     PTS, COIN, LIVES = 0, 1, 2
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING, ISANIMATING, INVULFRAMES = 0, 1, 2, 3, 4, 5, 6, 7
@@ -654,14 +650,17 @@ def checkClearCollide(mario, marioStats, marioScore, coins, mushrooms, enemiesLi
                         playSound(shrinkSound, "effect")
     # Checking victory pole collision
     isPole = False
+    forceTime = None
     poleRect = Rect(flagInfo[0][0], flagInfo[0][1], flagInfo[0][2], flagInfo[0][3])
     if marioRect.colliderect(poleRect):
         isPole = True
         mario[X] = poleRect.x - 16
         playSound(flagSound, "music")
-    return isPole
+        forceTime = 200 - (time.get_ticks() - startTime)//1000
+    return [isPole, forceTime]
 
-def movePole(mario, marioStats, frame, flagInfo, unisprite):
+def movePole(mario, marioStats, marioScore, frame, flagInfo, unisprite, isDone, forceTime):
+    PTS, COIN, LIVES = 0, 1, 2
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING, ISANIMATING, INVULFRAMES = 0, 1, 2, 3, 4, 5, 6, 7
     poleRect = Rect(flagInfo[0][0], flagInfo[0][1], flagInfo[0][2], flagInfo[0][3])
@@ -684,7 +683,7 @@ def movePole(mario, marioStats, frame, flagInfo, unisprite):
         frame[2] += 1
         playSound(doneSound, "music")
     elif mario[Y] >= 451 - offset and flagRect.y >= 451:
-        mario[VX] = 6
+        mario[VX] = 5
         mario[VY] = 0
         mario[X] += 3.5
         marioStats[ONGROUND] = True
@@ -692,8 +691,14 @@ def movePole(mario, marioStats, frame, flagInfo, unisprite):
         if mario[X] > 650 and mario[X] < 800:
             mario[X] = 800
             playSound(timepointsSound, "effect")
-    if mario[X] > 800:
-        print('ye')
+    if mario[X] > 800 and forceTime != 0:
+        forceTime -= 1
+        marioScore[PTS] += 100
+    if forceTime == 0:
+        mixer.Channel(1).stop()
+        if not mixer.Channel(0).get_busy():
+            isDone = True
+    return [isDone, forceTime]
 
 def rotateRect(rectList, breakingBrick, itemsList, enemiesList, points):
     X, Y, ENMYVX, ENMYVY, ENMYIDLE, ENMYINFLOOR = 0, 1, 4, 5, 6, 7
@@ -773,7 +778,7 @@ def loadFile(targetFile):
         line = line.split(",")  # Dividing elements seperated by commas
         listLength = len(line)
         outputList.append([int(line[index]) for index in range(listLength)])  # Appending line info to list
-    return outputList  # Returning final list-
+    return outputList  # Returning final list
 
 # Declaring main functions
 
@@ -794,6 +799,7 @@ def game():
     isDone = False
     fast = False
     uniSprite = 0  # Counter to control all non - Mario sprites
+    forceTime = None
     # Declaring session specific lists
     breakingBrick = []
     moveCoins = []
@@ -839,6 +845,11 @@ def game():
                     marioStats = [True, 0, False, False, False, False, False, 0]
                 elif evnt.key == K_BACKSLASH:
                     return "loading"
+                elif evnt.key == K_SLASH:
+                    marioPos = [0, 496, 5, 0, "Right", 0]
+                    print('pew')
+                    while backPos > -8000:
+                        walkMario(marioPos, rectList, "Right", clearRectList)
             elif evnt.type == KEYUP:
                 if evnt.key == K_SPACE:
                     marioStats[ISFALLING] = True
@@ -855,22 +866,21 @@ def game():
             floatObjects(moveCoins, points)
             moveItems(rectList, enemiesList, mushrooms, goombas)
             checkCollide(marioPos, marioStats, marioScore, rectList, breakingBrick, moveCoins, mushrooms)
-            isPole = checkClearCollide(marioPos, marioStats, marioScore, coins, mushrooms, enemiesList, points)
+            isPole, forceTime = checkClearCollide(marioPos, marioStats, marioScore, coins, mushrooms, enemiesList, points, startTime)
         if marioStats[ISANIMATING]:
             isDead = moveSprites(marioPos, marioStats, marioFrame)
         if isPole and not pausedBool:
             fast = True
             uniSprite = spriteCounter(uniSprite)
-            movePole(marioPos, marioStats, marioFrame, flagInfo, uniSprite)
+            isDone, forceTime = movePole(marioPos, marioStats, marioScore, marioFrame, flagInfo, uniSprite, isDone, forceTime)
         drawScene(backgroundPics[levelNum - 1], backPos, marioPos, marioSprites, marioFrame, rectList, breakingBrick, brickSprites, coins, moveCoins, coinsPic, mushrooms, itemsPic, enemiesList, enemiesPic, uniSprite, points, isMuted)
-        fast, timesUp = drawStats(marioPos, marioStats, marioScore[PTS], marioScore[COIN], startTime, levelNum, fast, timesUp, statCoin, uniSprite)
+        fast, timesUp = drawStats(marioPos, marioStats, marioScore[PTS], marioScore[COIN], startTime, levelNum, fast, timesUp, statCoin, uniSprite, forceTime)
         if pausedBool:
             drawPause()
             startTime += (time.get_ticks() - startTime) - pauseTime
         display.flip()
         fpsCounter.tick(60)
         display.set_caption("Super Mario Bros! FPS: %.2f" %fpsCounter.get_fps())
-        print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
         # End of game handling
         if isDead:
             levelNum -=1
@@ -880,7 +890,7 @@ def game():
             return "loading"
         if isDone:
             return "loading"
-
+        #print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
 
 def menu():
     global levelNum, marioScore

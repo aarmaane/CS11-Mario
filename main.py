@@ -127,6 +127,7 @@ helpText = marioFont.render("press esc to exit game", False, WHITE)
 marioText = marioFontBig.render("mario", False, WHITE)
 timeText = marioFontBig.render("time", False, WHITE)
 worldText = marioFontBig.render("world", False, WHITE)
+overText = marioFontBig.render("Game over", False, WHITE)
 
 instructHelp = marioFontSuperBig.render("Instructions", False, WHITE)
 moveRightHelp = marioFont.render("Move Right  -  D", False, WHITE)
@@ -151,6 +152,7 @@ deathSound = mixer.Sound("assets/music/songs/death.wav")
 flagSound = mixer.Sound("assets/music/songs/flag.wav")
 doneSound = mixer.Sound("assets/music/songs/leveldone.wav")
 timepointsSound = mixer.Sound("assets/music/songs/timepoints.ogg")
+overSound = mixer.Sound("assets/music/songs/gameover.ogg")
 timeLowSound = mixer.Sound("assets/music/effects/timeLow.wav")
 smallJumpSound = mixer.Sound("assets/music/effects/smallJump.ogg")
 bigJumpSound = mixer.Sound("assets/music/effects/bigJump.ogg")
@@ -354,22 +356,24 @@ def drawPause():
     screen.blit(pauseText, (345,290))
     screen.blit(helpText, (210, 330))
 
-def moveSprites(mario, marioInfo, frame):
+def moveSprites(mario, marioInfo, frame, forceTime = None):
     """ Function to cycle through Mario's sprites """
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING, ISANIMATING, INVULFRAMES = 0, 1, 2, 3, 4, 5, 6, 7
     changingSprites = [[2,5], [2,4], [2,5], [2,4], [2,5], [2,4], [1,0]]
     isDead = False
     if marioInfo[ISANIMATING]:
-        if mario[STATE] == -1 and frame[2] > 70:
-            isDead = True
+        if mario[STATE] == -1:
+            forceTime = 0
+            if frame[2] > 70:
+                isDead = True
         if frame[2] == 55:
             marioInfo[ISANIMATING] = False
             frame[2] = 0
             if mario[STATE] == 0:
                 mario[Y] += 42
                 frame[0], frame[1] = 0, 0
-            return
+            return isDead, forceTime
         if mario[STATE] == -1 and frame[2] == 0:  # If mario is dying, play his dying animation
             frame[0], frame[1] = 2, 3
             frame[2] = -15
@@ -390,7 +394,7 @@ def moveSprites(mario, marioInfo, frame):
         elif mario[STATE] == 1:
             frame[2] += 1
             frame[0], frame[1] = changingSprites[(frame[2]//8)][0], changingSprites[(frame[2]//8)][1]
-        return isDead
+        return isDead, forceTime
     if marioInfo[ONGROUND]:
         frame[0] = 0 + mario[STATE] # Adjusting for sprite for = big mario
         # Mario's running sprite counter
@@ -632,7 +636,7 @@ def checkClearCollide(mario, marioStats, marioScore, coins, mushrooms, enemiesLi
             del mushrooms[index]
     for list in range(len(enemiesList)):
         for enemy in range(len(enemiesList[list]) - 1, -1, -1):
-            enmyRect = Rect(enemiesList[list][enemy][0], enemiesList[list][enemy][1], enemiesList[list][enemy][2], enemiesList[list][enemy][3])
+            enmyRect = Rect(enemiesList[list][enemy][0], enemiesList[list][enemy][1] + 10, enemiesList[list][enemy][2], enemiesList[list][enemy][3] - 10)
             if enemiesList[list][enemy][ENMYIDLE] != 2 and marioRect.colliderect(enmyRect):
                 if int(mario[Y]) + height - int(mario[VY]) <= enmyRect.y:
                     mario[VY] = -7.5
@@ -847,9 +851,10 @@ def game():
                     return "loading"
                 elif evnt.key == K_SLASH:
                     marioPos = [0, 496, 5, 0, "Right", 0]
-                    print('pew')
                     while backPos > -8000:
                         walkMario(marioPos, rectList, "Right", clearRectList)
+                elif evnt.key == K_PERIOD:
+                    return "gameOver"
             elif evnt.type == KEYUP:
                 if evnt.key == K_SPACE:
                     marioStats[ISFALLING] = True
@@ -868,7 +873,7 @@ def game():
             checkCollide(marioPos, marioStats, marioScore, rectList, breakingBrick, moveCoins, mushrooms)
             isPole, forceTime = checkClearCollide(marioPos, marioStats, marioScore, coins, mushrooms, enemiesList, points, startTime)
         if marioStats[ISANIMATING]:
-            isDead = moveSprites(marioPos, marioStats, marioFrame)
+            isDead, forceTime = moveSprites(marioPos, marioStats, marioFrame, forceTime)
         if isPole and not pausedBool:
             fast = True
             uniSprite = spriteCounter(uniSprite)
@@ -965,6 +970,22 @@ def loading():
     return ["game", brickList, interactBricks, questionBricks, coins, goombas, flagInfo, marioPos, backPos, marioStats, marioFrame]
 
 def gameOver():
+    PTS, COIN, LIVES = 0, 1, 2
+    uniSprite = 0
+    globalSound("stop")
+    playSound(overSound, "music")
+    startTime = time.get_ticks()
+    while time.get_ticks() - startTime < 5000:
+        for evnt in event.get():
+            if evnt.type == QUIT:
+                return "exit"
+        screen.fill(BLACK)
+        uniSprite = spriteCounter(uniSprite)
+        drawStats(None, None, marioScore[PTS], marioScore[COIN], time.get_ticks(), levelNum, True, True, statCoin,
+                  uniSprite, 0)
+        screen.blit(overText,(300,300))
+        display.flip()
+        fpsCounter.tick(60)
     return "menu"
 
 def instructions():

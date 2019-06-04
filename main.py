@@ -895,7 +895,7 @@ def game():
             return "loading"
         if isDone:
             return "loading"
-        #print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
+        print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
 
 def menu():
     global levelNum, marioScore
@@ -958,7 +958,7 @@ def loading():
     while time.get_ticks() - startTime < 2500:
         for evnt in event.get():          
             if evnt.type == QUIT:
-                return ["exit", None, None, None, None, None, None, None, None, None]
+                return ["exit", None, None, None, None, None, None, None, None, None, None]
         screen.fill(BLACK)
         uniSprite = spriteCounter(uniSprite)
         drawStats(None, None, marioScore[PTS], marioScore[COIN], time.get_ticks(), levelNum, True, True, statCoin, uniSprite)

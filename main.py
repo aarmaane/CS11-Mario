@@ -50,7 +50,9 @@ mutePic = transform.scale(image.load("assets/sprites/title/muted.png"), (45,45))
 
 backgroundPics = [transform.scale(image.load("assets/backgrounds/level_1.png").convert(), (9086, 600)),
                   transform.scale(image.load("assets/backgrounds/level_2.png").convert(), (10065, 600)),
-                  transform.scale(image.load("assets/backgrounds/level_3.png").convert(), (9200, 600))]
+                  transform.scale(image.load("assets/backgrounds/level_3.png").convert(), (9200, 600)),
+                  transform.scale(image.load("assets/backgrounds/level_4.png").convert(), (16380, 600)),
+                  transform.scale(image.load("assets/backgrounds/level_5.png").convert(), (10000, 600))]
 
 marioSpriteNames = ["smallmariojump" , "bigmariojump" , "bigmariocrouch" , "smallmariodead" , "bigmariochange", "smallmariochange"]
 marioSpriteNamesFlag = ["flagsmall1", "flagsmall2", "flagbig1", "flagbig2", "flagsmall2", "flagbig2"]
@@ -895,13 +897,13 @@ def game():
             return "loading"
         if isDone:
             return "loading"
-        print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
+        #print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
 
 def menu():
     global levelNum, marioScore
     if mixer.Channel(0).get_volume() == 0:
         globalSound("toggleVol")
-    levelNum = 0
+    levelNum = 3
     marioScore= [0, 0, 3]
     running = True
     globalSound("stop") # Stop any music that's playing

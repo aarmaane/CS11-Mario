@@ -897,13 +897,13 @@ def game():
             return "loading"
         if isDone:
             return "loading"
-        #print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
+        print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
 
 def menu():
     global levelNum, marioScore
     if mixer.Channel(0).get_volume() == 0:
         globalSound("toggleVol")
-    levelNum = 3
+    levelNum = 0
     marioScore= [0, 0, 3]
     running = True
     globalSound("stop") # Stop any music that's playing

@@ -175,7 +175,7 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breaking
     BRICKVY, IDLE, TYPE = 4, 5, 6
     ENMYVX, ENMYVY, ENMYIDLE, ENMYINFLOOR = 4, 5, 6, 7
     GUNSTATE, GUNTYPE = 4, 5
-    BULLVX = 4
+    BULLVX, BULLVY = 4, 5
     screen.fill(BLACK) # Clearing screen
     screen.blit(background, (backX, 0))  # Blitting background
     marioShow = marioPic[marioFrame[0]][int(marioFrame[1])]
@@ -622,12 +622,13 @@ def checkCollide(mario, marioInfo, marioScore, rectLists, breakingBrick, moveCoi
                     playSound(appearSound, "block")
 
 
-def checkClearCollide(mario, marioStats, marioScore, coins, mushrooms, enemiesList, points, startTime):
+def checkClearCollide(mario, marioStats, marioScore, coins, mushrooms, enemiesList, points, bullets, startTime):
     PTS, COIN, LIVES = 0, 1, 2
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING, ISANIMATING, INVULFRAMES = 0, 1, 2, 3, 4, 5, 6, 7
     X, Y, DELAY, MOVEUP, MUSHVX, MUSHVY = 0, 1, 4, 5, 6, 7
     ENMYVX, ENMYVY, ENMYIDLE, ENMYINFLOOR = 4, 5, 6, 7
+    BULLVX, BULLVY = 4, 5
     height = 42
     if mario[STATE] == 1:
         height = 84
@@ -654,21 +655,26 @@ def checkClearCollide(mario, marioStats, marioScore, coins, mushrooms, enemiesLi
     for list in range(len(enemiesList)):
         for enemy in range(len(enemiesList[list]) - 1, -1, -1):
             enmyRect = Rect(enemiesList[list][enemy][0], enemiesList[list][enemy][1] + 10, enemiesList[list][enemy][2], enemiesList[list][enemy][3] - 10)
-            if enemiesList[list][enemy][ENMYIDLE] != 2 and marioRect.colliderect(enmyRect):
+            if marioRect.colliderect(enmyRect) and ((enemiesList[list] == goombas and enemiesList[list][enemy][ENMYIDLE] != 2) or (enemiesList[list] == bullets)):
                 if int(mario[Y]) + height - int(mario[VY]) <= enmyRect.y:
                     mario[VY] = -7.5
                     marioStats[ISFALLING] = True
                     marioStats[ONGROUND] = False
                     marioScore[PTS] += 100
                     playSound(stompSound, "effect")
-                    enemiesList[list][enemy][ENMYIDLE] = 2
-                    enemiesList[list][enemy][ENMYINFLOOR] = 32  # Turning the infloor value into a counter for removing dead goombas
+                    if enemiesList[list] == goombas:
+                        enemiesList[list][enemy][ENMYIDLE] = 2
+                        enemiesList[list][enemy][ENMYINFLOOR] = 32  # Turning the infloor value into a counter for removing dead goombas
+                    elif enemiesList[list] == bullets:
+                        enemiesList[list][enemy][BULLVY] = -1
+                        points.append([enmyRect.x, enmyRect.y, 30, 100])
                 elif marioStats[INVULFRAMES] == 0:
                     mario[STATE] -= 1
                     marioStats[ISANIMATING] = True
                     if mario[STATE] == 0:
                         marioStats[INVULFRAMES] = 80
                         playSound(shrinkSound, "effect")
+
     # Checking victory pole collision
     isPole = False
     forceTime = None
@@ -721,7 +727,7 @@ def movePole(mario, marioStats, marioScore, frame, flagInfo, unisprite, isDone, 
             isDone = True
     return [isDone, forceTime]
 
-def rotateRect(rectList, breakingBrick, itemsList, enemiesList, points):
+def rotateRect(rectList, breakingBrick, itemsList, enemiesList, bullets, points):
     X, Y, ENMYVX, ENMYVY, ENMYIDLE, ENMYINFLOOR = 0, 1, 4, 5, 6, 7
     # Deleting any offscreen Rects
     for index in range(len(breakingBrick) - 1, -1, -1):
@@ -745,11 +751,16 @@ def rotateRect(rectList, breakingBrick, itemsList, enemiesList, points):
     # Activating and deactivating all enemies
     for list in range(len(enemiesList)):
         for enemy in range(len(enemiesList[list]) - 1, -1, -1):
-            if enemiesList[list][enemy][ENMYIDLE] == 0 and enemiesList[list][enemy][X] < 800:
-                enemiesList[list][enemy][ENMYIDLE] = 1
-            elif enemiesList[list][enemy][ENMYIDLE] == 2 and enemiesList[list][enemy][ENMYINFLOOR] == 0:
-                points.append([enemiesList[list][enemy][0], enemiesList[list][enemy][1], 40, 100])
-                del enemiesList[list][enemy]
+            if enemiesList[list] == goombas:
+                if enemiesList[list][enemy][ENMYIDLE] == 0 and enemiesList[list][enemy][X] < 800:
+                    enemiesList[list][enemy][ENMYIDLE] = 1
+                elif enemiesList[list][enemy][ENMYIDLE] == 2 and enemiesList[list][enemy][ENMYINFLOOR] == 0:
+                    points.append([enemiesList[list][enemy][0], enemiesList[list][enemy][1], 40, 100])
+                    del enemiesList[list][enemy]
+            elif enemiesList[list] == bullets:
+                if enemiesList[list][enemy][0] < 0:
+                    del enemiesList[list][enemy]
+
 
 def playSound(soundFile, soundChannel, queue = False):
     """ Function to load in sounds and play them on a channel """
@@ -825,13 +836,13 @@ def game():
     breakingBrick = []
     moveCoins = []
     mushrooms = []
-    bullets = [[500,500,42,42,1]]
+    bullets = [[500,500,42,42,1,0]]
     points = []
     # Declaring packaged lists
     rectList = [brickList, interactBricks, questionBricks, gunRects]
     clearRectList = [coins, moveCoins, breakingBrick, mushrooms, goombas, points, flagInfo, bullets]
     itemsList = [mushrooms]
-    enemiesList = [goombas]
+    enemiesList = [goombas, bullets]
     startTime = time.get_ticks()  # Variable to keep track of time since level start
     while running:
         mx, my = mouse.get_pos()
@@ -882,14 +893,14 @@ def game():
                 RECTFINDER = [mx,my]
         if not pausedBool and not marioStats[ISANIMATING] and not isPole:
             uniSprite = spriteCounter(uniSprite)
-            rotateRect(rectList, breakingBrick, itemsList, enemiesList, points)
+            rotateRect(rectList, breakingBrick, itemsList, enemiesList, bullets, points)
             checkMovement(marioPos, marioStats, marioAccelerate, rectList, initialSpace, clearRectList)
             moveSprites(marioPos, marioStats, marioFrame)
             moveBricks(questionBricks, interactBricks)
             floatObjects(moveCoins, points)
             moveItems(rectList, enemiesList, mushrooms, goombas)
             checkCollide(marioPos, marioStats, marioScore, rectList, breakingBrick, moveCoins, mushrooms)
-            isPole, forceTime = checkClearCollide(marioPos, marioStats, marioScore, coins, mushrooms, enemiesList, points, startTime)
+            isPole, forceTime = checkClearCollide(marioPos, marioStats, marioScore, coins, mushrooms, enemiesList, points, bullets, startTime)
         if marioStats[ISANIMATING]:
             isDead, forceTime = moveSprites(marioPos, marioStats, marioFrame, forceTime)
         if isPole and not pausedBool:

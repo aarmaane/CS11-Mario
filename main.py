@@ -75,7 +75,10 @@ coinsPic = [[image.load("assets/sprites/coins/coinidle"+str(i)+".png").convert_a
 
 itemsPic = [image.load("assets/sprites/items/mushroom.png").convert_alpha()]
 
-enemiesPic = [[image.load("assets/sprites/enemies/goomba"+str(i)+'.png').convert_alpha() for i in range(1,4)]]
+enemiesPic = [[transform.scale(image.load("assets/sprites/enemies/goomba"+str(i)+".png").convert_alpha(), (42,42)) for i in range(1,4)],
+              [transform.scale(image.load("assets/sprites/enemies/bulletbill.png").convert_alpha(),(48,42)),
+               transform.scale(image.load("assets/sprites/enemies/bulletgun.png").convert_alpha(),(42,81)),
+               transform.scale(image.load("assets/sprites/enemies/bulletgunext.png").convert_alpha(),(42,45))]]
 
 flagPic = [transform.scale(image.load("assets/sprites/items/flagpole.png").convert_alpha(), (42, 420)),
            transform.scale(image.load("assets/sprites/items/flag.png").convert_alpha(), (42, 42))]
@@ -106,9 +109,6 @@ for subList in range(len(coinsPic)):
 for pic in range(len(itemsPic)):
     itemsPic[pic] = transform.scale(itemsPic[pic], (42,42))
 coinsPic[0] = coinsPic[0] + coinsPic[0][::-1]
-for subList in range(len(enemiesPic)):
-    for pic in range(len(enemiesPic[subList])):
-        enemiesPic[subList][pic] = transform.scale(enemiesPic[subList][pic], (42,42))
 
 
 # Declaring all fonts
@@ -165,14 +165,17 @@ appearSound = mixer.Sound("assets/music/effects/itemAppear.ogg")
 stompSound = mixer.Sound("assets/music/effects/stomp.ogg")
 growSound = mixer.Sound("assets/music/effects/grow.ogg")
 shrinkSound = mixer.Sound("assets/music/effects/shrink.ogg")
+shootSound = mixer.Sound("assets/music/effects/shoot.wav")
 
 # Declaring game functions
-def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breakingBrick, brickPic, coins, moveCoins, coinsPic, mushrooms, itemsPic, enemiesList, enemiesPic, spriteCount, points, isMuted):
+def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breakingBrick, brickPic, coins, moveCoins, coinsPic, mushrooms, itemsPic, enemiesList, enemiesPic, bullets, spriteCount, points, isMuted):
     """Function to draw the background, mario, enemies, and all objects"""
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING, ISANIMATING, INVULFRAMES = 0, 1, 2, 3, 4, 5, 6, 7
     BRICKVY, IDLE, TYPE = 4, 5, 6
     ENMYVX, ENMYVY, ENMYIDLE, ENMYINFLOOR = 4, 5, 6, 7
+    GUNSTATE, GUNTYPE = 4, 5
+    BULLVX = 4
     screen.fill(BLACK) # Clearing screen
     screen.blit(background, (backX, 0))  # Blitting background
     marioShow = marioPic[marioFrame[0]][int(marioFrame[1])]
@@ -203,11 +206,22 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breaking
                     screen.blit(brickPic[1][1], brickRect)
                 else:
                     screen.blit(brickPic[0][int(spriteCount//2)],brickRect)
+            elif list == gunRects:
+                if brick[GUNTYPE] == 1:
+                    screen.blit(enemiesPic[1][1], (brickRect.x, brickRect.y))
+                elif brick[GUNTYPE] == 2:
+                    screen.blit(enemiesPic[1][2], (brickRect.x, brickRect.y))
     for brick in breakingBrick:
         drawDebris(brick)
     for coin in coins:
         coinRect = coin[0], coin[1], coin[2], coin[3]
         screen.blit(coinsPic[0][int(spriteCount // 2)], coinRect)
+    for bullet in bullets:
+        bullRect = Rect(bullet[0], bullet[1], bullet[2], bullet[3])
+        bullPic = enemiesPic[1][0]
+        if bullet[BULLVX] == 1:
+            bullPic = transform.flip(bullPic, True, False)
+        screen.blit(bullPic, bullRect)
     # Blitting flag
     screen.blit(flagPic[0],(flagInfo[0][0],flagInfo[0][1]))
     screen.blit(flagPic[1],(flagInfo[1][0],flagInfo[1][1]))
@@ -218,6 +232,7 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breaking
         screen.blit(pointText, (point[0], point[1]))
     if isMuted:
         screen.blit(mutePic, (735,25))
+
 
 
 def drawDebris(brick):
@@ -810,10 +825,11 @@ def game():
     breakingBrick = []
     moveCoins = []
     mushrooms = []
+    bullets = [[500,500,42,42,1]]
     points = []
     # Declaring packaged lists
-    rectList = [brickList, interactBricks, questionBricks]
-    clearRectList = [coins, moveCoins, breakingBrick, mushrooms, goombas, points, flagInfo]
+    rectList = [brickList, interactBricks, questionBricks, gunRects]
+    clearRectList = [coins, moveCoins, breakingBrick, mushrooms, goombas, points, flagInfo, bullets]
     itemsList = [mushrooms]
     enemiesList = [goombas]
     startTime = time.get_ticks()  # Variable to keep track of time since level start
@@ -880,7 +896,7 @@ def game():
             fast = True
             uniSprite = spriteCounter(uniSprite)
             isDone, forceTime = movePole(marioPos, marioStats, marioScore, marioFrame, flagInfo, uniSprite, isDone, forceTime)
-        drawScene(backgroundPics[levelNum - 1], backPos, marioPos, marioSprites, marioFrame, rectList, breakingBrick, brickSprites, coins, moveCoins, coinsPic, mushrooms, itemsPic, enemiesList, enemiesPic, uniSprite, points, isMuted)
+        drawScene(backgroundPics[levelNum - 1], backPos, marioPos, marioSprites, marioFrame, rectList, breakingBrick, brickSprites, coins, moveCoins, coinsPic, mushrooms, itemsPic, enemiesList, enemiesPic, bullets, uniSprite, points, isMuted)
         fast, timesUp = drawStats(marioPos, marioStats, marioScore[PTS], marioScore[COIN], startTime, levelNum, fast, timesUp, statCoin, uniSprite, forceTime)
         if pausedBool:
             drawPause()
@@ -897,7 +913,7 @@ def game():
             return "loading"
         if isDone:
             return "loading"
-        print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
+        #print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
 
 def menu():
     global levelNum, marioScore
@@ -952,6 +968,7 @@ def loading():
     questionBricks = loadFile(str("data/level_" + str(levelNum) + "/questionBricks.txt"))  # 1-4: Rect, VY, State, Type
     coins = loadFile(str("data/level_" + str(levelNum) + "/coins.txt"))
     goombas = loadFile(str("data/level_" + str(levelNum) + "/goombas.txt"))
+    gunRects = loadFile(str("data/level_" + str(levelNum) + "/guns.txt"))
     flagInfo = loadFile(str("data/level_" + str(levelNum) + "/flag.txt"))
     uniSprite = 0
     currentWorld = marioFontBig.render("World 1-%s" %levelNum, False, (255,255,255))
@@ -960,7 +977,7 @@ def loading():
     while time.get_ticks() - startTime < 2500:
         for evnt in event.get():          
             if evnt.type == QUIT:
-                return ["exit", None, None, None, None, None, None, None, None, None, None]
+                return ["exit", None, None, None, None, None, None, None, None, None, None, None]
         screen.fill(BLACK)
         uniSprite = spriteCounter(uniSprite)
         drawStats(None, None, marioScore[PTS], marioScore[COIN], time.get_ticks(), levelNum, True, True, statCoin, uniSprite)
@@ -969,7 +986,7 @@ def loading():
         screen.blit(marioSprites[0][0], (315, 300))
         display.flip()
         fpsCounter.tick(60)
-    return ["game", brickList, interactBricks, questionBricks, coins, goombas, flagInfo, marioPos, backPos, marioStats, marioFrame]
+    return ["game", brickList, interactBricks, questionBricks, coins, goombas, flagInfo, marioPos, backPos, marioStats, marioFrame, gunRects]
 
 def gameOver():
     PTS, COIN, LIVES = 0, 1, 2
@@ -1043,7 +1060,7 @@ while page != "exit":
     if page == "menu":
         page = menu()
     if page == "loading":
-        page, brickList, interactBricks, questionBricks, coins, goombas, flagInfo, marioPos, backPos, marioStats, marioFrame = loading()
+        page, brickList, interactBricks, questionBricks, coins, goombas, flagInfo, marioPos, backPos, marioStats, marioFrame, gunRects = loading()
     if page == "gameOver":
         page = gameOver()
     if page == "game":

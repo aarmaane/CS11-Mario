@@ -174,7 +174,7 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breaking
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING, ISANIMATING, INVULFRAMES = 0, 1, 2, 3, 4, 5, 6, 7
     BRICKVY, IDLE, TYPE = 4, 5, 6
     ENMYVX, ENMYVY, ENMYIDLE, ENMYINFLOOR = 4, 5, 6, 7
-    GUNSTATE, GUNTYPE = 4, 5
+    GUNSTATE, GUNCOUNT, GUNTYPE = 4, 5, 6
     BULLVX, BULLVY = 4, 5
     screen.fill(BLACK) # Clearing screen
     screen.blit(background, (backX, 0))  # Blitting background
@@ -727,8 +727,9 @@ def movePole(mario, marioStats, marioScore, frame, flagInfo, unisprite, isDone, 
             isDone = True
     return [isDone, forceTime]
 
-def rotateRect(rectList, breakingBrick, itemsList, enemiesList, bullets, points):
+def rotateRect(rectList, breakingBrick, itemsList, enemiesList, bullets, gunsList, points):
     X, Y, ENMYVX, ENMYVY, ENMYIDLE, ENMYINFLOOR = 0, 1, 4, 5, 6, 7
+    GUNSTATE, GUNCOUNT, GUNTYPE = 4, 5, 6
     # Deleting any offscreen Rects
     for index in range(len(breakingBrick) - 1, -1, -1):
         if breakingBrick[index][1] > 600:
@@ -760,7 +761,11 @@ def rotateRect(rectList, breakingBrick, itemsList, enemiesList, bullets, points)
             elif enemiesList[list] == bullets:
                 if enemiesList[list][enemy][0] < 0:
                     del enemiesList[list][enemy]
-
+    for gun in range(len(gunsList) - 1, -1, -1):
+        if gunsList[gun][0] < 1500:
+            gunsList[gun][GUNSTATE] == 1
+        if gunsList[gun][0] < -500:
+            del gunsList[gun]
 
 def playSound(soundFile, soundChannel, queue = False):
     """ Function to load in sounds and play them on a channel """
@@ -893,7 +898,7 @@ def game():
                 RECTFINDER = [mx,my]
         if not pausedBool and not marioStats[ISANIMATING] and not isPole:
             uniSprite = spriteCounter(uniSprite)
-            rotateRect(rectList, breakingBrick, itemsList, enemiesList, bullets, points)
+            rotateRect(rectList, breakingBrick, itemsList, enemiesList, bullets, gunRects, points)
             checkMovement(marioPos, marioStats, marioAccelerate, rectList, initialSpace, clearRectList)
             moveSprites(marioPos, marioStats, marioFrame)
             moveBricks(questionBricks, interactBricks)
@@ -924,7 +929,7 @@ def game():
             return "loading"
         if isDone:
             return "loading"
-        #print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
+        print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
 
 def menu():
     global levelNum, marioScore

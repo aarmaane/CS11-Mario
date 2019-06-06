@@ -219,7 +219,7 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breaking
     for bullet in bullets:
         bullRect = Rect(bullet[0], bullet[1], bullet[2], bullet[3])
         bullPic = enemiesPic[1][0]
-        if bullet[BULLVX] == 1:
+        if bullet[BULLVX] > 0:
             bullPic = transform.flip(bullPic, True, False)
         screen.blit(bullPic, bullRect)
     # Blitting flag
@@ -332,6 +332,28 @@ def itemCollide(item, rectList, indexList, extraCollideIn = []):
                     except IndexError:
                         item[VX] *= -1
 
+def shootBullets(gunRects, bullets, mario):
+    X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
+    GUNSTATE, GUNCOUNT, GUNTYPE = 4, 5, 6
+    BULLVX, BULLVY = 4, 5
+    for gun in gunRects:
+        if gun[GUNTYPE] == 1 and gun[GUNSTATE] == 1:  # Checking if it's the gun or just cosmetic
+            gun[GUNCOUNT] += 1
+            if gun[GUNCOUNT] == 180:
+                gun[GUNCOUNT] = 0
+                bulletVX = -3
+                xOffset = -48
+                if mario[X] > gun[X]:
+                    bulletVX = 3
+                    xOffset = 42
+                bullets.append([gun[X] + xOffset, gun[Y], 48, 42, bulletVX, 0])
+                playSound(shootSound, "block")
+    for bullet in bullets:
+        if bullet[BULLVY] == 0:
+            bullet[X] += bullet[BULLVX]
+        else:
+            bullet[BULLVY] += 0.6
+            bullet[Y] += bullet[BULLVY]
 
 def drawStats(mario, marioInfo, points, coins, startTime, level, fastMode, timesUp, coinPic, spriteCount, forceTime = None):
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING, ISANIMATING, INVULFRAMES = 0, 1, 2, 3, 4, 5, 6, 7
@@ -511,6 +533,8 @@ def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace, clearRectL
         marioInfo[ONGROUND] = True
         marioInfo[ONPLATFORM] = False
         marioInfo[ISFALLING] = False
+    if marioInfo[INGROUND] and mario[Y] < 440: # Allow mario to recover if he goes back above the ground
+        marioInfo[INGROUND] = True
     if mario[INGROUND] and mario[Y] > 700:
         marioInfo[ISANIMATING] = True
         mario[STATE] = -1
@@ -633,6 +657,8 @@ def checkClearCollide(mario, marioStats, marioScore, coins, mushrooms, enemiesLi
     if mario[STATE] == 1:
         height = 84
     marioRect = Rect(mario[X], mario[Y], 38 - 2, height)
+    if marioStats[ISCROUCH]:
+        marioRect = Rect(mario[X], mario[Y] + 42, 38 - 2, 42)
     for coin in range(len(coins) - 1, -1, -1):
         coinRect = Rect(coins[coin][0], coins[coin][1], coins[coin][2], coins[coin][3])
         if marioRect.colliderect(coinRect):
@@ -655,7 +681,7 @@ def checkClearCollide(mario, marioStats, marioScore, coins, mushrooms, enemiesLi
     for list in range(len(enemiesList)):
         for enemy in range(len(enemiesList[list]) - 1, -1, -1):
             enmyRect = Rect(enemiesList[list][enemy][0], enemiesList[list][enemy][1] + 10, enemiesList[list][enemy][2], enemiesList[list][enemy][3] - 10)
-            if marioRect.colliderect(enmyRect) and ((enemiesList[list] == goombas and enemiesList[list][enemy][ENMYIDLE] != 2) or (enemiesList[list] == bullets)):
+            if marioRect.colliderect(enmyRect) and ((enemiesList[list] == goombas and enemiesList[list][enemy][ENMYIDLE] != 2) or (enemiesList[list] == bullets and enemiesList[list][enemy][BULLVY] == 0)):
                 if int(mario[Y]) + height - int(mario[VY]) <= enmyRect.y:
                     mario[VY] = -7.5
                     marioStats[ISFALLING] = True
@@ -674,7 +700,6 @@ def checkClearCollide(mario, marioStats, marioScore, coins, mushrooms, enemiesLi
                     if mario[STATE] == 0:
                         marioStats[INVULFRAMES] = 80
                         playSound(shrinkSound, "effect")
-
     # Checking victory pole collision
     isPole = False
     forceTime = None
@@ -728,6 +753,7 @@ def movePole(mario, marioStats, marioScore, frame, flagInfo, unisprite, isDone, 
     return [isDone, forceTime]
 
 def rotateRect(rectList, breakingBrick, itemsList, enemiesList, bullets, gunsList, points):
+    """ Function to take the activate and deactivate Rects relative to the screen """
     X, Y, ENMYVX, ENMYVY, ENMYIDLE, ENMYINFLOOR = 0, 1, 4, 5, 6, 7
     GUNSTATE, GUNCOUNT, GUNTYPE = 4, 5, 6
     # Deleting any offscreen Rects
@@ -759,12 +785,12 @@ def rotateRect(rectList, breakingBrick, itemsList, enemiesList, bullets, gunsLis
                     points.append([enemiesList[list][enemy][0], enemiesList[list][enemy][1], 40, 100])
                     del enemiesList[list][enemy]
             elif enemiesList[list] == bullets:
-                if enemiesList[list][enemy][0] < 0:
+                if enemiesList[list][enemy][0] < -1600 or enemiesList[list][enemy][0] > 1600:
                     del enemiesList[list][enemy]
     for gun in range(len(gunsList) - 1, -1, -1):
-        if gunsList[gun][0] < 1500:
-            gunsList[gun][GUNSTATE] == 1
-        if gunsList[gun][0] < -500:
+        if gunsList[gun][0] < 1600:
+            gunsList[gun][GUNSTATE] = 1
+        if gunsList[gun][0] < -1600:
             del gunsList[gun]
 
 def playSound(soundFile, soundChannel, queue = False):
@@ -841,7 +867,7 @@ def game():
     breakingBrick = []
     moveCoins = []
     mushrooms = []
-    bullets = [[500,500,42,42,1,0]]
+    bullets = []
     points = []
     # Declaring packaged lists
     rectList = [brickList, interactBricks, questionBricks, gunRects]
@@ -904,6 +930,7 @@ def game():
             moveBricks(questionBricks, interactBricks)
             floatObjects(moveCoins, points)
             moveItems(rectList, enemiesList, mushrooms, goombas)
+            shootBullets(gunRects, bullets, marioPos)
             checkCollide(marioPos, marioStats, marioScore, rectList, breakingBrick, moveCoins, mushrooms)
             isPole, forceTime = checkClearCollide(marioPos, marioStats, marioScore, coins, mushrooms, enemiesList, points, bullets, startTime)
         if marioStats[ISANIMATING]:
@@ -929,7 +956,7 @@ def game():
             return "loading"
         if isDone:
             return "loading"
-        print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
+        #print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
 
 def menu():
     global levelNum, marioScore

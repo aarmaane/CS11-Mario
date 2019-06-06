@@ -78,7 +78,8 @@ itemsPic = [image.load("assets/sprites/items/mushroom.png").convert_alpha()]
 enemiesPic = [[transform.scale(image.load("assets/sprites/enemies/goomba"+str(i)+".png").convert_alpha(), (42,42)) for i in range(1,4)],
               [transform.scale(image.load("assets/sprites/enemies/bulletbill.png").convert_alpha(),(48,42)),
                transform.scale(image.load("assets/sprites/enemies/bulletgun.png").convert_alpha(),(42,81)),
-               transform.scale(image.load("assets/sprites/enemies/bulletgunext.png").convert_alpha(),(42,45))]]
+               transform.scale(image.load("assets/sprites/enemies/bulletgunext.png").convert_alpha(),(42,45))],
+              [transform.scale(image.load("assets/sprites/enemies/spiny"+str(i)+".png").convert_alpha(),(42,42)) for i in range(1,3)]]
 
 flagPic = [transform.scale(image.load("assets/sprites/items/flagpole.png").convert_alpha(), (42, 420)),
            transform.scale(image.load("assets/sprites/items/flag.png").convert_alpha(), (42, 42))]
@@ -196,6 +197,11 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breaking
                     screen.blit(enemiesPic[0][2], enmyRect)
                 else:
                     screen.blit(enemiesPic[0][int(spriteCount//6)], enmyRect)
+            elif list == spinys:
+                spinePic = enemiesPic[2][int(spriteCount// 2.4 % 2)]
+                if enemy[ENMYVX] > 0:
+                    spinePic = transform.flip(spinePic, True, False)
+                screen.blit(spinePic, enmyRect)
     for list in rectList:
         for brick in list:
             brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
@@ -275,7 +281,7 @@ def floatObjects(moveCoins, points):
         points[point][Y] -= 1
 
 
-def moveItems(rectList, enemiesList, mushrooms, goombas):
+def moveItems(rectList, enemiesList, mushrooms, goombas, spinys):
     X, Y, DELAY, MOVEUP, MUSHVX, MUSHVY, INFLOOR = 0, 1, 4, 5, 6, 7, 8
     ENMYVX, ENMYVY, ENMYIDLE, ENMYINFLOOR = 4, 5, 6, 7
     # Making sure all mushrooms are activated
@@ -292,6 +298,9 @@ def moveItems(rectList, enemiesList, mushrooms, goombas):
             itemCollide(goomba, rectList, [X, Y, ENMYVX, ENMYVY, ENMYINFLOOR], enemiesList)
         if goomba[ENMYIDLE] == 2:
             goomba[ENMYINFLOOR] -=1
+    for spiny in spinys:
+        if spiny[ENMYIDLE] == 1:
+            itemCollide(spiny, rectList, [X, Y, ENMYVX, ENMYVY, ENMYINFLOOR], enemiesList)
 
 
 def itemCollide(item, rectList, indexList, extraCollideIn = []):
@@ -681,8 +690,8 @@ def checkClearCollide(mario, marioStats, marioScore, coins, mushrooms, enemiesLi
     for list in range(len(enemiesList)):
         for enemy in range(len(enemiesList[list]) - 1, -1, -1):
             enmyRect = Rect(enemiesList[list][enemy][0], enemiesList[list][enemy][1] + 10, enemiesList[list][enemy][2], enemiesList[list][enemy][3] - 10)
-            if marioRect.colliderect(enmyRect) and ((enemiesList[list] == goombas and enemiesList[list][enemy][ENMYIDLE] != 2) or (enemiesList[list] == bullets and enemiesList[list][enemy][BULLVY] == 0)):
-                if int(mario[Y]) + height - int(mario[VY]) <= enmyRect.y:
+            if marioRect.colliderect(enmyRect) and ((enemiesList[list] == goombas and enemiesList[list][enemy][ENMYIDLE] != 2) or (enemiesList[list] == bullets and enemiesList[list][enemy][BULLVY] == 0) or (enemiesList[list] == spinys)):
+                if int(mario[Y]) + height - int(mario[VY]) <= enmyRect.y and enemiesList[list] != spinys:
                     mario[VY] = -7.5
                     marioStats[ISFALLING] = True
                     marioStats[ONGROUND] = False
@@ -778,7 +787,7 @@ def rotateRect(rectList, breakingBrick, itemsList, enemiesList, bullets, gunsLis
     # Activating and deactivating all enemies
     for list in range(len(enemiesList)):
         for enemy in range(len(enemiesList[list]) - 1, -1, -1):
-            if enemiesList[list] == goombas:
+            if enemiesList[list] == goombas or enemiesList[list] == spinys:
                 if enemiesList[list][enemy][ENMYIDLE] == 0 and enemiesList[list][enemy][X] < 800:
                     enemiesList[list][enemy][ENMYIDLE] = 1
                 elif enemiesList[list][enemy][ENMYIDLE] == 2 and enemiesList[list][enemy][ENMYINFLOOR] == 0:
@@ -871,9 +880,9 @@ def game():
     points = []
     # Declaring packaged lists
     rectList = [brickList, interactBricks, questionBricks, gunRects]
-    clearRectList = [coins, moveCoins, breakingBrick, mushrooms, goombas, points, flagInfo, bullets]
+    clearRectList = [coins, moveCoins, breakingBrick, mushrooms, goombas, points, flagInfo, bullets, spinys]
     itemsList = [mushrooms]
-    enemiesList = [goombas, bullets]
+    enemiesList = [goombas, bullets, spinys]
     startTime = time.get_ticks()  # Variable to keep track of time since level start
     while running:
         mx, my = mouse.get_pos()
@@ -929,7 +938,7 @@ def game():
             moveSprites(marioPos, marioStats, marioFrame)
             moveBricks(questionBricks, interactBricks)
             floatObjects(moveCoins, points)
-            moveItems(rectList, enemiesList, mushrooms, goombas)
+            moveItems(rectList, enemiesList, mushrooms, goombas, spinys)
             shootBullets(gunRects, bullets, marioPos)
             checkCollide(marioPos, marioStats, marioScore, rectList, breakingBrick, moveCoins, mushrooms)
             isPole, forceTime = checkClearCollide(marioPos, marioStats, marioScore, coins, mushrooms, enemiesList, points, bullets, startTime)
@@ -1011,6 +1020,7 @@ def loading():
     questionBricks = loadFile(str("data/level_" + str(levelNum) + "/questionBricks.txt"))  # 1-4: Rect, VY, State, Type
     coins = loadFile(str("data/level_" + str(levelNum) + "/coins.txt"))
     goombas = loadFile(str("data/level_" + str(levelNum) + "/goombas.txt"))
+    spinys = loadFile(str("data/level_" + str(levelNum) + "/spinys.txt"))
     gunRects = loadFile(str("data/level_" + str(levelNum) + "/guns.txt"))
     flagInfo = loadFile(str("data/level_" + str(levelNum) + "/flag.txt"))
     uniSprite = 0
@@ -1020,7 +1030,7 @@ def loading():
     while time.get_ticks() - startTime < 2500:
         for evnt in event.get():          
             if evnt.type == QUIT:
-                return ["exit", None, None, None, None, None, None, None, None, None, None, None]
+                return ["exit", None, None, None, None, None, None, None, None, None, None, None, None]
         screen.fill(BLACK)
         uniSprite = spriteCounter(uniSprite)
         drawStats(None, None, marioScore[PTS], marioScore[COIN], time.get_ticks(), levelNum, True, True, statCoin, uniSprite)
@@ -1029,7 +1039,7 @@ def loading():
         screen.blit(marioSprites[0][0], (315, 300))
         display.flip()
         fpsCounter.tick(60)
-    return ["game", brickList, interactBricks, questionBricks, coins, goombas, flagInfo, marioPos, backPos, marioStats, marioFrame, gunRects]
+    return ["game", brickList, interactBricks, questionBricks, coins, goombas, flagInfo, marioPos, backPos, marioStats, marioFrame, gunRects, spinys]
 
 def gameOver():
     PTS, COIN, LIVES = 0, 1, 2
@@ -1103,7 +1113,7 @@ while page != "exit":
     if page == "menu":
         page = menu()
     if page == "loading":
-        page, brickList, interactBricks, questionBricks, coins, goombas, flagInfo, marioPos, backPos, marioStats, marioFrame, gunRects = loading()
+        page, brickList, interactBricks, questionBricks, coins, goombas, flagInfo, marioPos, backPos, marioStats, marioFrame, gunRects, spinys = loading()
     if page == "gameOver":
         page = gameOver()
     if page == "game":

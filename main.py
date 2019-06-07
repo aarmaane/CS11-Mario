@@ -519,7 +519,7 @@ def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace, clearRectL
         marioInfo[ONPLATFORM] = False
     if keys[K_SPACE] and not marioInfo[ISCROUCH] and not marioInfo[ONPLATFORM]:
         if marioInfo[ONGROUND] and pressSpace:  # Checking if jumping is true
-            mario[VY] -= 9.5  # Jumping power
+            mario[VY] = -9.5  # Jumping power
             marioInfo[ONGROUND] = False
             marioInfo[JUMPFRAMES] = 0
             # Playing jumping sounds
@@ -972,7 +972,7 @@ def menu():
     if mixer.Channel(0).get_volume() == 0:
         globalSound("toggleVol")
     levelNum = 0
-    marioScore= [0, 0, 3]
+    marioScore= [0, 0, 5]
     running = True
     globalSound("stop") # Stop any music that's playing
     selected = 0 # Variable for current selected option

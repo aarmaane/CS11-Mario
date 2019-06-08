@@ -1025,7 +1025,10 @@ def loading():
     global levelNum, marioPos
     globalSound("stop")
     levelNum += 1
-    marioPos = [40, 496, 0, 0, "Right", marioPos[5]]
+    oldState = marioPos[5]
+    if oldState == -1:
+        oldState = 0
+    marioPos = [40, 496, 0, 0, "Right", oldState]
     marioStats = [True, 0, False, False, False, False, False, 0]
     backPos = 0
     marioFrame = [0,0, 0]

@@ -330,8 +330,13 @@ def itemCollide(item, rectList, indexList, extraCollideIn = []):
             brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
             if itemRect.colliderect(brickRect) and itemRect != brickRect:
                 if int(item[Y]) < brickRect.y:
-                    item[Y] = brickRect.y - 42
-                    item[VY] = 0
+                    try:
+                        if brick[ENMYVY] == 0:
+                            item[Y] = brickRect.y - 42
+                            item[VY] = 0
+                    except:
+                        item[Y] = brickRect.y - 42
+                        item[VY] = 0
                 else:
                     try:
                         if brick[ENMYIDLE] == 2:
@@ -356,7 +361,7 @@ def shootBullets(gunRects, bullets, mario):
                     bulletVX = 3
                     xOffset = 42
                 bullets.append([gun[X] + xOffset, gun[Y], 48, 42, bulletVX, 0])
-                playSound(shootSound, "block")
+                playSound(shootSound, "enemy")
     for bullet in bullets:
         if bullet[BULLVY] == 0:
             bullet[X] += bullet[BULLVX]
@@ -542,8 +547,12 @@ def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace, clearRectL
         marioInfo[ONGROUND] = True
         marioInfo[ONPLATFORM] = False
         marioInfo[ISFALLING] = False
-    if marioInfo[INGROUND] and mario[Y] < 440: # Allow mario to recover if he goes back above the ground
-        marioInfo[INGROUND] = True
+    try:
+        if marioInfo[INGROUND] and screen.get_at((int(mario[X]+4),int(mario[Y]+marioOffset)))!=SKYBLUE and \
+           screen.get_at((int(mario[X]+38),int(mario[Y]+marioOffset)))!=SKYBLUE: # Allow mario to recover if he goes back above the ground
+            marioInfo[INGROUND] = False
+    except:
+        pass
     if mario[INGROUND] and mario[Y] > 700:
         marioInfo[ISANIMATING] = True
         mario[STATE] = -1
@@ -601,10 +610,10 @@ def checkCollide(mario, marioInfo, marioScore, rectLists, breakingBrick, moveCoi
                     mario[VY] = 1
                     mario[Y] = brickRect.y + brickRect.height
                     marioInfo[JUMPFRAMES] = 41
-                elif int(mario[X]) >= int(brickRect[X]):  # Right side collision
+                elif int(mario[X] + 2) >= int(brickRect[X]):  # Right side collision
                     mario[X] = brickRect.x + brickRect.width - 2  # Move mario to the right of the rect
                     mario[VX] = 0
-                elif int(mario[X]) <= int(brickRect[X]):  # Left side collision
+                elif int(mario[X] + 2) <= int(brickRect[X]):  # Left side collision
                     mario[X] = brickRect.x - 38  # Move mario to the left of the rect
                     mario[VX] = 0
             if list != brickList and brickRect.colliderect(originalMarioRect) and originalY - originalVY >= brickRect.y + brickRect.height:
@@ -689,7 +698,12 @@ def checkClearCollide(mario, marioStats, marioScore, coins, mushrooms, enemiesLi
             del mushrooms[index]
     for list in range(len(enemiesList)):
         for enemy in range(len(enemiesList[list]) - 1, -1, -1):
-            enmyRect = Rect(enemiesList[list][enemy][0], enemiesList[list][enemy][1] + 10, enemiesList[list][enemy][2], enemiesList[list][enemy][3] - 10)
+            # Defining hitbox
+            if enemiesList[list] == goombas or enemiesList[list] == spinys:
+                enmyRect = Rect(enemiesList[list][enemy][0] + 5, enemiesList[list][enemy][1] + 10, enemiesList[list][enemy][2] - 10, enemiesList[list][enemy][3] - 10)
+            elif enemiesList[list] == bullets:
+                enmyRect = Rect(enemiesList[list][enemy][0] + 15, enemiesList[list][enemy][1], enemiesList[list][enemy][2] - 15, enemiesList[list][enemy][3])
+            # Checking proper collision
             if marioRect.colliderect(enmyRect) and ((enemiesList[list] == goombas and enemiesList[list][enemy][ENMYIDLE] != 2) or (enemiesList[list] == bullets and enemiesList[list][enemy][BULLVY] == 0) or (enemiesList[list] == spinys)):
                 if int(mario[Y]) + height - int(mario[VY]) <= enmyRect.y and enemiesList[list] != spinys:
                     mario[VY] = -7.5
@@ -804,7 +818,7 @@ def rotateRect(rectList, breakingBrick, itemsList, enemiesList, bullets, gunsLis
 
 def playSound(soundFile, soundChannel, queue = False):
     """ Function to load in sounds and play them on a channel """
-    channelList = [["music", 0], ["effect", 1], ["block", 2], ["extra", 3]]  # List to keep track of mixer channels
+    channelList = [["music", 0], ["effect", 1], ["block", 2], ["extra", 3], ["enemy", 4]]  # List to keep track of mixer channels
     for subList in channelList:  # For loop to identify the input
         if subList[0] == soundChannel:
             channelNumber = subList[1]
@@ -920,7 +934,7 @@ def game():
                     return "loading"
                 elif evnt.key == K_SLASH:
                     marioPos = [0, 496, 5, 0, "Right", 0]
-                    while backPos > -8000:
+                    while backPos > -3300:
                         walkMario(marioPos, rectList, "Right", clearRectList)
                 elif evnt.key == K_PERIOD:
                     return "gameOver"
@@ -965,7 +979,7 @@ def game():
             return "loading"
         if isDone:
             return "loading"
-        print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
+        #print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
 
 def menu():
     global levelNum, marioScore
@@ -1008,10 +1022,10 @@ def menu():
 def loading():
     PTS, COIN, LIVES = 0, 1, 2
     # Loading up and declaring all level elements
-    global levelNum
+    global levelNum, marioPos
     globalSound("stop")
     levelNum += 1
-    marioPos = [40, 496, 0, 0, "Right", 0]
+    marioPos = [40, 496, 0, 0, "Right", marioPos[5]]
     marioStats = [True, 0, False, False, False, False, False, 0]
     backPos = 0
     marioFrame = [0,0, 0]

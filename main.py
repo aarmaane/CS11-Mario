@@ -238,6 +238,8 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breaking
         screen.blit(pointText, (point[0], point[1]))
     if isMuted:
         screen.blit(mutePic, (735,25))
+    for brick in brickList:
+        draw.rect(screen,GREEN,(brick[0],brick[1],brick[2],brick[3]))
 
 
 
@@ -789,7 +791,7 @@ def rotateRect(rectList, breakingBrick, itemsList, enemiesList, bullets, gunsLis
                 del itemsList[list][item]
     for list in range(len(rectList)):
         for rect in range(len(rectList[list]) - 1, -1, -1):
-            if rectList[list][rect][0] < -300:
+            if rectList[list][rect][0] < -700:
                 del rectList[list][rect]
     for list in range(len(enemiesList)):
         for rect in range(len(enemiesList[list]) - 1, -1, -1):
@@ -979,13 +981,13 @@ def game():
             return "loading"
         if isDone:
             return "loading"
-        #print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
+        print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
 
 def menu():
     global levelNum, marioScore
     if mixer.Channel(0).get_volume() == 0:
         globalSound("toggleVol")
-    levelNum = 0
+    levelNum = 4
     marioScore= [0, 0, 5]
     running = True
     globalSound("stop") # Stop any music that's playing

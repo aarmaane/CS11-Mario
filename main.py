@@ -998,7 +998,7 @@ def game():
             return "loading"
         if isDone:
             return "loading"
-        #print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
+        print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
 
 def menu():
     """ Function to reset all game variables and display the menu screen """
@@ -1006,7 +1006,7 @@ def menu():
     # Resetting volume and game variables
     if mixer.Channel(0).get_volume() == 0:
         globalSound("toggleVol")
-    levelNum = 0
+    levelNum = 3
     marioScore= [0, 0, 5]
     running = True
     globalSound("stop") # Stop any music that's playing

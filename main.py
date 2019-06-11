@@ -5,8 +5,8 @@ import os
 # Starting up pygame and necessary components
 os.environ['SDL_VIDEO_CENTERED'] = '1'
 init()
-size = width, height = 800, 600
-screen = display.set_mode(size)
+size=width, height = 800, 600
+screen=display.set_mode(size)
 display.set_caption("Super Mario Bros!")
 display.set_icon(transform.scale(image.load("assets/sprites/mario/smallMarioJump.png"),(32,32)))
 

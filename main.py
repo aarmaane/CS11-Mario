@@ -1026,7 +1026,7 @@ def menu(selected):
     # Resetting volume and game variables
     if mixer.Channel(0).get_volume() == 0:
         globalSound("toggleVol")
-    levelNum = 0
+    levelNum = 3
     marioScore= [0, 0, 5]
     running = True
     globalSound("stop") # Stop any music that's playing

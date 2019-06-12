@@ -827,15 +827,19 @@ def rotateRect(rectList, breakingBrick, itemsList, enemiesList, bullets, gunsLis
     for list in range(len(enemiesList)):
         for enemy in range(len(enemiesList[list]) - 1, -1, -1):
             if enemiesList[list] == goombas or enemiesList[list] == spinys:
+                # Activating goombas and spinys if they get close
                 if enemiesList[list][enemy][ENMYIDLE] == 0 and enemiesList[list][enemy][X] < 800:
                     enemiesList[list][enemy][ENMYIDLE] = 1
+                # Deleting them if they are crushed by mario
                 elif enemiesList[list][enemy][ENMYIDLE] == 2 and enemiesList[list][enemy][ENMYINFLOOR] == 0:
                     points.append([enemiesList[list][enemy][0], enemiesList[list][enemy][1], 40, 100])
                     del enemiesList[list][enemy]
             elif enemiesList[list] == bullets:
+                # Deleting bullets if they are too far off screen
                 if enemiesList[list][enemy][0] < -1600 or enemiesList[list][enemy][0] > 1600:
                     del enemiesList[list][enemy]
     for gun in range(len(gunsList) - 1, -1, -1):
+        # Activating guns if they get close and deleting them if they get too far back
         if gunsList[gun][0] < 1600:
             gunsList[gun][GUNSTATE] = 1
         if gunsList[gun][0] < -1600:
@@ -872,9 +876,9 @@ def globalSound(command):
 def spriteCounter(counter):
     """ Function to progress the universal sprite counter"""
     counter += 0.2
-    if counter > 10:
+    if counter > 10:  # Checking if the counter hits the limit and resetting it
         counter = 0
-    return counter
+    return counter  # Returning the new counter
 
 
 # Declaring loading functions
@@ -1217,6 +1221,7 @@ def credit():
                     return "menu"
             if evnt.type == QUIT:
                 return "exit"
+        # Drawing background and text
         screen.blit(backgroundPics[0], (0, 0))
         screen.blit(creditTitleHelp,(170,45))
         screen.blit(marioSprites[0][0],(400,494))

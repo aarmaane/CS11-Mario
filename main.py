@@ -1156,7 +1156,7 @@ def credit():
         screen.blit(enemiesPic[0][0],(630,495))
         screen.blit(creditTextHelp1,(30,350))
         screen.blit(creditTextHelp2, (335, 400))
-        screen.blit(creditTextHelp3, (550, 420))
+        screen.blit(creditTextHelp3, (550, 350))
         screen.blit(backTextHelp, (50, 50))
         screen.blit(titleSelect, (10, 45))
         display.flip()

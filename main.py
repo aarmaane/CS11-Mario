@@ -55,7 +55,8 @@ backgroundPics = [transform.scale(image.load("assets/backgrounds/level_1.png").c
                   transform.scale(image.load("assets/backgrounds/level_4.png").convert(), (16380, 600)),
                   transform.scale(image.load("assets/backgrounds/level_5.png").convert(), (10000, 600))]
 
-winPic = transform.scale(image.load("assets/backgrounds/win.png").convert(), (800, 600))
+winPics = [transform.scale(image.load("assets/backgrounds/win.png").convert(), (800, 600)),
+            transform.scale(image.load("assets/sprites/title/peach.png").convert(), (42, 69))]
 
 marioSpriteNames = ["smallmariojump" , "bigmariojump" , "bigmariocrouch" , "smallmariodead" , "bigmariochange", "smallmariochange"]
 marioSpriteNamesFlag = ["flagsmall1", "flagsmall2", "flagbig1", "flagbig2", "flagsmall2", "flagbig2"]
@@ -571,7 +572,7 @@ def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace, clearRectL
             marioInfo[INGROUND] = False
     except:
         pass
-    if mario[INGROUND] and mario[Y] > 700:
+    if marioInfo[INGROUND] and mario[Y] > 700:
         marioInfo[ISANIMATING] = True
         mario[STATE] = -1
     marioPos[VY] += gravity  # apply gravity
@@ -761,7 +762,7 @@ def movePole(mario, marioStats, marioScore, frame, flagInfo, unisprite, isDone, 
     offset = 0
     endPoint = 650
     if levelNum == 5:
-        endPoint = 680
+        endPoint = 690
     if mario[STATE] == 1:
         offset = 42
     if flagRect.y < 451:
@@ -963,7 +964,7 @@ def game():
                     return "loading"
                 elif evnt.key == K_SLASH:
                     marioPos = [0, 496, 5, 0, "Right", 0]
-                    while backPos > -8500:
+                    while backPos > -15000:
                         walkMario(marioPos, rectList, "Right", clearRectList)
                 elif evnt.key == K_PERIOD:
                     return "gameOver"
@@ -1009,7 +1010,7 @@ def game():
         display.set_caption("Super Mario Bros! FPS: %.2f" %fpsCounter.get_fps())
         # End of game handling
         if isDead:
-            levelNum -=1
+            levelNum -= 1
             marioScore[LIVES] -= 1
             if marioScore[LIVES] == 0:
                 return "gameOver"
@@ -1026,7 +1027,7 @@ def menu(selected):
     # Resetting volume and game variables
     if mixer.Channel(0).get_volume() == 0:
         globalSound("toggleVol")
-    levelNum = 3
+    levelNum = 4
     marioScore= [0, 0, 5]
     running = True
     globalSound("stop") # Stop any music that's playing
@@ -1138,26 +1139,43 @@ def win(marioPos):
     globalSound("stop") # Stopping any music
     playSound(gameDoneSound, "music") # Playing win music
     if marioPos[STATE] == 0:
-        marioPos = [0, 496, 5, 0, "Right", 0]
+        marioPos = [-50, 495, 5, 0, "Right", 0]
     else:
-        marioPos = [0, 452, 5, 0, "Right", 0]
+        marioPos = [-50, 451, 5, 0, "Right", 1]
     frame = [0,0,0]
+    canExit = False
     startTime = None
     running = True
     while running:
         for evnt in event.get():
             if evnt.type == QUIT:
                 return "exit"
-        # Drawing win screen
-        if marioPos[X] < 360:
+            elif evnt.type == KEYDOWN:
+                if evnt.key == K_RETURN and canExit:
+                    return "menu"
+        # Moving Mario
+        if marioPos[X] < 350:
             marioPos[X] += 5
         elif startTime == None:
             startTime = time.get_ticks()
             marioPos[VX] = 0
         moveSprites(marioPos, marioStats, frame, 0)
+        # Drawing win screen
         screen.fill(BLACK)
-        screen.blit(winPic, (0,0))
+        screen.blit(winPics[0], (0, 0))
+        screen.blit(winPics[1], (430, 467))
         screen.blit(marioSprites[frame[0]][int(frame[1])], (marioPos[X], marioPos[Y]))
+        # Checking for text times and drawing text
+        if startTime != None:
+            timeDiff = time.get_ticks() - startTime
+            screen.blit(winText1, (250,170))
+            if timeDiff > 2000:
+                screen.blit(winText2, (190, 260))
+            if timeDiff > 4000:
+                screen.blit(winText3, (160, 300))
+            if timeDiff > 6000:
+                screen.blit(winText4, (135, 390))
+                canExit = True
         display.flip()
         fpsCounter.tick(60)
     return "menu"

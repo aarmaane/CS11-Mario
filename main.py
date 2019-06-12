@@ -5,8 +5,8 @@ import os
 # Starting up pygame and necessary components
 os.environ['SDL_VIDEO_CENTERED'] = '1'
 init()
-size=width, height = 800, 600
-screen=display.set_mode(size)
+size = width, height = 800, 600
+screen = display.set_mode(size)
 display.set_caption("Super Mario Bros!")
 display.set_icon(transform.scale(image.load("assets/sprites/mario/smallMarioJump.png"),(32,32)))
 
@@ -40,6 +40,7 @@ marioFrame = [0, 0, 0]  # List to keep track of mario's sprites and his changing
 marioAccelerate = 0.2  # The value at which mario can speed up and slow down
 backPos = 0  # Position of the background
 levelNum = 0  # Using 0 as level 1 since indexes start at 0
+selected = 0  # Variable for current selected option in menu
 
 RECTFINDER = [0,0] #DELETE THIS LATER
     
@@ -53,6 +54,8 @@ backgroundPics = [transform.scale(image.load("assets/backgrounds/level_1.png").c
                   transform.scale(image.load("assets/backgrounds/level_3.png").convert(), (9200, 600)),
                   transform.scale(image.load("assets/backgrounds/level_4.png").convert(), (16380, 600)),
                   transform.scale(image.load("assets/backgrounds/level_5.png").convert(), (10000, 600))]
+
+winPic = transform.scale(image.load("assets/backgrounds/win.png").convert(), (800, 600))
 
 marioSpriteNames = ["smallmariojump" , "bigmariojump" , "bigmariocrouch" , "smallmariodead" , "bigmariochange", "smallmariochange"]
 marioSpriteNamesFlag = ["flagsmall1", "flagsmall2", "flagbig1", "flagbig2", "flagsmall2", "flagbig2"]
@@ -146,6 +149,13 @@ creditTextHelp1 = marioFont.render("Armaan Randhawa",False,WHITE)
 creditTextHelp2 = marioFont.render("Kevin Cui",False,WHITE)
 creditTextHelp3 = marioFont.render("Henry Zhang",False,WHITE)
 
+winText1 = marioFont.render("Thank You Mario!",False,WHITE)
+winText2 = marioFont.render("Your quest is now over.",False,WHITE)
+winText3 = marioFont.render("We present you a new quest.",False,WHITE)
+winText4 = marioFont.render("Press Enter to return to menu.",False,WHITE)
+
+
+
 # Loading all sound files
 
 pauseSound = mixer.Sound("assets/music/effects/pause.wav")
@@ -154,6 +164,8 @@ backgroundFastSound = mixer.Sound("assets/music/songs/mainSongFast.ogg")
 deathSound = mixer.Sound("assets/music/songs/death.wav")
 flagSound = mixer.Sound("assets/music/songs/flag.wav")
 doneSound = mixer.Sound("assets/music/songs/leveldone.wav")
+doneworldSound = mixer.Sound("assets/music/songs/worlddone.wav")
+gameDoneSound = mixer.Sound("assets/music/songs/gamedone.ogg")
 timepointsSound = mixer.Sound("assets/music/songs/timepoints.ogg")
 overSound = mixer.Sound("assets/music/songs/gameover.ogg")
 timeLowSound = mixer.Sound("assets/music/effects/timeLow.wav")
@@ -747,6 +759,9 @@ def movePole(mario, marioStats, marioScore, frame, flagInfo, unisprite, isDone, 
     poleRect = Rect(flagInfo[0][0], flagInfo[0][1], flagInfo[0][2], flagInfo[0][3])
     flagRect = Rect(flagInfo[1][0], flagInfo[1][1], flagInfo[1][2], flagInfo[1][3])
     offset = 0
+    endPoint = 650
+    if levelNum == 5:
+        endPoint = 680
     if mario[STATE] == 1:
         offset = 42
     if flagRect.y < 451:
@@ -762,14 +777,17 @@ def movePole(mario, marioStats, marioScore, frame, flagInfo, unisprite, isDone, 
         mario[X] = poleRect.right
         mario[Y] = 496 - offset
         frame[2] += 1
-        playSound(doneSound, "music")
+        if levelNum != 5:
+            playSound(doneSound, "music")
+        else:
+            playSound(doneworldSound, "music")
     elif mario[Y] >= 451 - offset and flagRect.y >= 451:
         mario[VX] = 5
         mario[VY] = 0
         mario[X] += 3.5
         marioStats[ONGROUND] = True
         moveSprites(mario,marioStats,frame)
-        if mario[X] > 650 and mario[X] < 800:
+        if mario[X] > endPoint and mario[X] < 800:
             mario[X] = 800
             playSound(timepointsSound, "effect")
     if mario[X] > 800 and forceTime != 0:
@@ -945,7 +963,7 @@ def game():
                     return "loading"
                 elif evnt.key == K_SLASH:
                     marioPos = [0, 496, 5, 0, "Right", 0]
-                    while backPos > -3300:
+                    while backPos > -8500:
                         walkMario(marioPos, rectList, "Right", clearRectList)
                 elif evnt.key == K_PERIOD:
                     return "gameOver"
@@ -997,10 +1015,12 @@ def game():
                 return "gameOver"
             return "loading"
         if isDone:
+            if levelNum == 5:
+                return "win"
             return "loading"
-        #print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
+        print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
 
-def menu():
+def menu(selected):
     """ Function to reset all game variables and display the menu screen """
     global levelNum, marioScore
     # Resetting volume and game variables
@@ -1011,14 +1031,13 @@ def menu():
     running = True
     globalSound("stop") # Stop any music that's playing
     # Menu screen variables
-    selected = 0 # Variable for current selected option
     textPoints = [[360, 350], [290, 390], [333, 430], [360, 470]]
     textList = [playText, instructText, creditText, quitText]
     returnList = ["loading", "instructions", "credit", "exit"]
     while running:
         for evnt in event.get():
             if evnt.type == QUIT:
-                return "exit"
+                return ["exit", None]
             if evnt.type == KEYDOWN:
                 # Checking for menu screen inputs
                 if evnt.key == K_UP or evnt.key == K_w:
@@ -1026,7 +1045,7 @@ def menu():
                 elif evnt.key == K_DOWN or evnt.key == K_s:
                     selected += 1
                 elif evnt.key == K_RETURN:
-                    return returnList[selected]
+                    return [returnList[selected], selected]
         # Keeping the cursor within the bounds of the options
         if selected < 0:
             selected = 3
@@ -1041,7 +1060,7 @@ def menu():
         screen.blit(titleSelect, (textPoints[selected][0] - 30, textPoints[selected][1] - 4 ))
         display.flip()
         fpsCounter.tick(60)
-    return "exit"
+    return ["exit", selected]
 
 
 def loading():
@@ -1112,6 +1131,27 @@ def gameOver():
         fpsCounter.tick(60)
     return "menu"
 
+def win():
+    """ Function to display winning screen"""
+    PTS, COIN, LIVES = 0, 1, 2
+    uniSprite = 0
+    globalSound("stop") # Stopping any music
+    playSound(gameDoneSound, "music") # Playing win music
+    startTime = time.get_ticks()
+    while mixer.Channel(0).get_busy():
+        for evnt in event.get():
+            if evnt.type == QUIT:
+                return "exit"
+        # Drawing win screen
+        screen.fill(BLACK)
+        screen.blit(winPic, (0,0))
+        uniSprite = spriteCounter(uniSprite)
+        drawStats(None, None, marioScore[PTS], marioScore[COIN], time.get_ticks(), levelNum, True, True, statCoin,
+                  uniSprite, 0)
+        display.flip()
+        fpsCounter.tick(60)
+    return "menu"
+
 def instructions():
     """ Function to display instructions screen """
     running = True
@@ -1156,7 +1196,7 @@ def credit():
         screen.blit(enemiesPic[0][0],(630,495))
         screen.blit(creditTextHelp1,(30,350))
         screen.blit(creditTextHelp2, (335, 400))
-        screen.blit(creditTextHelp3, (550, 350))
+        screen.blit(creditTextHelp3, (550, 440))
         screen.blit(backTextHelp, (50, 50))
         screen.blit(titleSelect, (10, 45))
         display.flip()
@@ -1166,11 +1206,13 @@ def credit():
 # Main loop to check for which page to fall on
 while page != "exit":
     if page == "menu":
-        page = menu()
+        page, selected = menu(selected)
     if page == "loading":
         page, brickList, interactBricks, questionBricks, coins, goombas, flagInfo, marioPos, backPos, marioStats, marioFrame, gunRects, spinys = loading()
     if page == "gameOver":
         page = gameOver()
+    if page == "win":
+        page = win()
     if page == "game":
         page = game()
     if page == "instructions":

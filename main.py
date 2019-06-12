@@ -1131,23 +1131,33 @@ def gameOver():
         fpsCounter.tick(60)
     return "menu"
 
-def win():
+def win(marioPos):
     """ Function to display winning screen"""
     PTS, COIN, LIVES = 0, 1, 2
-    uniSprite = 0
+    X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     globalSound("stop") # Stopping any music
     playSound(gameDoneSound, "music") # Playing win music
-    startTime = time.get_ticks()
-    while mixer.Channel(0).get_busy():
+    if marioPos[STATE] == 0:
+        marioPos = [0, 496, 5, 0, "Right", 0]
+    else:
+        marioPos = [0, 452, 5, 0, "Right", 0]
+    frame = [0,0,0]
+    startTime = None
+    running = True
+    while running:
         for evnt in event.get():
             if evnt.type == QUIT:
                 return "exit"
         # Drawing win screen
+        if marioPos[X] < 360:
+            marioPos[X] += 5
+        elif startTime == None:
+            startTime = time.get_ticks()
+            marioPos[VX] = 0
+        moveSprites(marioPos, marioStats, frame, 0)
         screen.fill(BLACK)
         screen.blit(winPic, (0,0))
-        uniSprite = spriteCounter(uniSprite)
-        drawStats(None, None, marioScore[PTS], marioScore[COIN], time.get_ticks(), levelNum, True, True, statCoin,
-                  uniSprite, 0)
+        screen.blit(marioSprites[frame[0]][int(frame[1])], (marioPos[X], marioPos[Y]))
         display.flip()
         fpsCounter.tick(60)
     return "menu"
@@ -1212,7 +1222,7 @@ while page != "exit":
     if page == "gameOver":
         page = gameOver()
     if page == "win":
-        page = win()
+        page = win(marioPos)
     if page == "game":
         page = game()
     if page == "instructions":

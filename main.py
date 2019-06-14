@@ -1,14 +1,13 @@
 from pygame import *
-from random import *
 import copy
 import os
 # Starting up pygame and necessary components
-os.environ['SDL_VIDEO_CENTERED'] = '1'
-init()
+os.environ['SDL_VIDEO_CENTERED'] = '1'  # Centering the screen
+init()  # Starting up pygame
 size = width, height = 800, 600
 screen = display.set_mode(size)
-display.set_caption("Super Mario Bros!")
-display.set_icon(transform.scale(image.load("assets/sprites/mario/smallMarioJump.png"),(32,32)))
+display.set_caption("Super Mario Bros!")  # Setting the window title
+display.set_icon(transform.scale(image.load("assets/sprites/mario/smallMarioJump.png"),(32,32)))  # Setting the screen icon
 
 # Declaring colours
 RED = (255, 0, 0)
@@ -19,8 +18,8 @@ WHITE = (255, 255, 255)
 SKYBLUE = (107, 140, 255)
 
 # Declaring Variables
-page = "menu"
-fpsCounter = time.Clock()
+page = "menu"  # Variable for the current game state
+fpsCounter = time.Clock()  # FPS counter
 marioPos = [40, 496, 0, 0, "Right", 0]  # X, Y, VX, VY, direction, state
 # X, Y: Variables to keep track of mario's position on screen
 # VX, VY:  Variables to keep track of mario's X and Y velocity
@@ -37,13 +36,12 @@ marioStats = [True, 0, False, False, False, False, False, 0] # onGround, jumpFra
 # invulFrames: Variable to keep track of the frames where mario is invulnerable
 marioScore = [0, 0, 5]  # Points, Coins, Lives
 marioFrame = [0, 0, 0]  # List to keep track of mario's sprites and his changing animation
-marioAccelerate = 0.2  # The value at which mario can speed up and slow down
+marioAccelerate = 0.2  # The rate at which mario can speed up and slow down
 backPos = 0  # Position of the background
-levelNum = 0  # Using 0 as level 1 since indexes start at 0
+levelNum = 0  # Variable to keep track of the current level
 selected = 0  # Variable for current selected option in menu
 
-RECTFINDER = [0,0] #DELETE THIS LATER
-    
+
 # Loading Pictures
 titleLogo = transform.scale(image.load("assets/sprites/title/logo.png"), (480,220))
 titleSelect = transform.scale(image.load("assets/sprites/title/select.png"), (24,24))
@@ -156,7 +154,6 @@ winText3 = marioFont.render("We present you a new quest.",False,WHITE)
 winText4 = marioFont.render("Press Enter to return to menu.",False,WHITE)
 
 
-
 # Loading all sound files
 
 pauseSound = mixer.Sound("assets/music/effects/pause.wav")
@@ -180,6 +177,7 @@ stompSound = mixer.Sound("assets/music/effects/stomp.ogg")
 growSound = mixer.Sound("assets/music/effects/grow.ogg")
 shrinkSound = mixer.Sound("assets/music/effects/shrink.ogg")
 shootSound = mixer.Sound("assets/music/effects/shoot.wav")
+
 
 # Declaring game functions
 def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breakingBrick, brickPic, coins, moveCoins, coinsPic, mushrooms, itemsPic, enemiesList, enemiesPic, bullets, spriteCount, points, isMuted):
@@ -249,23 +247,21 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breaking
             bullPic = transform.flip(bullPic, True, False)
         screen.blit(bullPic, bullRect)
     # Blitting flag
-    screen.blit(flagPic[0],(flagInfo[0][0],flagInfo[0][1]))  # Bliting pole
-    screen.blit(flagPic[1],(flagInfo[1][0],flagInfo[1][1]))  # Bliting flag
+    screen.blit(flagPic[0],(flagInfo[0][0],flagInfo[0][1]))  # Blitting pole
+    screen.blit(flagPic[1],(flagInfo[1][0],flagInfo[1][1]))  # Blitting flag
     # Blitting mario
     marioShow = marioPic[marioFrame[0]][int(marioFrame[1])]
     if mario[DIR] == "Left":
         marioShow = transform.flip(marioShow, True, False)  # Flipping mario's sprite if he's facing left
-    if marioStats[INVULFRAMES]%2 == 0 or marioStats[ISANIMATING]:
+    if marioStats[INVULFRAMES]%2 == 0 or marioStats[ISANIMATING]:  # Checking if mario's sprite should be skipped this frame
         screen.blit(marioShow, (mario[0], mario[1]))  # Blitting mario's sprite
     # Blitting floating points
     for point in points:
-        pointText = marioFontThin.render("%s" %point[3], False, WHITE)
+        pointText = marioFontThin.render("%s" %point[3], False, WHITE)  # Rendering the text
         screen.blit(pointText, (point[0], point[1]))
     # Blitting mute icon
     if isMuted:
         screen.blit(mutePic, (735,25))
-    #for brick in brickList:
-        #draw.rect(screen,GREEN,(brick[0],brick[1],brick[2],brick[3]))
 
 
 def moveBricks(questionBricks, interactBricks, breakingBrick):
@@ -285,14 +281,14 @@ def moveBricks(questionBricks, interactBricks, breakingBrick):
             brick[BRICKVY] = 0
             brick[IDLE] = 0
     # Moving all brick debris
-    for brick in breakingBrick:  # Going through all of the debris and adding gravity
+    for brick in breakingBrick:  # Going through all of the debris and adding gravity/motion
         brick[1] += brick[4]
         brick[4] += 0.8
         brick[5] += 3
 
 
 def floatObjects(moveCoins, points):
-    """ Function to allow coins and points to float up"""
+    """ Function to allow coins and points to float up """
     X, Y, COINVY = 0, 1, 4
     PTSCOUNT, PTSNUM = 2, 3
     for coin in range(len(moveCoins) - 1, -1, -1):
@@ -308,6 +304,7 @@ def floatObjects(moveCoins, points):
 
 
 def moveItems(rectList, enemiesList, mushrooms, goombas, spinys):
+    """ Function to check item/enemy collision with the environment and progress animations """
     X, Y, DELAY, MOVEUP, MUSHVX, MUSHVY, INFLOOR = 0, 1, 4, 5, 6, 7, 8
     ENMYVX, ENMYVY, ENMYIDLE, ENMYINFLOOR = 4, 5, 6, 7
     # Making sure all mushrooms are activated
@@ -319,17 +316,18 @@ def moveItems(rectList, enemiesList, mushrooms, goombas, spinys):
             mushroom[1] -= 1
         else:  # If delay and animation are done, check for its collision
             itemCollide(mushroom, rectList, [X, Y, MUSHVX, MUSHVY, INFLOOR])
-    for goomba in goombas:
-        if goomba[ENMYIDLE] == 1:
-            itemCollide(goomba, rectList, [X, Y, ENMYVX, ENMYVY, ENMYINFLOOR], enemiesList[:2])
-        if goomba[ENMYIDLE] == 2:
-            goomba[ENMYINFLOOR] -=1
-    for spiny in spinys:
-        if spiny[ENMYIDLE] == 1:
-            itemCollide(spiny, rectList, [X, Y, ENMYVX, ENMYVY, ENMYINFLOOR], enemiesList[:2])
+    for goomba in goombas:  # Going through each goomba
+        if goomba[ENMYIDLE] == 1:  # Checking if the goomba is active
+            itemCollide(goomba, rectList, [X, Y, ENMYVX, ENMYVY, ENMYINFLOOR], enemiesList[:2])  # Checking collision
+        if goomba[ENMYIDLE] == 2:  # Checking if the goomba is dying
+            goomba[ENMYINFLOOR] -=1  # Using the INFLOOR as a counter for removal
+    for spiny in spinys:  # Going through each spiny
+        if spiny[ENMYIDLE] == 1:  # Checking if it's active
+            itemCollide(spiny, rectList, [X, Y, ENMYVX, ENMYVY, ENMYINFLOOR], enemiesList[:2])  # Checking collision
 
 
 def itemCollide(item, rectList, indexList, extraCollideIn = None):
+    """ Function to check item/enemy collision with the floor, objects, and optionally other enemies """
     X, Y, VX, VY, INFLOOR = indexList[0], indexList[1], indexList[2], indexList[3], indexList[4]
     ENMYVX, ENMYVY, ENMYIDLE, ENMYINFLOOR = 4, 5, 6, 7
     extraCollide = copy.deepcopy(extraCollideIn)
@@ -471,7 +469,7 @@ def moveSprites(mario, marioInfo, frame, forceTime = None):
         elif mario[STATE] == 1:
             frame[2] += 1
             frame[0], frame[1] = changingSprites[(frame[2]//8)][0], changingSprites[(frame[2]//8)][1]
-        return isDead, forceTime
+        return isDead, forceTime  # Stop running the function and return isDead/forceTime (Which could stay unchanged)
     if marioInfo[ONGROUND]:
         frame[0] = 0 + mario[STATE] # Adjusting for sprite for = big mario
         # Mario's running sprite counter
@@ -810,40 +808,40 @@ def rotateRect(rectList, breakingBrick, itemsList, enemiesList, bullets, gunsLis
     X, Y, ENMYVX, ENMYVY, ENMYIDLE, ENMYINFLOOR = 0, 1, 4, 5, 6, 7
     GUNSTATE, GUNCOUNT, GUNTYPE = 4, 5, 6
     # Deleting any offscreen Rects
-    for index in range(len(breakingBrick) - 1, -1, -1):
+    for index in range(len(breakingBrick) - 1, -1, -1):  # Going through all of the brick debris and deleting them once they exit below the screen
         if breakingBrick[index][1] > 600:
             del breakingBrick[index]
-    for list in range(len(itemsList)):
+    for list in range(len(itemsList)):  # Going through all of the items and deleting them once they scroll off the screen
         for item in range(len(itemsList[list]) - 1, -1, -1):
             if itemsList[list][item][0] < -300 or itemsList[list][item][1] > 650:
                 del itemsList[list][item]
-    for list in range(len(rectList)):
+    for list in range(len(rectList)):  # Going through all of the rects and deleting them once they scroll off the screen
         for rect in range(len(rectList[list]) - 1, -1, -1):
             if rectList[list][rect][0] < -700:
                 del rectList[list][rect]
-    for list in range(len(enemiesList)):
+    for list in range(len(enemiesList)):  # Going through all of the enemies and deleting them once they scroll off the screen
         for rect in range(len(enemiesList[list]) - 1, -1, -1):
             if enemiesList[list][rect][0] < -300 or enemiesList[list][rect][1] > 650:
                 del enemiesList[list][rect]
-    for point in range(len(points) - 1, -1, -1):
+    for point in range(len(points) - 1, -1, -1):  # Going through all of the points indicators and deleting them once the counter reaches zero
         if points[point][2] == 0:
             del points[point]
     # Activating and deactivating all enemies
-    for list in range(len(enemiesList)):
+    for list in range(len(enemiesList)):  # Going through all of the enemies
         for enemy in range(len(enemiesList[list]) - 1, -1, -1):
-            if enemiesList[list] == goombas or enemiesList[list] == spinys:
-                # Activating goombas and spinys if they get close
+            if enemiesList[list] == goombas or enemiesList[list] == spinys:  # If they are goombas or spinys
+                # Activating goombas and spinys if they get close to the screen
                 if enemiesList[list][enemy][ENMYIDLE] == 0 and enemiesList[list][enemy][X] < 800:
                     enemiesList[list][enemy][ENMYIDLE] = 1
-                # Deleting them if they are crushed by mario
+                # Deleting them if they are crushed by mario and the death counter reaches zero
                 elif enemiesList[list][enemy][ENMYIDLE] == 2 and enemiesList[list][enemy][ENMYINFLOOR] == 0:
                     points.append([enemiesList[list][enemy][0], enemiesList[list][enemy][1], 40, 100])
                     del enemiesList[list][enemy]
-            elif enemiesList[list] == bullets:
+            elif enemiesList[list] == bullets:  # If they are bullets
                 # Deleting bullets if they are too far off screen
                 if enemiesList[list][enemy][0] < -1600 or enemiesList[list][enemy][0] > 1600:
                     del enemiesList[list][enemy]
-    for gun in range(len(gunsList) - 1, -1, -1):
+    for gun in range(len(gunsList) - 1, -1, -1):  # Going through all of the guns
         # Activating guns if they get close and deleting them if they get too far back
         if gunsList[gun][0] < 1600:
             gunsList[gun][GUNSTATE] = 1
@@ -853,10 +851,10 @@ def rotateRect(rectList, breakingBrick, itemsList, enemiesList, bullets, gunsLis
 def playSound(soundFile, soundChannel, queue = False):
     """ Function to load in sounds and play them on a channel """
     channelList = [["music", 0], ["effect", 1], ["block", 2], ["extra", 3], ["enemy", 4]]  # List to keep track of mixer channels
-    for subList in channelList:  # For loop to identify the input
+    for subList in channelList:  # For loop to identify the input through corresponding lists
         if subList[0] == soundChannel:
-            channelNumber = subList[1]
-    if queue:
+            channelNumber = subList[1]  # Taking the matching channel number and declaring it
+    if queue:  # If the input requests for a queue
         mixer.Channel(channelNumber).queue(soundFile)  # Add the sound to the queue
     else:
         mixer.Channel(channelNumber).stop()  # Stopping any previous sound
@@ -864,23 +862,23 @@ def playSound(soundFile, soundChannel, queue = False):
 
 def globalSound(command):
     """ Function to apply commands to all mixer channels """
-    for id in range(mixer.get_num_channels()):
+    for id in range(mixer.get_num_channels()):  # Going through each mixer channel
         if command == "stop":
-            mixer.Channel(id).stop()
+            mixer.Channel(id).stop()  # Stopping all playback on the channel
         elif command == "pause":
-            mixer.Channel(id).pause()
+            mixer.Channel(id).pause()  # Pausing playback on the channel
         elif command == "unpause":
-            mixer.Channel(id).unpause()
+            mixer.Channel(id).unpause() # Unpausing playback on the channel
         elif command == "toggleVol":
-            if mixer.Channel(id).get_volume() == 0:
-                mixer.Channel(id).set_volume(1)
+            if mixer.Channel(id).get_volume() == 0:  # Checking if the channel is muted
+                mixer.Channel(id).set_volume(1)  # Unmuting the channel
             else:
-                mixer.Channel(id).set_volume(0)
+                mixer.Channel(id).set_volume(0)  # Otherwise, mute the channel
 
 
 def spriteCounter(counter):
     """ Function to progress the universal sprite counter"""
-    counter += 0.2
+    counter += 0.2  # Adding to the counter
     if counter > 10:  # Checking if the counter hits the limit and resetting it
         counter = 0
     return counter  # Returning the new counter
@@ -894,8 +892,8 @@ def loadFile(targetFile):
     file = open(targetFile, "r")  # Loading file
     fileLines = file.readlines()  # Splitting into lines
     for line in fileLines:
-        line = line.strip("\n")  # Removing any line seperators
-        line = line.split(",")  # Dividing elements seperated by commas
+        line = line.strip("\n")  # Removing any line separators
+        line = line.split(",")  # Dividing elements separated by commas
         listLength = len(line)
         outputList.append([int(line[index]) for index in range(listLength)])  # Appending line info to list
     return outputList  # Returning final list
@@ -911,28 +909,28 @@ def game():
     global levelNum, marioStats, RECTFINDER, marioPos, marioScore # REMOVE THESE AT END
     playSound(backgroundSound, "music")  # Starting the background music
     # Declaring session specific booleans
-    pausedBool = False
-    isMuted = False
+    pausedBool = False  # Boolean to keep track of pause status
+    isMuted = False  # Boolean to see if the sound is muted
     if mixer.Channel(0).get_volume() == 0:  # Checking current volume and fixing mute boolean accordingly
         isMuted = True
-    timesUp = False
-    isDead = False
-    isPole = False
-    isDone = False
-    fast = False
+    timesUp = False  # Boolean to see if the game timer has reached zero
+    isPole = False  # Boolean to see if Mario is animating on the victory pole
+    isDead = False  # Boolean to see if the game should reload the level after death
+    isDone = False  # Boolean to see if the game should load the next level after victory
+    fast = False  # Boolean to see if the music is playing faster
     uniSprite = 0  # Counter to control all non - Mario sprites
-    forceTime = None
+    forceTime = None  # Variable to keep track of a time that should be forced on screen
     # Declaring session specific lists
-    breakingBrick = []
-    moveCoins = []
-    mushrooms = []
-    bullets = []
-    points = []
+    breakingBrick = []  # List of bricks that are broken and showing their debris
+    moveCoins = []  # List of animating coins that Mario has grabbed
+    mushrooms = []  # List of mushroom powerups
+    bullets = []  # List of bullet bill enemies
+    points = []  # List of animating point indicators
     # Declaring packaged lists
-    rectList = [brickList, interactBricks, questionBricks, gunRects]
-    clearRectList = [coins, moveCoins, breakingBrick, mushrooms, goombas, points, flagInfo, bullets, spinys]
-    itemsList = [mushrooms]
-    enemiesList = [goombas, spinys, bullets]
+    rectList = [brickList, interactBricks, questionBricks, gunRects]  # List of rectangles Mario can't pass through
+    clearRectList = [coins, moveCoins, breakingBrick, mushrooms, goombas, points, flagInfo, bullets, spinys]  # List of rectangles Mario can pass through
+    itemsList = [mushrooms]  # List of all items
+    enemiesList = [goombas, spinys, bullets]  # List of all enemies
     startTime = time.get_ticks()  # Variable to keep track of time since level start
     while running:
         mx, my = mouse.get_pos()
@@ -960,23 +958,6 @@ def game():
                 # Exiting the game
                 elif evnt.key == K_ESCAPE and pausedBool:
                     return "menu"
-                # TEMPORARY KEY INPUTS
-                elif evnt.key == K_o:
-                    if marioPos[STATE] == 0:
-                        marioPos[STATE] = 1
-                    else:
-                        marioPos[STATE] = 0
-                elif evnt.key == K_0:
-                    marioPos = [0, 496, 0, 0, "Right", 0]
-                    marioStats = [True, 0, False, False, False, False, False, 0]
-                elif evnt.key == K_BACKSLASH:
-                    return "loading"
-                elif evnt.key == K_SLASH:
-                    marioPos = [0, 496, 5, 0, "Right", 0]
-                    while backPos > -15000:
-                        walkMario(marioPos, rectList, "Right", clearRectList)
-                elif evnt.key == K_PERIOD:
-                    return "gameOver"
             elif evnt.type == KEYUP:
                 # Keep track of when user lets go of space
                 if evnt.key == K_SPACE:
@@ -984,10 +965,8 @@ def game():
                 # Keep track of when user lets go of the crouch key
                 elif evnt.key== K_s:
                     marioStats[ISCROUCH]=False
-            elif evnt.type == MOUSEBUTTONDOWN:
-                RECTFINDER = [mx,my]
         # Functions to run during normal play
-        if not pausedBool and not marioStats[ISANIMATING] and not isPole:
+        if not pausedBool and not marioStats[ISANIMATING] and not isPole:  # If the game isn't paused, Mario isn't animating, and Mario isn't on the flag pole
             uniSprite = spriteCounter(uniSprite)
             rotateRect(rectList, breakingBrick, itemsList, enemiesList, bullets, gunRects, points)
             checkMovement(marioPos, marioStats, marioAccelerate, rectList, initialSpace, clearRectList)
@@ -999,10 +978,10 @@ def game():
             checkCollide(marioPos, marioStats, marioScore, rectList, breakingBrick, moveCoins, mushrooms)
             isPole, forceTime = checkClearCollide(marioPos, marioStats, marioScore, coins, mushrooms, enemiesList, points, bullets, startTime)
         # Functions to run during Mario animations
-        if marioStats[ISANIMATING]:
+        if marioStats[ISANIMATING]:  # If Mario is animating
             isDead, forceTime = moveSprites(marioPos, marioStats, marioFrame, forceTime)
         # Functions to run during Mario's end of level animation
-        if isPole and not pausedBool:
+        if isPole and not pausedBool:  # If Mario is on the flag pole and the game isn't paused
             fast = True
             uniSprite = spriteCounter(uniSprite)
             isDone, forceTime = movePole(marioPos, marioStats, marioScore, marioFrame, flagInfo, uniSprite, isDone, forceTime)
@@ -1018,17 +997,16 @@ def game():
         fpsCounter.tick(60)
         display.set_caption("Super Mario Bros! FPS: %.2f" %fpsCounter.get_fps())
         # End of game handling
-        if isDead:
-            levelNum -= 1
-            marioScore[LIVES] -= 1
-            if marioScore[LIVES] == 0:
+        if isDead:  # If Mario died
+            levelNum -= 1  # Adjust the level number so it loads the same level
+            marioScore[LIVES] -= 1  # Reduce the number of lives
+            if marioScore[LIVES] == 0:  # If Mario has zero lives left, go to the game over screen
                 return "gameOver"
             return "loading"
-        if isDone:
-            if levelNum == 5:
+        if isDone:  # If Mario reached the end of the level
+            if levelNum == 5:  # If the current level is 5, load the win screen
                 return "win"
             return "loading"
-        print(RECTFINDER[0] - backPos, RECTFINDER[1], mx - RECTFINDER[0], my - RECTFINDER[1] )
 
 def menu(selected):
     """ Function to reset all game variables and display the menu screen """
@@ -1040,7 +1018,7 @@ def menu(selected):
     marioScore= [0, 0, 5]
     running = True
     globalSound("stop") # Stop any music that's playing
-    # Menu screen variables
+    # Menu screen corresponding lists
     textPoints = [[360, 350], [290, 390], [333, 430], [360, 470]]
     textList = [playText, instructText, creditText, quitText]
     returnList = ["loading", "instructions", "credit", "exit"]
@@ -1050,11 +1028,11 @@ def menu(selected):
                 return ["exit", None]
             if evnt.type == KEYDOWN:
                 # Checking for menu screen inputs
-                if evnt.key == K_UP or evnt.key == K_w:
+                if evnt.key == K_UP or evnt.key == K_w:  # Making the cursor go up
                     selected -= 1
-                elif evnt.key == K_DOWN or evnt.key == K_s:
+                elif evnt.key == K_DOWN or evnt.key == K_s:  # Making the cursor go down
                     selected += 1
-                elif evnt.key == K_RETURN:
+                elif evnt.key == K_RETURN:  # Selecting an option
                     return [returnList[selected], selected]
         # Keeping the cursor within the bounds of the options
         if selected < 0:
@@ -1062,12 +1040,12 @@ def menu(selected):
         elif selected > 3:
             selected = 0
         # Drawing the background and buttons
-        screen.blit(backgroundPics[0],(0,0))
-        screen.blit(marioSprites[0][0], (40, 496))
-        screen.blit(titleLogo,(160,80))
-        for index in range(len(textList)):
+        screen.blit(backgroundPics[0],(0,0))  # Blitting background
+        screen.blit(marioSprites[0][0], (40, 496))  # Blitting Mario
+        screen.blit(titleLogo,(160,80))  # Blitting title
+        for index in range(len(textList)):  # Go through all of the menu text and blit it at the corresponding coordinates
             screen.blit(textList[index], (textPoints[index][0], textPoints[index][1]))
-        screen.blit(titleSelect, (textPoints[selected][0] - 30, textPoints[selected][1] - 4 ))
+        screen.blit(titleSelect, (textPoints[selected][0] - 30, textPoints[selected][1] - 4 ))  # Blitting the selected option icon
         display.flip()
         fpsCounter.tick(60)
     return ["exit", selected]
@@ -1097,7 +1075,7 @@ def loading():
     spinys = loadFile(str("data/level_" + str(levelNum) + "/spinys.txt"))
     gunRects = loadFile(str("data/level_" + str(levelNum) + "/guns.txt"))
     flagInfo = loadFile(str("data/level_" + str(levelNum) + "/flag.txt"))
-    # Loading screen variables
+    # Loading screen variables and rendered text
     uniSprite = 0
     currentWorld = marioFontBig.render("World 1-%s" %levelNum, False, (255,255,255))
     lives = marioFontBig.render("X  %s" %marioScore[LIVES], False, (255,255,255))
@@ -1108,12 +1086,12 @@ def loading():
             if evnt.type == QUIT:
                 return ["exit", None, None, None, None, None, None, None, None, None, None, None, None]
         # Drawing loading screen
-        screen.fill(BLACK)
-        uniSprite = spriteCounter(uniSprite)
+        screen.fill(BLACK)  # Clearing screen
+        uniSprite = spriteCounter(uniSprite)  # Progressing the sprites
         drawStats(None, None, marioScore[PTS], marioScore[COIN], time.get_ticks(), levelNum, True, True, statCoin, uniSprite)
-        screen.blit(currentWorld, (300, 250))
-        screen.blit(lives, (390, 315))
-        screen.blit(marioSprites[0][0], (315, 300))
+        screen.blit(currentWorld, (300, 250))  # Blitting current world text
+        screen.blit(lives, (390, 315))  # Blitting number of lives text
+        screen.blit(marioSprites[0][0], (315, 300))  # Blitting mario
         display.flip()
         fpsCounter.tick(60)
     # Returning all variables for game function to handle
@@ -1136,7 +1114,7 @@ def gameOver():
         uniSprite = spriteCounter(uniSprite)
         drawStats(None, None, marioScore[PTS], marioScore[COIN], time.get_ticks(), levelNum, True, True, statCoin,
                   uniSprite, 0)
-        screen.blit(overText,(300,300))
+        screen.blit(overText,(300,300))  # Blitting game over text
         display.flip()
         fpsCounter.tick(60)
     return "menu"
@@ -1147,44 +1125,45 @@ def win(marioPos):
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     globalSound("stop") # Stopping any music
     playSound(gameDoneSound, "music") # Playing win music
-    if marioPos[STATE] == 0:
+    # Adjusting Mario position depending on his state
+    if marioPos[STATE] == 0:  # If he's small
         marioPos = [-50, 495, 5, 0, "Right", 0]
-    else:
+    else:  # If he's big
         marioPos = [-50, 451, 5, 0, "Right", 1]
     frame = [0,0,0]
-    canExit = False
-    startTime = None
+    canExit = False  # Boolean to check if user can press enter and exit win screen
+    startTime = None  # Variable to keep track of time since text starts to appear
     running = True
     while running:
         for evnt in event.get():
             if evnt.type == QUIT:
                 return "exit"
             elif evnt.type == KEYDOWN:
-                if evnt.key == K_RETURN and canExit:
+                if evnt.key == K_RETURN and canExit:  # If the user has pressed Enter and is allowed to exit, return to the menu
                     return "menu"
         # Moving Mario
-        if marioPos[X] < 350:
+        if marioPos[X] < 350:  # Moving him if he's not in the right place
             marioPos[X] += 5
-        elif startTime == None:
-            startTime = time.get_ticks()
-            marioPos[VX] = 0
-        moveSprites(marioPos, marioStats, frame, 0)
+        elif startTime == None:  # If we don't need to move Mario and a text time hasn't been established yet
+            startTime = time.get_ticks()  # Get the current time
+            marioPos[VX] = 0  # Stop mario's moving animation by removing his speed
+        moveSprites(marioPos, marioStats, frame, 0)  # Animating mario
         # Drawing win screen
-        screen.fill(BLACK)
-        screen.blit(winPics[0], (0, 0))
-        screen.blit(winPics[1], (430, 467))
-        screen.blit(marioSprites[frame[0]][int(frame[1])], (marioPos[X], marioPos[Y]))
+        screen.fill(BLACK)  # Clearing screen
+        screen.blit(winPics[0], (0, 0))  # Blitting the background
+        screen.blit(winPics[1], (430, 467))  # Blitting peach sprite
+        screen.blit(marioSprites[frame[0]][int(frame[1])], (marioPos[X], marioPos[Y]))  # Blitting Mario
         # Checking for text times and drawing text
-        if startTime != None:
-            timeDiff = time.get_ticks() - startTime
-            screen.blit(winText1, (250,170))
+        if startTime != None:  # If a text time has been established
+            timeDiff = time.get_ticks() - startTime  # Calculate the time that has passed
+            screen.blit(winText1, (250,170))  # Always blit the first line
             if timeDiff > 2000:
-                screen.blit(winText2, (190, 260))
+                screen.blit(winText2, (190, 260))  # Blit this if 2s have passed
             if timeDiff > 4000:
-                screen.blit(winText3, (160, 300))
+                screen.blit(winText3, (160, 300))  # Blit this if 4s have passed
             if timeDiff > 6000:
-                screen.blit(winText4, (135, 390))
-                canExit = True
+                screen.blit(winText4, (135, 390))  # Blit this if 6s have passed
+                canExit = True  # Allow the user to exit
         display.flip()
         fpsCounter.tick(60)
     return "menu"
@@ -1230,7 +1209,7 @@ def credit():
         screen.blit(backgroundPics[0], (0, 0))
         screen.blit(creditTitleHelp,(170,45))
         screen.blit(marioSprites[0][0],(400,494))
-        screen.blit(marioSprites[1][0],(130,450))
+        screen.blit(marioSprites[1][0],(130,452))
         screen.blit(enemiesPic[0][0],(630,495))
         screen.blit(creditTextHelp1,(30,350))
         screen.blit(creditTextHelp2, (335, 400))

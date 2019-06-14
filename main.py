@@ -193,64 +193,64 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breaking
     screen.fill(BLACK) # Clearing screen
     screen.blit(background, (backX, 0))  # Blitting background
     # Blitting moving coins
-    for coin in moveCoins:
+    for coin in moveCoins:  # Going through each coin and defining rects
         coinRect = coin[0], coin[1], coin[2], coin[3]
         screen.blit(coinsPic[1][int(spriteCount // 0.4 % 4)], coinRect)
     # Blitting mushrooms
-    for mushroom in mushrooms:
+    for mushroom in mushrooms:  # Going through each mushroom and defining rects
         mushRect = Rect(mushroom[0], mushroom[1], mushroom[2], mushroom[3])
-        if mushroom[4] == 0:
+        if mushroom[4] == 0:  # Checkiong if the moving up animation is done
             screen.blit(itemsPic[0], mushRect)
     # Blitting enemies
-    for list in enemiesList:
-        for enemy in list:
+    for list in enemiesList:  # For each type of enemy in the enemies list
+        for enemy in list:  # For each individual enemy within that type
             enmyRect = Rect(enemy[0], enemy[1], enemy[2], enemy[3])
             if list == goombas:
-                if enemy[ENMYIDLE] == 2:
+                if enemy[ENMYIDLE] == 2:  # Checking if enemy is dying
                     screen.blit(enemiesPic[0][2], enmyRect)
-                else:
+                else:  # Normal animation
                     screen.blit(enemiesPic[0][int(spriteCount//6)], enmyRect)
-            elif list == spinys:
+            elif list == spinys:  # Same thing as goombas except with spinys
                 spinePic = enemiesPic[2][int(spriteCount// 2.4 % 2)]
-                if enemy[ENMYVX] > 0:
+                if enemy[ENMYVX] > 0:  # Checking which direction the enemy is moving (1 or -1)
                     spinePic = transform.flip(spinePic, True, False)
                 screen.blit(spinePic, enmyRect)
     # Blitting bricks and guns
-    for list in rectList:
-        for brick in list:
-            brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
-            if list == interactBricks:
+    for list in rectList:  # For each type of bricks
+        for brick in list:  # For each individual brick within that type of brick
+            brickRect = Rect(brick[0], brick[1], brick[2], brick[3])  # Defining the rect of that brick
+            if list == interactBricks:  # Bliting the correct picture if it is an interactBrick
                 screen.blit(brickPic[1][0],brickRect)
-            elif list == questionBricks:
+            elif list == questionBricks:  # Doing the same thing but also checking if the brick has been hit or not
                 if brick[IDLE] == 1:
                     screen.blit(brickPic[1][1], brickRect)
                 else:
                     screen.blit(brickPic[0][int(spriteCount//2)],brickRect)
-            elif list == gunRects:
+            elif list == gunRects:  # Bliting the pictures for the bullet bills
                 if brick[GUNTYPE] == 1:
                     screen.blit(enemiesPic[1][1], (brickRect.x, brickRect.y))
                 elif brick[GUNTYPE] == 2:
                     screen.blit(enemiesPic[1][2], (brickRect.x, brickRect.y))
     # Blitting brick debris
-    for brick in breakingBrick:
+    for brick in breakingBrick: # For each break in all breakable bricks making the debris fall out in all 4 directions if broken
         screen.blit(brickPiece[0], (brick[0] - brick[5], brick[1]))
         screen.blit(brickPiece[1], (brick[0] + 21 + brick[5], brick[1]))
         screen.blit(brickPiece[2], (brick[0] - brick[5] / 2, brick[1] + 21))
         screen.blit(brickPiece[3], (brick[0] + 21 + brick[5] / 2, brick[1] + 21))
     # Blitting coins
-    for coin in coins:
-        coinRect = coin[0], coin[1], coin[2], coin[3]
-        screen.blit(coinsPic[0][int(spriteCount // 2)], coinRect)
+    for coin in coins:  # For each coin in the list of all coins
+        coinRect = coin[0], coin[1], coin[2], coin[3]  # Defining the coins rect
+        screen.blit(coinsPic[0][int(spriteCount // 2)], coinRect)  # Bliting the coins sprite
     # Blitting bullet bills
-    for bullet in bullets:
+    for bullet in bullets: # going through each bullet and defining the bullets rect
         bullRect = Rect(bullet[0], bullet[1], bullet[2], bullet[3])
         bullPic = enemiesPic[1][0]
         if bullet[BULLVX] > 0:
             bullPic = transform.flip(bullPic, True, False)
         screen.blit(bullPic, bullRect)
     # Blitting flag
-    screen.blit(flagPic[0],(flagInfo[0][0],flagInfo[0][1]))
-    screen.blit(flagPic[1],(flagInfo[1][0],flagInfo[1][1]))
+    screen.blit(flagPic[0],(flagInfo[0][0],flagInfo[0][1]))  # Bliting pole
+    screen.blit(flagPic[1],(flagInfo[1][0],flagInfo[1][1]))  # Bliting flag
     # Blitting mario
     marioShow = marioPic[marioFrame[0]][int(marioFrame[1])]
     if mario[DIR] == "Left":

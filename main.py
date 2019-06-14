@@ -270,10 +270,13 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breaking
 
 def moveBricks(questionBricks, interactBricks, breakingBrick):
     BRICKVY, IDLE, TYPE = 4, 5, 6
+
+    # Moving all question blocks that are hit
     for brick in questionBricks:
         if brick[BRICKVY] != 3.5 and brick[IDLE] == 1:
             brick[BRICKVY] += 0.5
             brick[1] += brick[BRICKVY]
+    # Moving all bricks that are hit and resetting them after
     for brick in interactBricks:
         if brick[BRICKVY] != 3.5 and brick[IDLE] == 1:
             brick[BRICKVY] += 0.5
@@ -281,6 +284,7 @@ def moveBricks(questionBricks, interactBricks, breakingBrick):
         else:
             brick[BRICKVY] = 0
             brick[IDLE] = 0
+    # Moving all brick debris
     for brick in breakingBrick:
         brick[1] += brick[4]
         brick[4] += 0.8
@@ -290,6 +294,7 @@ def moveBricks(questionBricks, interactBricks, breakingBrick):
 def floatObjects(moveCoins, points):
     X, Y, COINVY = 0, 1, 4
     PTSCOUNT, PTSNUM = 2, 3
+
     for coin in range(len(moveCoins) - 1, -1, -1):
         if moveCoins[coin][COINVY] != 5:
             moveCoins[coin][COINVY] += 0.5
@@ -1031,7 +1036,7 @@ def menu(selected):
     # Resetting volume and game variables
     if mixer.Channel(0).get_volume() == 0:
         globalSound("toggleVol")
-    levelNum = 4
+    levelNum = 0
     marioScore= [0, 0, 5]
     running = True
     globalSound("stop") # Stop any music that's playing

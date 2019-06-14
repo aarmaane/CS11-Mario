@@ -269,32 +269,32 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breaking
 
 
 def moveBricks(questionBricks, interactBricks, breakingBrick):
+    """ Function to move all of the bricks when they're in the process of getting hit """
     BRICKVY, IDLE, TYPE = 4, 5, 6
-
     # Moving all question blocks that are hit
-    for brick in questionBricks:
-        if brick[BRICKVY] != 3.5 and brick[IDLE] == 1:
-            brick[BRICKVY] += 0.5
-            brick[1] += brick[BRICKVY]
+    for brick in questionBricks:  # Going through each question block
+        if brick[BRICKVY] != 3.5 and brick[IDLE] == 1:  # Checking if the block is back at its original position or idle
+            brick[BRICKVY] += 0.5  # Adding VY
+            brick[1] += brick[BRICKVY]  # Applying gravity
     # Moving all bricks that are hit and resetting them after
     for brick in interactBricks:
         if brick[BRICKVY] != 3.5 and brick[IDLE] == 1:
             brick[BRICKVY] += 0.5
             brick[1] += brick[BRICKVY]
-        else:
+        else:  # Resetting the brick
             brick[BRICKVY] = 0
             brick[IDLE] = 0
     # Moving all brick debris
-    for brick in breakingBrick:
+    for brick in breakingBrick:  # Going through all of the debris and adding gravity
         brick[1] += brick[4]
         brick[4] += 0.8
         brick[5] += 3
 
 
 def floatObjects(moveCoins, points):
+    """ Function to allow coins and points to float up"""
     X, Y, COINVY = 0, 1, 4
     PTSCOUNT, PTSNUM = 2, 3
-
     for coin in range(len(moveCoins) - 1, -1, -1):
         if moveCoins[coin][COINVY] != 5:
             moveCoins[coin][COINVY] += 0.5
@@ -311,13 +311,13 @@ def moveItems(rectList, enemiesList, mushrooms, goombas, spinys):
     X, Y, DELAY, MOVEUP, MUSHVX, MUSHVY, INFLOOR = 0, 1, 4, 5, 6, 7, 8
     ENMYVX, ENMYVY, ENMYIDLE, ENMYINFLOOR = 4, 5, 6, 7
     # Making sure all mushrooms are activated
-    for mushroom in mushrooms:
-        if mushroom[DELAY] > 0:
+    for mushroom in mushrooms:  # Going through each mushroom
+        if mushroom[DELAY] > 0:  # Checking if it's being delayed and progressing the counter
             mushroom[DELAY] -= 1
-        elif mushroom[MOVEUP] > 0:
+        elif mushroom[MOVEUP] > 0:  # Checking if it's animating and progressing the animation
             mushroom[MOVEUP] -= 1
             mushroom[1] -= 1
-        else:
+        else:  # If delay and animation are done, check for its collision
             itemCollide(mushroom, rectList, [X, Y, MUSHVX, MUSHVY, INFLOOR])
     for goomba in goombas:
         if goomba[ENMYIDLE] == 1:

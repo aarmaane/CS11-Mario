@@ -265,7 +265,7 @@ def drawScene(background, backX, mario, marioPic, marioFrame, rectList, breaking
     if isMuted:
         screen.blit(mutePic, (735,25))
     #for brick in brickList:
-    #    draw.rect(screen,GREEN,(brick[0],brick[1],brick[2],brick[3]))
+        #draw.rect(screen,GREEN,(brick[0],brick[1],brick[2],brick[3]))
 
 
 def moveBricks(questionBricks, interactBricks, breakingBrick):

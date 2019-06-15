@@ -396,7 +396,7 @@ def drawStats(mario, marioInfo, points, coins, startTime, level, fastMode, times
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     nowFast = fastMode
     timesUpCheck = timesUp
-    currentTime = 200 - int((time.get_ticks() - startTime) / 1000)
+    currentTime = 200 - int((time.get_ticks() - startTime) / 1000)   # Getting the time in seconds
     if forceTime != None:
         currentTime = forceTime
     if currentTime < 100 and not fastMode and forceTime is None:
@@ -749,10 +749,10 @@ def checkClearCollide(mario, marioStats, marioScore, coins, mushrooms, enemiesLi
     isPole = False
     forceTime = None
     poleRect = Rect(flagInfo[0][0], flagInfo[0][1], flagInfo[0][2], flagInfo[0][3])
-    if marioRect.colliderect(poleRect):
+    if marioRect.colliderect(poleRect):  # If mario collides with the pole
         isPole = True
-        mario[X] = poleRect.x - 16
-        playSound(flagSound, "music")
+        mario[X] = poleRect.x - 16  # Making mario slide down
+        playSound(flagSound, "music")  # Playing the flag sound
         forceTime = 200 - (time.get_ticks() - startTime)//1000
     return [isPole, forceTime]
 

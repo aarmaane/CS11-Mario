@@ -291,16 +291,16 @@ def floatObjects(moveCoins, points):
     """ Function to allow coins and points to float up """
     X, Y, COINVY = 0, 1, 4
     PTSCOUNT, PTSNUM = 2, 3
-    for coin in range(len(moveCoins) - 1, -1, -1):
-        if moveCoins[coin][COINVY] != 5:
-            moveCoins[coin][COINVY] += 0.5
-            moveCoins[coin][Y] += moveCoins[coin][COINVY]
-        else:
+    for coin in range(len(moveCoins) - 1, -1, -1): # Going through each moving coin
+        if moveCoins[coin][COINVY] != 5:  # Checking if the animation is still going by checking VY
+            moveCoins[coin][COINVY] += 0.5  # Adding to the VY
+            moveCoins[coin][Y] += moveCoins[coin][COINVY]  # Applying gravity/VY
+        else:  # Deleting coin and adding to points if the animation is finished
             points.append([moveCoins[coin][X], moveCoins[coin][Y], 30, 200])
             del moveCoins[coin]
-    for point in range(len(points) - 1, -1, -1):
-        points[point][PTSCOUNT] -= 1
-        points[point][Y] -= 1
+    for point in range(len(points) - 1, -1, -1):  # Going through all points
+        points[point][PTSCOUNT] -= 1  # Reducing the animation counter
+        points[point][Y] -= 1  # Moving the text up
 
 
 def moveItems(rectList, enemiesList, mushrooms, goombas, spinys):
@@ -330,88 +330,98 @@ def itemCollide(item, rectList, indexList, extraCollideIn = None):
     """ Function to check item/enemy collision with the floor, objects, and optionally other enemies """
     X, Y, VX, VY, INFLOOR = indexList[0], indexList[1], indexList[2], indexList[3], indexList[4]
     ENMYVX, ENMYVY, ENMYIDLE, ENMYINFLOOR = 4, 5, 6, 7
-    extraCollide = copy.deepcopy(extraCollideIn)
-    if extraCollide != None:
-        for list in range(len(extraCollide)):
+    extraCollide = copy.deepcopy(extraCollideIn)  # Deepcopying to remove mutability
+    if extraCollide != None:  # Checking if there was an input of other rects to collide against
+        for list in range(len(extraCollide)):  # Loop to remove the item itself from the rects to check against
             if item in extraCollide[list]:
                 del extraCollide[list][extraCollide[list].index(item)]
-        rectList = rectList + extraCollide
+        rectList = rectList + extraCollide  # Joining the two lists together
+    # Applying gravity and moving the item across the screen
     item[X] += item[VX]
     item[VY] += 0.6
     item[Y] += item[VY]
-    itemRect = Rect(item[0] + 3, item[1], item[2] - 3, item[3])
-    if item[Y] > 496 and not item[INFLOOR]:
+    itemRect = Rect(item[0] + 3, item[1], item[2] - 3, item[3])  # Declaring rect
+    # Checking collision with floor and keeping it up
+    if item[Y] > 496 and not item[INFLOOR]:  # If the item is in the floor and not falling through a gap, put it back
         item[Y] = 496
         item[VY] = 0
-        try:
+        try:  # Checking if the item is over a gap (using colour collision) and needs to fall
             if itemRect.x > 0 and screen.get_at((itemRect.x, itemRect.bottom)) == SKYBLUE and screen.get_at((itemRect.right, itemRect.bottom)) == SKYBLUE:
                 item[INFLOOR] = True
-        except IndexError:
+        except IndexError:  # If the item is off-screen and an IndexError is raised, ignore
             pass
-    try:
+    # Floor recovery code
+    try:  # Checking if the item is supposed to be falling but there isn't a gap under them, and stopping their fall
         if item[INFLOOR] and screen.get_at((itemRect.x, itemRect.bottom)) != SKYBLUE and screen.get_at((itemRect.right, itemRect.bottom)) != SKYBLUE:
             item[INFLOOR] = False
-    except IndexError:
+    except IndexError:  # If the item is off-screen and an IndexError is raised, ignore
         pass
-    itemRect = Rect(item[0], item[1], item[2], item[3])
+    itemRect = Rect(item[0], item[1], item[2], item[3])  # Re-declaring react after possible changes
+    # Going through each rect in the 2D List
     for list in rectList:
         for brick in list:
-            brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
-            if itemRect.colliderect(brickRect) and itemRect != brickRect:
-                if int(item[Y]) < brickRect.y:
+            brickRect = Rect(brick[0], brick[1], brick[2], brick[3])  # Declaring rect to check against
+            if itemRect.colliderect(brickRect) and itemRect != brickRect:  # Checking the two rects are colliding and that they are not the same (shouldn't collide with itself)
+                if int(item[Y]) < brickRect.y:  # If the item is above the rect, put it on top (imprecise since it's not needed to be)
                     item[Y] = brickRect.y - 42
                     item[VY] = 0
-                else:
+                else:  # Otherwise change the direction of the item movement (allow it to bounce off)
+                    # Try and except statement to skip the collision if it's a dead enemy
                     try:
-                        if brick[ENMYIDLE] != 2:
+                        if brick[ENMYIDLE] != 2:  # Idle state 2 means dead enemy
                             item[VX] *= -1
-                    except IndexError:
+                    except IndexError:  # If an IndexError is raised, it means it isn't an enemy and collison should work
                         item[VX] *= -1
 
 def shootBullets(gunRects, bullets, mario):
+    """ Function to shoot bullets and to move them across the screen """
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     GUNSTATE, GUNCOUNT, GUNTYPE = 4, 5, 6
     BULLVX, BULLVY = 4, 5
-    for gun in gunRects:
+    for gun in gunRects:  # Going through each gun
         if gun[GUNTYPE] == 1 and gun[GUNSTATE] == 1:  # Checking if it's the gun or just cosmetic
-            gun[GUNCOUNT] += 1
-            if gun[GUNCOUNT] == 180:
-                gun[GUNCOUNT] = 0
+            gun[GUNCOUNT] += 1  # Adding to the shooting counter
+            if gun[GUNCOUNT] == 180:  # If the shooting counter reaches 180
+                gun[GUNCOUNT] = 0  # Reset the counter
+                # Checking where Mario is and adjusting bullet stats accordingly
                 bulletVX = -3
                 xOffset = -48
                 if mario[X] > gun[X]:
                     bulletVX = 3
                     xOffset = 42
-                bullets.append([gun[X] + xOffset, gun[Y], 48, 42, bulletVX, 0])
-                playSound(shootSound, "enemy")
-    for bullet in bullets:
-        if bullet[BULLVY] == 0:
-            bullet[X] += bullet[BULLVX]
-        else:
+                bullets.append([gun[X] + xOffset, gun[Y], 48, 42, bulletVX, 0])  # Append a bullet to the bullets list
+                playSound(shootSound, "enemy")  # Play the bullet shooting sound
+    for bullet in bullets:  # Going through each bullet
+        if bullet[BULLVY] == 0:  # If the bullet has not been stepped on (Checked by seeing if it has no VY)
+            bullet[X] += bullet[BULLVX]  # Move the bullet across the screen according to its VX (Negative or positive)
+        else:  # If the bullet has been stepped on
+            # Apply gravity
             bullet[BULLVY] += 0.6
             bullet[Y] += bullet[BULLVY]
 
 def drawStats(mario, marioInfo, points, coins, startTime, level, fastMode, timesUp, coinPic, spriteCount, forceTime = None):
+    """ Function to draw Mario's stats on screen (Points, coins, level number, and time left) """
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING, ISANIMATING, INVULFRAMES = 0, 1, 2, 3, 4, 5, 6, 7
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
-    nowFast = fastMode
-    timesUpCheck = timesUp
     currentTime = 200 - int((time.get_ticks() - startTime) / 1000)   # Getting the time in seconds
-    if forceTime != None:
+    if forceTime != None:  # If a forced time was entered, ignore the calculated time and use the forced time
         currentTime = forceTime
-    if currentTime < 100 and not fastMode and forceTime is None:
-        playSound(timeLowSound, "music")
-        playSound(backgroundFastSound, "music", True)
-        nowFast = True
-    if currentTime == 0 and not timesUp and forceTime is None:
-        currentTime = 0
-        marioInfo[ISANIMATING] = True
-        mario[STATE] = -1
-        timesUpCheck = True
+    # Time checks (ignored if a forced time is entered)
+    if currentTime < 100 and not fastMode and forceTime is None:  # If the time is lower than 100 and fast mode hasn't been activated
+        playSound(timeLowSound, "music")  # Play the "time low" sound
+        playSound(backgroundFastSound, "music", True)  # Queue the sped up background music
+        fastMode = True  # Set fast mode to on
+    if currentTime == 0 and not timesUp and forceTime is None:  # If the time is 0 and the times up animation hasn't been played
+        currentTime = 0  # Set the current time to zero
+        marioInfo[ISANIMATING] = True  # Make Mario animate
+        mario[STATE] = -1  # Set his state to -1 (-1 means dead)
+        timesUp = True  # Set times up to on
+    # Rendering text
     points = marioFontBig.render("%06i" %int(points), False, (255,255,255))
     coins =  marioFontBig.render("x%02i" %int(coins), False, (255,255,255))
     world = marioFontBig.render("1-%i" %int(level), False, (255,255,255))
     timer = marioFontBig.render("%03i" %int(currentTime), False, (255,255,255))
+    # Blitting text and coin sprite
     screen.blit(points, (75,50))
     screen.blit(marioText, (75,25))
     screen.blit(coins, (300,50))
@@ -420,14 +430,15 @@ def drawStats(mario, marioInfo, points, coins, startTime, level, fastMode, times
     screen.blit(timeText, (625,25))
     screen.blit(timer, (640, 50))
     screen.blit(coinPic[int(spriteCount//2)], (275,48))
-    return nowFast, timesUpCheck
+    return fastMode, timesUp  # Returning fast mode and time up values (Which could stay the same)
 
 def drawPause():
+    """ Function to draw the pause screen on top of the surface """
     alphaSurface = Surface((800, 600))  # Making a surface
     alphaSurface.set_alpha(128)  # Giving it alpha functionality
     alphaSurface.fill((0, 0, 0))  # Fill the surface with a black background
     screen.blit(alphaSurface, (0, 0))  # Blit it into the actual screen
-    # Blitting text
+    # Blitting pause screen text
     screen.blit(pauseText, (345,290))
     screen.blit(helpText, (210, 330))
 
@@ -435,47 +446,52 @@ def moveSprites(mario, marioInfo, frame, forceTime = None):
     """ Function to cycle through Mario's sprites """
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING, ISANIMATING, INVULFRAMES = 0, 1, 2, 3, 4, 5, 6, 7
-    changingSprites = [[2,5], [2,4], [2,5], [2,4], [2,5], [2,4], [1,0]]
-    isDead = False
-    if marioInfo[ISANIMATING]:
-        if mario[STATE] == -1:
-            forceTime = 0
-            if frame[2] > 70:
-                isDead = True
-        if frame[2] == 55:
-            marioInfo[ISANIMATING] = False
-            frame[2] = 0
-            if mario[STATE] == 0:
-                mario[Y] += 42
-                frame[0], frame[1] = 0, 0
-            return isDead, forceTime
-        if mario[STATE] == -1 and frame[2] == 0:  # If mario is dying, play his dying animation
-            frame[0], frame[1] = 2, 3
-            frame[2] = -15
-            playSound(deathSound, "music")
-        elif mario[STATE] == -1:
-            frame[0], frame[1] = 2, 3
-            frame[2] += 0.4
-            if frame[2] > -9:
+    changingSprites = [[2,5], [2,4], [2,5], [2,4], [2,5], [2,4], [1,0]]  # List of Mario's change state sprites (Indices)
+    isDead = False  # Boolean to see if the level should restart (returned and handled by game function)
+    # Mario's animation loop
+    if marioInfo[ISANIMATING]:  # If mario is animating
+        # Animation counter checks
+        if mario[STATE] == -1:  # If his state is -1 (dead)
+            forceTime = 0  # Force the time to be zero
+            if frame[2] > 70:  # If his animation counter has reached 70
+                isDead = True  # Restart the level
+        if frame[2] == 55:  # If his animation counter has reached 55
+            marioInfo[ISANIMATING] = False  # Turn off his animation
+            frame[2] = 0  # Reset the animation counter
+            if mario[STATE] == 0:  # If his result state should be 0 (small mario)
+                mario[Y] += 42  # Shift mario down
+                frame[0], frame[1] = 0, 0  # Reset his sprite frame to standing
+            return isDead, forceTime  # Ignore the rest of the function and return
+        if mario[STATE] == -1 and frame[2] == 0:  # If mario is dying and his animation counter hasn't been touched
+            frame[0], frame[1] = 2, 3  # Set his sprite to dying
+            frame[2] = -15  # Turn the animation counter into a VY starting at -15
+            playSound(deathSound, "music")  # Start the death music
+        elif mario[STATE] == -1:  # If he's dying but his animation counter has touched (meaning above has already ran)
+            frame[0], frame[1] = 2, 3  # Keep his dying sprite on
+            frame[2] += 0.4  # Add to his VY
+            if frame[2] > -9:  # If his VY has passed -9, then apply gravity (Acts as a delay to his falling animation)
                 mario[Y] += frame[2]
-        elif mario[STATE] == 0:
+        elif mario[STATE] == 0:  # If his result state should be 0 (small Mario)
+            # Reverse the animation sprite List
             for index in range(len(changingSprites)):
                 if changingSprites[index] == [2,5]:
                     changingSprites[index] = [1,0]
                 elif changingSprites[index] == [1,0]:
                     changingSprites[index] = [2,5]
+            # Add to his animation counter and apply the counter value to the current sprite
             frame[2] += 1
             frame[0], frame[1] = changingSprites[(frame[2]//8)][0], changingSprites[(frame[2]//8)][1]
-        elif mario[STATE] == 1:
+        elif mario[STATE] == 1:  # Same as above but without the list reversal
             frame[2] += 1
             frame[0], frame[1] = changingSprites[(frame[2]//8)][0], changingSprites[(frame[2]//8)][1]
         return isDead, forceTime  # Stop running the function and return isDead/forceTime (Which could stay unchanged)
+    # Mario's normal movement loop
     if marioInfo[ONGROUND]:
-        frame[0] = 0 + mario[STATE] # Adjusting for sprite for = big mario
+        frame[0] = 0 + mario[STATE] # Adjusting for sprite for big mario
         # Mario's running sprite counter
-        if frame[1] < 3.8 and mario[VY] < 2:
-            frame[1] += mario[VX]**2/100 + 0.2
-        else:
+        if frame[1] < 3.8 and mario[VY] < 2:  # If the counter hasn't reached to upper limit and Mario isn't falling too fast
+            frame[1] += mario[VX]**2/100 + 0.2  # Taking his VX and adding to counter accordingly
+        else: # Mario's sprite if he's falling fast
             frame[1] = 1
         if frame[1] > 3.9:  # Sprite counter upper limit
             frame[1] = 3.9
@@ -485,7 +501,7 @@ def moveSprites(mario, marioInfo, frame, forceTime = None):
         frame[0],frame[1] = 2, 0 + mario[STATE]  # If mario is midair, stay on his jumping sprite
     if marioInfo[ISCROUCH]:
         frame[0],frame[1] = 2, 2  # If mario is crouching, stay on his crouching sprite
-    if marioInfo[INVULFRAMES] != 0:
+    if marioInfo[INVULFRAMES] != 0:  # Loop to reduce Mario's invulnerability counter
         marioInfo[INVULFRAMES] -= 1
 
 
@@ -526,7 +542,6 @@ def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace, clearRectL
             walkMario(mario, rectLists, "Left", clearRectList)
         if marioInfo[ONGROUND]:  # Don't decelerate mid air
             mario[VX] -= acclerate
-
     # Max and min acceleration
     if mario[VX] > 5:
         mario[VX] = 5
@@ -569,15 +584,16 @@ def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace, clearRectL
         marioInfo[ONGROUND] = True
         marioInfo[ONPLATFORM] = False
         marioInfo[ISFALLING] = False
+    # Try except statement for Mario's falling recovery
     try:
         if marioInfo[INGROUND] and screen.get_at((int(mario[X]+4),int(mario[Y]+marioOffset)))!=SKYBLUE and \
            screen.get_at((int(mario[X]+38),int(mario[Y]+marioOffset)))!=SKYBLUE: # Allow mario to recover if he goes back above the ground
             marioInfo[INGROUND] = False
-    except:
+    except IndexError:  # If IndexError is raised, ignore
         pass
-    if marioInfo[INGROUND] and mario[Y] > 700:
-        marioInfo[ISANIMATING] = True
-        mario[STATE] = -1
+    if marioInfo[INGROUND] and mario[Y] > 700:  # If Mario falls off the screen, play his dying animation
+        marioInfo[ISANIMATING] = True  # Set animating to True
+        mario[STATE] = -1  # Put his state to -1 (dead)
     marioPos[VY] += gravity  # apply gravity
 
 

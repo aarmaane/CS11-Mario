@@ -362,13 +362,13 @@ def itemCollide(item, rectList, indexList, extraCollideIn = None):
         for brick in list:
             brickRect = Rect(brick[0], brick[1], brick[2], brick[3])  # Declaring rect to check against
             if itemRect.colliderect(brickRect) and itemRect != brickRect:  # Checking the two rects are colliding and that they are not the same (shouldn't collide with itself)
-                if int(item[Y]) < brickRect.y:  # If the item is above the rect, put it on top (imprecise since it's not needed to be)
+                if int(item[Y]) + 3 < brickRect.y:  # If the item is above the rect, put it on top (imprecise since it's not needed to be)
                     item[Y] = brickRect.y - 42
                     item[VY] = 0
                 else:  # Otherwise change the direction of the item movement (allow it to bounce off)
                     # Try and except statement to skip the collision if it's a dead enemy
                     try:
-                        if brick[ENMYIDLE] != 2:  # Idle state 2 means dead enemy
+                        if brick[ENMYIDLE] != 2:  # Idle state 2 means dead enemyd
                             item[VX] *= -1
                     except IndexError:  # If an IndexError is raised, it means it isn't an enemy and collison should work
                         item[VX] *= -1
@@ -510,17 +510,17 @@ def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace, clearRectL
     keys = key.get_pressed()
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING, ISANIMATING = 0, 1, 2, 3, 4, 5, 6
-    moving = False
+    moving = False  # Variable to check if user is moving Mario
     # Walking logic
     if keys[K_a] and keys[K_d]:  # If both keys are pressed, don't move
         mario[VX] = 0
-    elif keys[K_a] and not marioInfo[ISCROUCH]:  # Checking if mario is hitting left side of window
+    elif keys[K_a] and not marioInfo[ISCROUCH]:  # Checking if user is pressing left and not crouching
         if mario[DIR] != "Left":
             mario[VX] = 0  # Stop acceleration if changing direction
         walkMario(mario, rectLists, "Left", clearRectList)
         moving = True
         mario[DIR] = "Left"
-    elif keys[K_d] and not marioInfo[ISCROUCH]:
+    elif keys[K_d] and not marioInfo[ISCROUCH]:  # Checking if user is pressing right and not crouching
         if mario[DIR] != "Right":
             mario[VX] = 0  # Stop acceleration if changing direction
         walkMario(mario, rectLists, "Right", clearRectList)
@@ -549,8 +549,8 @@ def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace, clearRectL
         mario[VX] = 0
     # Jumping logic
     gravity = 0.6
-    floor=496
-    marioOffset = 42
+    floor = 496  # The floor Y coords (Using top of sprite)
+    marioOffset = 42  # Height of sprite
     if mario[STATE]==1:  # Change values if mario is big
         floor=452
         marioOffset = 88
@@ -560,10 +560,10 @@ def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace, clearRectL
         marioInfo[ISFALLING] = False
         marioInfo[ONPLATFORM] = False
     if keys[K_SPACE] and not marioInfo[ISCROUCH] and not marioInfo[ONPLATFORM]:
-        if marioInfo[ONGROUND] and pressSpace:  # Checking if jumping is true
+        if marioInfo[ONGROUND] and pressSpace:  # Checking if Mario is on ground and this is users first key down
             mario[VY] = -9.5  # Jumping power
             marioInfo[ONGROUND] = False
-            marioInfo[JUMPFRAMES] = 0
+            marioInfo[JUMPFRAMES] = 0  # Resetting the higher jump counter
             # Playing jumping sounds
             if mario[STATE] == 0:
                 playSound(smallJumpSound, "effect")
@@ -571,7 +571,7 @@ def checkMovement(mario, marioInfo, acclerate, rectLists, pressSpace, clearRectL
                 playSound(bigJumpSound, "effect")
         elif marioInfo[JUMPFRAMES] < 41 and not marioInfo[ISFALLING] and not marioInfo[ONPLATFORM]: # Simulating higher jump with less gravity
             gravity = 0.2
-            marioInfo[JUMPFRAMES] += 1
+            marioInfo[JUMPFRAMES] += 1  # Adding to the higher jump counter
     mario[Y] += mario[VY]  # Add the y movement value
     if not marioInfo[INGROUND] and mario[Y]>=floor and screen.get_at((int(mario[X]+4),int(mario[Y]+marioOffset)))==SKYBLUE and \
        screen.get_at((int(mario[X]+38),int(mario[Y]+marioOffset)))==SKYBLUE:
@@ -601,6 +601,7 @@ def walkMario(mario, rectLists, direction, clearRectList):
     """ Function to move the player, background, and all rectangles """
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     global backPos
+    # Checking which direction to move
     if direction == "Left" and mario[X] != 1:
         mario[X] -= mario[VX]  # Subtracting the VX
     elif direction == "Right":
@@ -621,88 +622,94 @@ def walkMario(mario, rectLists, direction, clearRectList):
 
 
 def checkCollide(mario, marioInfo, marioScore, rectLists, breakingBrick, moveCoins, mushrooms):
-    """ Function to check mario's collision with Rects"""
+    """ Function to check mario's collision with Rects """
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING = 0, 1, 2, 3, 4, 5
     BRICKVY, IDLE, TYPE = 4, 5, 6
     PTS, COIN, LIVES = 0, 1, 2
+    # Finding and declaring Mario's Rect
     height = 42
     if mario[STATE] == 1:
         height = 84
-    originalMarioRect = Rect(mario[X] + 2, mario[Y], 38 - 2, height)
-    originalX, originalY, originalVY = mario[X], mario[Y], mario[VY]
-    hitBrick = []
+    originalMarioRect = Rect(mario[X] + 2, mario[Y], 38 - 2, height)  # Mario's Rect
+    originalX, originalY, originalVY = mario[X], mario[Y], mario[VY]  # Storing orignial movement values
+    hitBrick = []  # List to store all bricks that were hit
+    # Going through each rect
     for list in rectLists:
         for brick in list:
-            brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
-            marioRect = Rect(mario[X] + 2, mario[Y], 38 - 2, height) # Mario's hit box (and making it a little smaller)
+            brickRect = Rect(brick[0], brick[1], brick[2], brick[3])  # Defining the brick Rect
+            marioRect = Rect(mario[X] + 2, mario[Y], 38 - 2, height)  # Mario's hit box (and making it a little smaller)
             if brickRect.colliderect(marioRect):
                 if int(mario[Y]) + height - int(mario[VY]) - 1 <= brickRect.y:  # Hitting top collision
                     marioInfo[ONGROUND] = True
                     marioInfo[ONPLATFORM] = True
                     marioInfo[ISFALLING] = True
-                    mario[VY] = 0
-                    mario[Y] = brickRect.y - height
+                    mario[VY] = 0  # Stopping his fall
+                    mario[Y] = brickRect.y - height  # Forcing him out of the rect upwards
                 elif int(mario[Y] - mario[VY]) >= int(brickRect.y + brickRect.height):  # Hitting bottom collision
-                    mario[Y] -= mario[VY]
-                    mario[VY] = 1
-                    mario[Y] = brickRect.y + brickRect.height
-                    marioInfo[JUMPFRAMES] = 41
+                    mario[VY] = 1  # Pushing him down
+                    mario[Y] = brickRect.y + brickRect.height  # Forcing him out of the rect downwards
+                    marioInfo[JUMPFRAMES] = 41  # Locking his jump
                 elif int(mario[X] + 2) >= int(brickRect[X]):  # Right side collision
                     mario[X] = brickRect.x + brickRect.width - 2  # Move mario to the right of the rect
                     mario[VX] = 0
                 elif int(mario[X] + 2) <= int(brickRect[X]):  # Left side collision
                     mario[X] = brickRect.x - 38  # Move mario to the left of the rect
                     mario[VX] = 0
+            # Checking if Mario was originall colliding with the rect and if it was interactable
             if list != brickList and brickRect.colliderect(originalMarioRect) and originalY - originalVY >= brickRect.y + brickRect.height:
                 hitBrick.append([brick, list])
+    # Going through each interactable brick that he hit
     for list in hitBrick:
-        brick, type = list[0], list[1]
-        brickRect = Rect(brick[0], brick[1], brick[2], brick[3])
+        brick, type = list[0], list[1]  # Splitting up the list
+        brickRect = Rect(brick[0], brick[1], brick[2], brick[3])  # Defining the Rect
         # Handling collision with multiple bricks
         if len(hitBrick) != 1:
             if abs(brickRect.x - originalX) > 21:
-                continue
+                continue  # Skipping this brick
             else:
-                del hitBrick[-1]
+                del hitBrick[-1]  # Skipping the next brick
         # Manipulating bricks appropriately
-        if type == interactBricks and brick[IDLE] == 0:
-            indexBrick = interactBricks.index(brick)
-            if brick[TYPE] > 0 or mario[STATE] == 0:
-                interactBricks[indexBrick][BRICKVY] = -4
-                interactBricks[indexBrick][IDLE] = 1
-                playSound(bumpSound, "effect")
-                if brick[TYPE] > 0:
-                    brick[TYPE] -= 1
-                    moveCoins.append([interactBricks[indexBrick][0] + 6, interactBricks[indexBrick][1], 30, 32, -12])
-                    playSound(coinSound, "block")
+        if type == interactBricks and brick[IDLE] == 0:  # If the rect is a brick and is idle
+            indexBrick = interactBricks.index(brick)  # Find it in the bricks list
+            if brick[TYPE] > 0 or mario[STATE] == 0:  # If Mario is small or there are coins in the brick
+                interactBricks[indexBrick][BRICKVY] = -4  # Add VY to the brick
+                interactBricks[indexBrick][IDLE] = 1  # Make it non-idle
+                playSound(bumpSound, "effect")  # Play the bump sound
+                if brick[TYPE] > 0:  # If the brick has coins
+                    brick[TYPE] -= 1  # Remove one
+                    moveCoins.append([interactBricks[indexBrick][0] + 6, interactBricks[indexBrick][1], 30, 32, -12])  # Append a coin to the moving coins list
+                    playSound(coinSound, "block")  # Play the coin sound
+                    # Adding to the score
                     marioScore[COIN] += 1
                     marioScore[PTS] += 200
-                    if brick[TYPE] == 0:
-                        questionBricks.append([brick[0], brick[1], brick[2], brick[3], brick[4], brick[5], 0])
-                        del interactBricks[indexBrick]
-            else:
-                interactBricks[indexBrick][BRICKVY] = -9
-                breakingBrick.append(interactBricks[indexBrick])
-                del interactBricks[indexBrick]
+                    if brick[TYPE] == 0:  # If the brick is now empty
+                        questionBricks.append([brick[0], brick[1], brick[2], brick[3], brick[4], brick[5], 0])  # Add it to the question blocks list and make it non-interactable
+                        del interactBricks[indexBrick]  # Delete the brick
+            else:  # If Mario is big or there are no coins
+                interactBricks[indexBrick][BRICKVY] = -9  # Add VY to it
+                breakingBrick.append(interactBricks[indexBrick])  # Append it to the breaking bricks list
+                del interactBricks[indexBrick]  # Delete it from the bricks list
                 playSound(breakSound, "block")  # Play bumping sound
-        elif type == questionBricks:
+        elif type == questionBricks:  # If the rect is a question block
             playSound(bumpSound, "effect")  # Play bumping sound
-            if brick[IDLE] == 0:
-                indexBrick = questionBricks.index(brick)
-                questionBricks[indexBrick][IDLE] = 1
-                questionBricks[indexBrick][BRICKVY] = -4
-                if questionBricks[indexBrick][TYPE] == 1:
+            if brick[IDLE] == 0:  # If the block is idle
+                indexBrick = questionBricks.index(brick)  # Find it in the question blocks list
+                questionBricks[indexBrick][IDLE] = 1  # Set the brick to non-interactable
+                questionBricks[indexBrick][BRICKVY] = -4  # Give the block VY
+                if questionBricks[indexBrick][TYPE] == 1:  # If the block has a coin
                     moveCoins.append([questionBricks[indexBrick][0] + 6, questionBricks[indexBrick][1], 30, 32, -12])
-                    playSound(coinSound, "block")
+                    playSound(coinSound, "block")  # Play the coin sound
+                    # Add to the score
                     marioScore[COIN] += 1
                     marioScore[PTS] += 200
-                elif questionBricks[indexBrick][TYPE] == 2:
-                    mushrooms.append([questionBricks[indexBrick][0], questionBricks[indexBrick][1], 42, 42, 15, 42, 3, 0, False])
-                    playSound(appearSound, "block")
+                elif questionBricks[indexBrick][TYPE] == 2:  # If the block has a mushroom
+                    mushrooms.append([questionBricks[indexBrick][0], questionBricks[indexBrick][1], 42, 42, 15, 42, 3, 0, False])  # Append a mushroom to the mushroom list
+                    playSound(appearSound, "block")  # Play the mushroom sound
 
 
 def checkClearCollide(mario, marioStats, marioScore, coins, mushrooms, enemiesList, points, bullets, startTime):
+    """ Function to check Mario's collision with objects that he can pass through """
     PTS, COIN, LIVES = 0, 1, 2
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING, ISANIMATING, INVULFRAMES = 0, 1, 2, 3, 4, 5, 6, 7
@@ -922,7 +929,7 @@ def game():
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING, ISANIMATING = 0, 1, 2, 3, 4, 5, 6
     PTS, COIN, LIVES = 0, 1, 2
-    global levelNum, marioStats, RECTFINDER, marioPos, marioScore # REMOVE THESE AT END
+    global levelNum
     playSound(backgroundSound, "music")  # Starting the background music
     # Declaring session specific booleans
     pausedBool = False  # Boolean to keep track of pause status

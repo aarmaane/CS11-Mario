@@ -87,34 +87,36 @@ flagPic = [transform.scale(image.load("assets/sprites/items/flagpole.png").conve
            transform.scale(image.load("assets/sprites/items/flag.png").convert_alpha(), (42, 42))]
 
 # Resizing, Flipping, and Reordering Pictures
-statCoin = [transform.scale(pic, (15,24)) for pic in statCoin]
-statCoin = statCoin + statCoin[::-1]
-for subList in range(len(marioSprites)):
+statCoin = [transform.scale(pic, (15,24)) for pic in statCoin]  # Resizing the coin icon sprites
+statCoin = statCoin + statCoin[::-1]  # Taking the coin icon sprites and adding a reversed version
+
+for subList in range(len(marioSprites)):  # Loop to go through Mario's sprite and resizing depending on if its small Mario's or big Mario's
     for pic in range(len(marioSprites[subList])):
         if marioSprites[subList][pic].get_height() == 16:
             marioSprites[subList][pic] = transform.scale(marioSprites[subList][pic], (42, 42))
         else:
             marioSprites[subList][pic] = transform.scale(marioSprites[subList][pic], (42, 84))
+
 marioSprites[3][4], marioSprites[3][5] = transform.flip(marioSprites[3][4], True, False), transform.flip(marioSprites[3][5], True, False)
 
-
-for subList in range(len(brickSprites)):
+for subList in range(len(brickSprites)):  # Going through each brick sprite and resizing it
     for pic in range(len(brickSprites[subList])):
         brickSprites[subList][pic] = transform.scale(brickSprites[subList][pic], (42,42))
-brickSprites[0] = brickSprites[0] + brickSprites[0][::-1]
-brickPiece = [transform.flip(brickPiece, False, True),
+brickSprites[0] = brickSprites[0] + brickSprites[0][::-1]  # Taking the brick sprites and adding a reversed version
+
+brickPiece = [transform.flip(brickPiece, False, True),  # Taking the brick debris and flipping the pictures
               brickPiece,
               transform.flip(brickPiece, True, True),
               transform.flip(brickPiece, True, False)]
-for subList in range(len(coinsPic)):
+for subList in range(len(coinsPic)):  # Going through each coin and resizing it
     for pic in range(len(coinsPic[subList])):
         coinsPic[subList][pic] = transform.scale(coinsPic[subList][pic], (30,36))
-for pic in range(len(itemsPic)):
+for pic in range(len(itemsPic)):  # Going though each item and resizing it
     itemsPic[pic] = transform.scale(itemsPic[pic], (42,42))
-coinsPic[0] = coinsPic[0] + coinsPic[0][::-1]
+coinsPic[0] = coinsPic[0] + coinsPic[0][::-1]  # Taking the coin pictures and adding a reversed version
 
 
-# Declaring all fonts
+# Declaring all fonts (with different sizes)
 
 marioFontThin = font.Font("assets/fonts/marioFont.ttf", 12)
 marioFont = font.Font("assets/fonts/marioFont.ttf", 18)
@@ -716,115 +718,124 @@ def checkClearCollide(mario, marioStats, marioScore, coins, mushrooms, enemiesLi
     X, Y, DELAY, MOVEUP, MUSHVX, MUSHVY = 0, 1, 4, 5, 6, 7
     ENMYVX, ENMYVY, ENMYIDLE, ENMYINFLOOR = 4, 5, 6, 7
     BULLVX, BULLVY = 4, 5
+    # Declaring Mario's hitbox
     height = 42
     if mario[STATE] == 1:
         height = 84
-    marioRect = Rect(mario[X], mario[Y], 38 - 2, height)
-    if marioStats[ISCROUCH]:
+    marioRect = Rect(mario[X], mario[Y], 38 - 2, height)  # Declaring Mario's Rect
+    if marioStats[ISCROUCH]:  # Shortening Mario hit box if he's crouching
         marioRect = Rect(mario[X], mario[Y] + 42, 38 - 2, 42)
+    # Going through each coin
     for coin in range(len(coins) - 1, -1, -1):
-        coinRect = Rect(coins[coin][0], coins[coin][1], coins[coin][2], coins[coin][3])
-        if marioRect.colliderect(coinRect):
-            del coins[coin]
-            playSound(coinSound, "block")
+        coinRect = Rect(coins[coin][0], coins[coin][1], coins[coin][2], coins[coin][3])  # Declaring coin rect
+        if marioRect.colliderect(coinRect):  # Checking if they're colliding
+            del coins[coin]  # Deleting the coin from the list
+            playSound(coinSound, "block")  # Playing the coin sound
+            # Adding to score
             marioScore[PTS] += 200
-            points.append([coinRect.x, coinRect.y, 30, 200])
             marioScore[COIN] += 1
+            points.append([coinRect.x, coinRect.y, 30, 200])  # Appending to the points list
+    # Going through each mushroom
     for index in range(len(mushrooms) - 1, -1, -1):
-        mushRect = Rect(mushrooms[index][0], mushrooms[index][1], mushrooms[index][2], mushrooms[index][3])
-        if marioRect.colliderect(mushRect) and mushrooms[index][DELAY] == 0 and mushrooms[index][MOVEUP] == 0:
-            if mario[STATE] == 0:
-                mario[Y] -= 42
-                mario[STATE] = 1
-                marioStats[ISANIMATING] = True
-                playSound(growSound, "effect")
-            marioScore[PTS] += 2000
-            points.append([mushRect.x, mushRect.y, 30, 2000])
-            del mushrooms[index]
+        mushRect = Rect(mushrooms[index][0], mushrooms[index][1], mushrooms[index][2], mushrooms[index][3])  # Declaring mushroom rect
+        if marioRect.colliderect(mushRect) and mushrooms[index][DELAY] == 0 and mushrooms[index][MOVEUP] == 0:  # Checking if Mario is colliding and the mushroom is not animating
+            if mario[STATE] == 0:  # If Mario's state is 0 (small)
+                mario[Y] -= 42  # Shift Mario up
+                mario[STATE] = 1  # Change his state to 1 (big)
+                marioStats[ISANIMATING] = True  # Make him animate
+                playSound(growSound, "effect")  # Play the animating sound
+            marioScore[PTS] += 2000  # Add to points
+            points.append([mushRect.x, mushRect.y, 30, 2000])  # Append to points list
+            del mushrooms[index]  # Delete mushroom from list
+    # Going through each enemy in the 2D list
     for list in range(len(enemiesList)):
         for enemy in range(len(enemiesList[list]) - 1, -1, -1):
-            # Defining hitbox
+            # Defining hitbox depending on enemy
             if enemiesList[list] == goombas or enemiesList[list] == spinys:
                 enmyRect = Rect(enemiesList[list][enemy][0] + 5, enemiesList[list][enemy][1] + 10, enemiesList[list][enemy][2] - 10, enemiesList[list][enemy][3] - 10)
             elif enemiesList[list] == bullets:
                 enmyRect = Rect(enemiesList[list][enemy][0] + 15, enemiesList[list][enemy][1], enemiesList[list][enemy][2] - 15, enemiesList[list][enemy][3])
-            # Checking proper collision
+            # Checking if there is collision and if the enemies are properly active/should collide
             if marioRect.colliderect(enmyRect) and ((enemiesList[list] == goombas and enemiesList[list][enemy][ENMYIDLE] != 2) or (enemiesList[list] == bullets and enemiesList[list][enemy][BULLVY] == 0) or (enemiesList[list] == spinys)):
+                # Checking top collision (Ignoring spinys since they don't have a top collision)
                 if int(mario[Y]) + height - int(mario[VY]) <= enmyRect.y and enemiesList[list] != spinys:
-                    mario[VY] = -7.5
-                    marioStats[ISFALLING] = True
+                    mario[VY] = -7.5  # Setting Mario's VY to -7.5
+                    marioStats[ISFALLING] = True  # Set falling to true
                     marioStats[ONGROUND] = False
-                    marioScore[PTS] += 100
-                    playSound(stompSound, "effect")
-                    if enemiesList[list] == goombas:
-                        enemiesList[list][enemy][ENMYIDLE] = 2
+                    marioScore[PTS] += 100  # Add to points
+                    playSound(stompSound, "effect")  # Play the stomp sound
+                    if enemiesList[list] == goombas:  # If the enemy is a goomba
+                        enemiesList[list][enemy][ENMYIDLE] = 2  # Set the enemy state to 2 (dead)
                         enemiesList[list][enemy][ENMYINFLOOR] = 32  # Turning the infloor value into a counter for removing dead goombas
-                    elif enemiesList[list] == bullets:
-                        enemiesList[list][enemy][BULLVY] = -1
-                        points.append([enmyRect.x, enmyRect.y, 30, 100])
-                elif marioStats[INVULFRAMES] == 0:
-                    mario[STATE] -= 1
-                    marioStats[ISANIMATING] = True
-                    if mario[STATE] == 0:
-                        marioStats[INVULFRAMES] = 80
+                    elif enemiesList[list] == bullets:  # If enemy is a bullets
+                        enemiesList[list][enemy][BULLVY] = -1  # Set the VY to -1 (Once it tips over, it keeps going)
+                        points.append([enmyRect.x, enmyRect.y, 30, 100])  # Appending to the points list
+                # If you don't hit the top, you get damaged
+                elif marioStats[INVULFRAMES] == 0:  # If mario is not invulnerable
+                    mario[STATE] -= 1  # Reducing Mario's state by 1
+                    marioStats[ISANIMATING] = True  # Animating Mario
+                    if mario[STATE] == 0:  # If Mario's state is now 0 (small)
+                        marioStats[INVULFRAMES] = 80  # Setting
                         playSound(shrinkSound, "effect")
     # Checking victory pole collision
-    isPole = False
-    forceTime = None
-    poleRect = Rect(flagInfo[0][0], flagInfo[0][1], flagInfo[0][2], flagInfo[0][3])
+    isPole = False  # Boolean to see if Mario is on the pole
+    forceTime = None  #
+    poleRect = Rect(flagInfo[0][0], flagInfo[0][1], flagInfo[0][2], flagInfo[0][3])  # Declaring the pole Recr
     if marioRect.colliderect(poleRect):  # If mario collides with the pole
         isPole = True
         mario[X] = poleRect.x - 16  # Making mario slide down
         playSound(flagSound, "music")  # Playing the flag sound
         forceTime = 200 - (time.get_ticks() - startTime)//1000
-    return [isPole, forceTime]
+    return [isPole, forceTime]  # Returning values for game function to handle
 
 def movePole(mario, marioStats, marioScore, frame, flagInfo, unisprite, isDone, forceTime):
+    """ Function for the pole grabbing animation """
     PTS, COIN, LIVES = 0, 1, 2
     X, Y, VX, VY, DIR, STATE = 0, 1, 2, 3, 4, 5
     ONGROUND, JUMPFRAMES, INGROUND, ISCROUCH, ONPLATFORM, ISFALLING, ISANIMATING, INVULFRAMES = 0, 1, 2, 3, 4, 5, 6, 7
+    # Declaring flag pole Rects
     poleRect = Rect(flagInfo[0][0], flagInfo[0][1], flagInfo[0][2], flagInfo[0][3])
     flagRect = Rect(flagInfo[1][0], flagInfo[1][1], flagInfo[1][2], flagInfo[1][3])
-    offset = 0
-    endPoint = 650
-    if levelNum == 5:
+    offset = 0  # Offset for height
+    endPoint = 650  # Variable for the X coordinate of the castle door
+    if levelNum == 5:  # If the level is 5, change the castle door position
         endPoint = 690
-    if mario[STATE] == 1:
+    if mario[STATE] == 1:  # If Mario is big, change the offset
         offset = 42
-    if flagRect.y < 451:
+    if flagRect.y < 451: # If the flag Y position is not past 451, bring it lower
         flagInfo[1][1] += 4
-    if mario[Y] < 451 - offset:
-        mario[Y] += 4
-        frame[0], frame[1] = 3, (unisprite * 0.8 % 2 + mario[STATE] * 2)
-    if mario[Y] >= 451 - offset and flagRect.y >= 451 and frame[2] < 20:
-        mario[X] = poleRect.x + 16
-        frame[0], frame[1] = 3, 4 + mario[STATE]
-        frame[2] += 1
-    elif mario[Y] >= 451 - offset and flagRect.y >= 451 and frame[2] == 20:
-        mario[X] = poleRect.right
-        mario[Y] = 496 - offset
-        frame[2] += 1
-        if levelNum != 5:
+    if mario[Y] < 451 - offset:  # If Mario is not att the bottom the pole
+        mario[Y] += 4  # Bring him lower
+        frame[0], frame[1] = 3, (unisprite * 0.8 % 2 + mario[STATE] * 2)  # Rotate is sprite
+    if mario[Y] >= 451 - offset and flagRect.y >= 451 and frame[2] < 20:  # If both Mario and the flag are at the bottom, and the animation counter hasn't reached 20
+        mario[X] = poleRect.x + 16  # Put Mario on the other side of the pole (still holding)
+        frame[0], frame[1] = 3, 4 + mario[STATE]  # Keep his sprite of the grabbing pole sprite
+        frame[2] += 1  # Add to the animation counter
+    elif mario[Y] >= 451 - offset and flagRect.y >= 451 and frame[2] == 20:  # If both Mario and the flag are at the bottom, and the animation counter is at 20
+        mario[X] = poleRect.right  # Put Mario to the left of the pole
+        mario[Y] = 496 - offset  # Put Mario on the ground, according to Mario's state
+        frame[2] += 1 # Add to the frame counter
+        if levelNum != 5:  # If the level is 5, play the game done sound
             playSound(doneSound, "music")
-        else:
+        else:  # If it's any other level, play the level done sound
             playSound(doneworldSound, "music")
-    elif mario[Y] >= 451 - offset and flagRect.y >= 451:
-        mario[VX] = 5
-        mario[VY] = 0
-        mario[X] += 3.5
+    elif mario[Y] >= 451 - offset and flagRect.y >= 451:  # If both the above are done
+        mario[VX] = 5  # Make Mario's speed 5
+        mario[VY] = 0  # Make his VY 0
+        mario[X] += 3.5  # Keep moving Mario right
         marioStats[ONGROUND] = True
-        moveSprites(mario,marioStats,frame)
-        if mario[X] > endPoint and mario[X] < 800:
-            mario[X] = 800
-            playSound(timepointsSound, "effect")
-    if mario[X] > 800 and forceTime != 0:
-        forceTime -= 1
-        marioScore[PTS] += 100
-    if forceTime == 0:
-        mixer.Channel(1).stop()
-        if not mixer.Channel(0).get_busy():
+        moveSprites(mario,marioStats,frame)  # Use the moveSprites function to rotate sprites
+        if mario[X] > endPoint and mario[X] < 800:  # If Mario reaches the castle and hasn't been moved yet
+            mario[X] = 800  # Move Mario off screen
+            playSound(timepointsSound, "effect")  # Play the time to points conversion sound
+    if mario[X] > 800 and forceTime != 0:  # If Mario has been moved off screen (meaning the time conversion has started)
+        forceTime -= 1  # Remove a second from the forced time
+        marioScore[PTS] += 100  # Add 100 to Marios points for each second removed
+    if forceTime == 0:  # If the force time has reached zero (meaning the time conversion is done)
+        mixer.Channel(1).stop()  # Stop the conversion sound
+        if not mixer.Channel(0).get_busy():  # If the end level sound is done, go to the next level
             isDone = True
-    return [isDone, forceTime]
+    return [isDone, forceTime]  # Return the isDone and forced time values for the game function to handle
 
 def rotateRect(rectList, breakingBrick, itemsList, enemiesList, bullets, gunsList, points):
     """ Function to take the activate and deactivate Rects relative to the screen """
